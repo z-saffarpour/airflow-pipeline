@@ -102,6 +102,8 @@ create_table_sync_dag(
 )
 ```
 
+راهنمای کامل SQL Server → Kafka: [docs/MSSQL_TO_KAFKA_CLICKHOUSE_SYNC_GUIDE.md](docs/MSSQL_TO_KAFKA_CLICKHOUSE_SYNC_GUIDE.md)
+
 راهنمای کامل Replication MD: [docs/MASTERDATA_STORE_SYNC_GUIDE.md](docs/MASTERDATA_STORE_SYNC_GUIDE.md)
 
 نمونه health monitor:
@@ -250,6 +252,7 @@ pytest tests/ -v
 | [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) | ساختار پوشه‌ها و ماژول‌ها |
 | [docs/QUICKSTART.md](docs/QUICKSTART.md) | راه‌اندازی سریع |
 | [docs/QUICK_START_IMPROVEMENTS.md](docs/QUICK_START_IMPROVEMENTS.md) | بهبودهای reliability و error-handling |
+| [docs/MSSQL_TO_KAFKA_CLICKHOUSE_SYNC_GUIDE.md](docs/MSSQL_TO_KAFKA_CLICKHOUSE_SYNC_GUIDE.md) | ساخت DAG همگام‌سازی SQL Server → Kafka |
 | [docs/MASTERDATA_STORE_SYNC_GUIDE.md](docs/MASTERDATA_STORE_SYNC_GUIDE.md) | ساخت DAG جدید Replication MD |
 | [docs/KAFKA_HEALTH_MONITOR_GUIDE.md](docs/KAFKA_HEALTH_MONITOR_GUIDE.md) | ساخت DAG مانیتور سلامت Kafka |
 | [docker/README.md](docker/README.md) | استقرار Docker و WinAuth |

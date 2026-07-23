@@ -127,18 +127,13 @@ airflow dags trigger query_inventory_and_sales_sync
 
 ## ۷. ساخت DAG جدید (خلاصه)
 
-### Table → Kafka
+### Table / Query → Kafka (± ClickHouse)
 
-1. از یک فایل مشابه در `dags/mssql_to_kafka_clickhouse_sync/dwh/` کپی بگیرید.
-2. `DAGConfig`، `TableConfiguration`، `KafkaTopicConfig` را تنظیم کنید.
-3. `create_table_sync_dag(...)` را فراخوانی کنید.
+راهنمای کامل: [MSSQL_TO_KAFKA_CLICKHOUSE_SYNC_GUIDE.md](MSSQL_TO_KAFKA_CLICKHOUSE_SYNC_GUIDE.md)
 
-### Query → Kafka
-
-از `create_query_sync_dag` و `QueryConfiguration` استفاده کنید. توکن‌های تاریخ:
-
-- `{{ ds }}` → `YYYY-MM-DD`
-- `{{ ds_nodash }}` → `YYYYMMDD`
+1. از یک فایل مشابه در `dags/mssql_to_kafka_clickhouse_sync/dwh/` یا `erp/` کپی بگیرید.
+2. برای Table: `DAGConfig`، `TableConfiguration`، `KafkaTopicConfig` و `create_table_sync_dag(...)`.
+3. برای Query: `QueryConfiguration` و `create_query_sync_dag(...)`؛ توکن‌های `{{ ds }}` / `{{ ds_nodash }}`.
 
 ### Replication MD → Store
 
@@ -222,6 +217,7 @@ pytest tests/ -v
 
 - معماری: [ARCHITECTURE_FA.md](ARCHITECTURE_FA.md)
 - ساختار پوشه‌ها: [../PROJECT_STRUCTURE.md](../PROJECT_STRUCTURE.md)
+- SQL Server → Kafka: [MSSQL_TO_KAFKA_CLICKHOUSE_SYNC_GUIDE.md](MSSQL_TO_KAFKA_CLICKHOUSE_SYNC_GUIDE.md)
 - Replication MD: [MASTERDATA_STORE_SYNC_GUIDE.md](MASTERDATA_STORE_SYNC_GUIDE.md)
 - MySQL → MSSQL: [MYSQL_TO_MSSQL_SYNC_GUIDE.md](MYSQL_TO_MSSQL_SYNC_GUIDE.md)
 - Kafka Health Monitor: [KAFKA_HEALTH_MONITOR_GUIDE.md](KAFKA_HEALTH_MONITOR_GUIDE.md)

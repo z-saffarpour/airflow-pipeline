@@ -91,6 +91,8 @@ validation → setup (ensure topic) → processing (transfer) → verify_and_com
 
 **Exactly-once در سمت Producer:** `enable.idempotence=true`، `acks=all` در `IdempotentKafkaProducer`.
 
+جزئیات عملیاتی: [MSSQL_TO_KAFKA_CLICKHOUSE_SYNC_GUIDE.md](MSSQL_TO_KAFKA_CLICKHOUSE_SYNC_GUIDE.md)
+
 ### ۳.۲ Sales & Inventory → Kafka
 
 DAGهای سفارشی در `dags/sales_inventory/` (نه فقط template ساده):
@@ -324,6 +326,7 @@ PipelineException
 | [../PROJECT_STRUCTURE.md](../PROJECT_STRUCTURE.md) | درخت پوشه‌ها و نقش هر مسیر |
 | [QUICKSTART.md](QUICKSTART.md) | راه‌اندازی سریع |
 | [QUICK_START_IMPROVEMENTS.md](QUICK_START_IMPROVEMENTS.md) | استفاده از بهبودهای reliability |
+| [MSSQL_TO_KAFKA_CLICKHOUSE_SYNC_GUIDE.md](MSSQL_TO_KAFKA_CLICKHOUSE_SYNC_GUIDE.md) | ساخت DAG همگام‌سازی SQL Server → Kafka |
 | [MASTERDATA_STORE_SYNC_GUIDE.md](MASTERDATA_STORE_SYNC_GUIDE.md) | ساخت DAG Replication MD |
 | [MYSQL_TO_MSSQL_SYNC_GUIDE.md](MYSQL_TO_MSSQL_SYNC_GUIDE.md) | ساخت DAG همگام‌سازی MySQL → MSSQL |
 | [KAFKA_HEALTH_MONITOR_GUIDE.md](KAFKA_HEALTH_MONITOR_GUIDE.md) | ساخت DAG مانیتور سلامت Kafka |
