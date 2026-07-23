@@ -255,6 +255,7 @@ airflow pools set replication_md_store_sync_pool 32 "Master data store chunk syn
 | Retry | `pipeline/utils/retry_helper.py` |
 | Validation | `pipeline/utils/validation.py` |
 | Hook امن | `pipeline/database/SafeMsSqlHook.py` |
+| MSSQL Connection Factory | `pipeline/database/MSSQLConnectionFactory.py` |
 | Audit | `pipeline/utils/AuditLogger.py` |
 | MD Orchestrator | `pipeline/core/MSSQLToMSSQLQueryOrchestrator.py` |
 | Master Data factory | `dags/template/mssql_masterdata_to_mssql_store_sync_dag_factory.py` |

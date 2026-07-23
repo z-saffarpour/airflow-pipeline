@@ -1,4 +1,4 @@
-"""
+﻿"""
 Kafka Connection Factory for managing cluster clients.
 Provides abstraction for broker resolution and client lifecycle management.
 """
@@ -16,7 +16,7 @@ class KafkaConnectionFactory:
     """
     Factory class for creating and managing Kafka clients from an Airflow Connection.
 
-    Mirrors ConnectionFactory / ClickHouseConnectionFactory:
+    Mirrors MSSQLConnectionFactory / ClickHouseConnectionFactory:
     - resolve credentials from Airflow Connection (conn_id)
     - build shared client config (bootstrap, SASL/SSL)
     - expose AdminClient + test_connection

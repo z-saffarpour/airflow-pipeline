@@ -1,11 +1,11 @@
-
+﻿
 import logging
 from typing import Dict, List, Optional, Any, Generator, Tuple
 
 from airflow.exceptions import AirflowException # type: ignore
 
 from pipeline.database.SQLQueryBuilder import SQLQueryBuilder
-from pipeline.database.ConnectionFactory import ConnectionFactory
+from pipeline.database.MSSQLConnectionFactory import MSSQLConnectionFactory
 from pipeline.interfaces.DataReader import DataReader
 from pipeline.core.exceptions import DataReadError, SQLServerQueryError
 
@@ -43,7 +43,7 @@ class MSSQLDataReader(DataReader):
         self.batch_size = batch_size
         self.is_connection_string = is_connection_string
         
-        self.connection_factory = ConnectionFactory(conn_id, is_connection_string)
+        self.connection_factory = MSSQLConnectionFactory(conn_id, is_connection_string)
         self.query_builder = SQLQueryBuilder()
     
     def get_total_count(

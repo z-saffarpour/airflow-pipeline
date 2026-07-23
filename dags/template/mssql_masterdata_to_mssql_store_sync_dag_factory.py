@@ -1,4 +1,4 @@
-"""
+﻿"""
 Replication MD store sync DAG factory.
 
 Repairs missed SQL Server Replication data by querying the Replication_MD publisher
@@ -34,7 +34,7 @@ from pipeline.core.exceptions import (
 
 from pipeline.config.AuditConfig import EventType, EventStatus
 from pipeline.core.MSSQLToMSSQLQueryOrchestrator import MSSQLToMSSQLQueryOrchestrator
-from pipeline.database.ConnectionFactory import ConnectionFactory
+from pipeline.database.MSSQLConnectionFactory import MSSQLConnectionFactory
 from pipeline.core.ExecutionDateExtractor import ExecutionDateExtractor
 from pipeline.utils.AuditLogger import AuditLogger
 from pipeline.utils.validation import validate_mssql_conn
@@ -338,7 +338,7 @@ def make_fetch_store_server_connection_task():
                 WHERE StoreNumber = '{store_number}' 
             """
             
-        factory = ConnectionFactory(conn_id = CONNECTION_INFO_CONN_ID)
+        factory = MSSQLConnectionFactory(conn_id = CONNECTION_INFO_CONN_ID)
         rows  = factory.execute_query(query)
 
         if not rows:
@@ -418,7 +418,7 @@ def make_validate_mssql_connection_task():
                 database=database,
                 template_conn_id=STORE_TEMPLATE_CONN_ID,
             )
-            factory = ConnectionFactory(conn_uri, is_connection_string=True)
+            factory = MSSQLConnectionFactory(conn_uri, is_connection_string=True)
 
             if not factory.test_connection():
                 raise AirflowFailException(

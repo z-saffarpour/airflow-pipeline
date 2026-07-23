@@ -1,4 +1,4 @@
-# معماری سیستم (Architecture)
+﻿# معماری سیستم (Architecture)
 
 مستند معماری پلتفرم **SQL Server Data Pipeline** مبتنی بر Apache Airflow.
 
@@ -55,7 +55,7 @@ pipeline/
 DAG / Factory
     │
     ├─► MSSQLDataTransferOrchestrator
-    │      ├─ MSSQLDataReader  ← ConnectionFactory / SafeMsSqlHook
+    │      ├─ MSSQLDataReader  ← MSSQLConnectionFactory / SafeMsSqlHook
     │      ├─ IdempotentKafkaProducer
     │      └─ ClickHouseWriter (اختیاری)
     │
@@ -262,7 +262,7 @@ health_checks (موازی):
 }
 ```
 
-### ConnectionFactory
+### MSSQLConnectionFactory
 
 - با `conn_id` Airflow → `SafeMsSqlHook`
 - با connection string (`mssql+pymssql://` یا `mssql+pyodbc://`) برای اتصال پویا به فروشگاه‌ها

@@ -395,6 +395,7 @@ dag = create_dag(dag_config=dag_config, sync_config=sync_config)
 | `pipeline/config/MasterDataSyncConfig.py` | تعریف پارامترهای sync |
 | `pipeline/config/DAGConfig.py` | تعریف پارامترهای DAG |
 | `pipeline/core/MSSQLToMSSQLQueryOrchestrator.py` | منطق خواندن/نوشتن |
+| `pipeline/database/MSSQLConnectionFactory.py` | اتصال Publisher / Store (conn یا URI) |
 | `dags/masterdata_store_sync/tables/ax_price_disc_group_sync.py` | نمونه ساده |
 | `dags/masterdata_store_sync/tables/ax_invent_table_sync.py` | نمونه chunk موازی |
 | `dags/masterdata_store_sync/tables/ax_invent_dim_sync.py` | نمونه فیلتر `{store_number}` |

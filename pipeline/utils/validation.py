@@ -1,4 +1,4 @@
-"""
+﻿"""
 Connection Validation
 =====================
 Standardized validation functions for Kafka and SQL Server connections.
@@ -13,7 +13,7 @@ from datetime import datetime
 from dataclasses import dataclass, asdict
 from airflow.exceptions import AirflowException # type: ignore
 
-from pipeline.database.ConnectionFactory import ConnectionFactory
+from pipeline.database.MSSQLConnectionFactory import MSSQLConnectionFactory
 from pipeline.database.MySQLConnectionFactory import MySQLConnectionFactory
 from pipeline.database.PostgreSQLConnectionFactory import PostgreSQLConnectionFactory
 from pipeline.database.MongoDBConnectionFactory import MongoDBConnectionFactory
@@ -114,7 +114,7 @@ def validate_mssql_conn(conn_id: str, hook_class) -> dict:
     logger.info("Validating SQL Server connection: %s", conn_id)
     
     try:
-        factory = ConnectionFactory(conn_id = conn_id)
+        factory = MSSQLConnectionFactory(conn_id = conn_id)
         result = factory.test_connection()
                
         if result == False:
@@ -160,7 +160,7 @@ def validate_mssql_conn(conn_id: str) -> dict:
     logger.info("Validating SQL Server connection: %s", conn_id)
     
     try:
-        factory = ConnectionFactory(conn_id = conn_id)
+        factory = MSSQLConnectionFactory(conn_id = conn_id)
         result = factory.test_connection()
                
         if result == False:

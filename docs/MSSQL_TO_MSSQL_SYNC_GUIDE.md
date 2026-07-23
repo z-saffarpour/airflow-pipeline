@@ -33,6 +33,7 @@
 | **Factory** | `dags/template/mssql_to_mssql_sync_dag_factory.py` | ساخت TaskGroupهای validation / processing |
 | **Orchestrator** | `pipeline/core/MSSQLToMSSQLQueryOrchestrator.py` | خواندن MSSQL + upsert به MSSQL |
 | **Reader / Writer** | `pipeline/database/MSSQLDataReader.py`، `MSSQLServerWriter.py` | stream و MERGE upsert |
+| **Connection** | `pipeline/database/MSSQLConnectionFactory.py` | اتصال Airflow conn یا URI |
 
 برای افزودن جدول جدید، معمولاً **فقط یک فایل در `dags/mssql_to_mssql_sync/`** کافی است.
 
@@ -230,6 +231,7 @@ Chunkها با `NTILE` روی SQL Server منبع ساخته می‌شوند.
 | `pipeline/core/MSSQLToMSSQLQueryOrchestrator.py` | orchestrator |
 | `pipeline/database/MSSQLServerWriter.py` | writer (MERGE) |
 | `pipeline/database/MSSQLDataReader.py` | reader |
+| `pipeline/database/MSSQLConnectionFactory.py` | اتصال MSSQL |
 | `pipeline/config/MasterDataSyncConfig.py` | تنظیمات sync |
 | `pipeline/config/ConnectionConfig.py` | `mssql_conn_id` + `mssql_target_conn_id` |
 | `docs/MASTERDATA_STORE_SYNC_GUIDE.md` | مسیر پویا Publisher → Store |

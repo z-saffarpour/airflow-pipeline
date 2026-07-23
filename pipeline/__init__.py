@@ -1,4 +1,4 @@
-"""
+﻿"""
 Pipeline Package - SQL Server to Kafka Data Pipeline
 ====================================================
 This package contains all pipeline components following SOLID principles.
@@ -75,7 +75,7 @@ from pipeline.config import (
 # DATABASE LAYER
 # ============================================================================
 from pipeline.database import (
-    ConnectionFactory,
+    MSSQLConnectionFactory,
     SQLQueryBuilder,
     MSSQLDataReader,
 )
@@ -128,7 +128,7 @@ __all__ = [
     "KAFKA_CONFIG",
     
     # Database
-    "ConnectionFactory",
+    "MSSQLConnectionFactory",
     "SQLQueryBuilder",
     "MSSQLDataReader",
     

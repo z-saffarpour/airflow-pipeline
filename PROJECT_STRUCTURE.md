@@ -1,4 +1,4 @@
-# ساختار پروژه (Project Structure)
+﻿# ساختار پروژه (Project Structure)
 
 توضیح درخت پوشه‌ها و نقش هر بخش در ریپازیتوری فعلی.
 
@@ -181,7 +181,7 @@ pipeline/
 │
 ├── database/
 │   ├── SafeMsSqlHook.py        # pymssql / pyodbc + Kerberos
-│   ├── ConnectionFactory.py
+│   ├── MSSQLConnectionFactory.py
 │   ├── SQLQueryBuilder.py
 │   ├── MSSQLDataReader.py
 │   ├── MSSQLServerWriter.py

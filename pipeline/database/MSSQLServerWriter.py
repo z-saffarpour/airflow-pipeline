@@ -1,11 +1,11 @@
-"""
+﻿"""
 SQL Server Writer with comprehensive CRUD operations and staging support.
 Designed for Airflow ETL pipelines with batch processing.
 """
 import logging
 from typing import Dict, List, Optional, Any, Tuple
 
-from pipeline.database.ConnectionFactory import ConnectionFactory
+from pipeline.database.MSSQLConnectionFactory import MSSQLConnectionFactory
 from pipeline.interfaces.DataWriter import DataWriter
 from pipeline.database.SQLQueryBuilder import SQLQueryBuilder
 from pipeline.core.exceptions import is_sql_server_deadlock
@@ -35,7 +35,7 @@ class MSSQLServerWriter(DataWriter):
         self.conn_id = conn_id
         self.is_connection_string = is_connection_string
         self.autocommit = autocommit
-        self.connection_factory = ConnectionFactory(conn_id, is_connection_string)
+        self.connection_factory = MSSQLConnectionFactory(conn_id, is_connection_string)
         self.logger = logging.getLogger(self.__class__.__name__)
         self._cached_unique_keys: Dict[str, Tuple[Tuple[str, ...], ...]] = {}
 

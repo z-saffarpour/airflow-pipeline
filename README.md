@@ -1,4 +1,4 @@
-# SQL Server Data Pipeline Platform
+﻿# SQL Server Data Pipeline Platform
 
 پلتفرم تولیدی Apache Airflow برای همگام‌سازی و انتقال داده بین **SQL Server**، **PostgreSQL**، **Apache Kafka**، **ClickHouse**، **MySQL** و **MongoDB**، به‌همراه تعمیر Master Data فروشگاهی و بهینه‌سازی جداول ClickHouse.
 
@@ -84,7 +84,7 @@ sqlserver-kafka-pipeline/
 ├── pipeline/                             # هستهٔ مشترک
 │   ├── interfaces/
 │   ├── config/
-│   ├── database/                         # Reader / Writer / ConnectionFactory
+│   ├── database/                         # Reader / Writer / MSSQLConnectionFactory
 │   ├── kafka/
 │   ├── core/                             # Orchestratorها + exceptions
 │   ├── utils/
