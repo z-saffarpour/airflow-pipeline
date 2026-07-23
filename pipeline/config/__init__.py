@@ -15,6 +15,7 @@ from pipeline.config.DAGConfig import DAGConfig
 from pipeline.config.SyncConfig import SyncConfig
 from pipeline.config.MasterDataSyncConfig import MasterDataSyncConfig
 from pipeline.config.MongoSyncConfig import MongoSyncConfig
+from pipeline.config.KafkaSyncConfig import KafkaSyncConfig
 from pipeline.config.KafkaHealthMonitorConfig import KafkaHealthMonitorConfig
 
 __all__ = [
@@ -30,5 +31,6 @@ __all__ = [
     "SyncConfig",
     "MasterDataSyncConfig",
     "MongoSyncConfig",
+    "KafkaSyncConfig",
     "KafkaHealthMonitorConfig",
 ]

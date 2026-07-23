@@ -46,6 +46,44 @@ class MessageSerializer:
         return [MessageSerializer.serialize_row(row) for row in rows]
 
     @staticmethod
+    def deserialize_row(payload: bytes) -> Dict[str, Any]:
+        """
+        Deserialize a Kafka message value (JSON UTF-8) to a row dict.
+
+        Args:
+            payload: Message value bytes produced by serialize_row
+
+        Returns:
+            Dictionary representing a database row
+
+        Raises:
+            ValueError: If payload is empty or not a JSON object
+        """
+        if payload is None:
+            raise ValueError("Cannot deserialize None Kafka payload")
+        if isinstance(payload, memoryview):
+            payload = payload.tobytes()
+        if isinstance(payload, bytearray):
+            payload = bytes(payload)
+        if not isinstance(payload, (bytes, str)):
+            raise TypeError(
+                f"Expected bytes/str Kafka payload, got {type(payload).__name__}"
+            )
+
+        raw = payload.decode("utf-8") if isinstance(payload, bytes) else payload
+        data = json.loads(raw)
+        if not isinstance(data, dict):
+            raise ValueError(
+                f"Kafka message value must be a JSON object, got {type(data).__name__}"
+            )
+        return data
+
+    @staticmethod
+    def deserialize_batch(payloads: List[bytes]) -> List[Dict[str, Any]]:
+        """Deserialize multiple Kafka message values to row dicts."""
+        return [MessageSerializer.deserialize_row(payload) for payload in payloads]
+
+    @staticmethod
     def _make_json_serializable(obj: Any) -> Any:
         """
         Convert an object to JSON-serializable format.

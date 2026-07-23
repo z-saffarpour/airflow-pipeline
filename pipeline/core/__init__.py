@@ -7,6 +7,7 @@ Contains core orchestration and utility components.
 from pipeline.core.MSSQLDataTransferOrchestrator import MSSQLDataTransferOrchestrator
 from pipeline.core.MySQLToMSSQLQueryOrchestrator import MySQLToMSSQLQueryOrchestrator
 from pipeline.core.MongoDBToMSSQLQueryOrchestrator import MongoDBToMSSQLQueryOrchestrator
+from pipeline.core.KafkaToMSSQLQueryOrchestrator import KafkaToMSSQLQueryOrchestrator
 from pipeline.core.TransferMetrics import TransferMetrics
 from pipeline.core.TransferResult import TransferResult
 from pipeline.core.ExecutionDateExtractor import ExecutionDateExtractor
@@ -24,6 +25,7 @@ from pipeline.core.exceptions import (
     KafkaConnectionError,
     KafkaProducerError,
     KafkaTopicError,
+    KafkaConsumerError,
     ConfigurationException,
     InvalidConfigurationError,
     MissingConfigurationError,
@@ -40,6 +42,7 @@ __all__ = [
     "MSSQLDataTransferOrchestrator",
     "MySQLToMSSQLQueryOrchestrator",
     "MongoDBToMSSQLQueryOrchestrator",
+    "KafkaToMSSQLQueryOrchestrator",
     "TransferMetrics",
     "TransferResult",
     "ExecutionDateExtractor",
@@ -55,6 +58,7 @@ __all__ = [
     "KafkaConnectionError",
     "KafkaProducerError",
     "KafkaTopicError",
+    "KafkaConsumerError",
     "ConfigurationException",
     "InvalidConfigurationError",
     "MissingConfigurationError",

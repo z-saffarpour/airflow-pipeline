@@ -156,6 +156,11 @@ class KafkaTopicError(KafkaException):
     pass
 
 
+class KafkaConsumerError(KafkaException):
+    """Raised when Kafka consumer encounters an error."""
+    pass
+
+
 class ConfigurationException(PipelineException):
     """Base exception for configuration-related errors."""
     pass

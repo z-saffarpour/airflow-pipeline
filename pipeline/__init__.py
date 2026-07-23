@@ -8,7 +8,7 @@ Structure:
 - interfaces/  : Abstract Base Classes (ABC) for dependency inversion
 - config/      : Configuration classes and dataclasses
 - database/    : Database access layer (SQL Server)
-- kafka/       : Kafka message production layer
+- kafka/       : Kafka message production and consumption layer
 - core/        : Core orchestration and utilities
 
 Author: Senior Data Engineer
@@ -31,6 +31,7 @@ from pipeline.core.exceptions import (
     KafkaConnectionError,
     KafkaProducerError,
     KafkaTopicError,
+    KafkaConsumerError,
     ConfigurationException,
     InvalidConfigurationError,
     MissingConfigurationError,
@@ -81,6 +82,7 @@ from pipeline.kafka import (
     KafkaTopicManager,
     MessageSerializer,
     KafkaConnectionFactory,
+    KafkaDataConsumer,
 )
 
 # ============================================================================
@@ -88,6 +90,7 @@ from pipeline.kafka import (
 # ============================================================================
 from pipeline.core import (
     MSSQLDataTransferOrchestrator,
+    KafkaToMSSQLQueryOrchestrator,
     TransferMetrics,
     TransferResult,
     ExecutionDateExtractor,
@@ -128,9 +131,11 @@ __all__ = [
     "KafkaTopicManager",
     "MessageSerializer",
     "KafkaConnectionFactory",
+    "KafkaDataConsumer",
     
     # Core
     "MSSQLDataTransferOrchestrator",
+    "KafkaToMSSQLQueryOrchestrator",
     "TransferMetrics",
     "TransferResult",
     "ExecutionDateExtractor",
@@ -145,6 +150,7 @@ __all__ = [
     "KafkaConnectionError",
     "KafkaProducerError",
     "KafkaTopicError",
+    "KafkaConsumerError",
     "ConfigurationException",
     "InvalidConfigurationError",
     "MissingConfigurationError",

@@ -35,6 +35,7 @@ dags/
 │   ├── mssql_masterdata_to_mssql_store_sync_dag_factory.py
 │   ├── mysql_to_mssql_sync_dag_factory.py
 │   ├── mongo_to_mssql_sync_dag_factory.py
+│   ├── kafka_to_mssql_sync_dag_factory.py
 │   ├── clickhouse_optimizer_dag_factory.py
 │   └── kafka_health_monitor_dag_factory.py
 │
@@ -45,6 +46,8 @@ dags/
 ├── mysql_to_mssql_sync/           # MySQL → MSSQL (upsert / replication-style)
 │
 ├── mongo_to_mssql_sync/           # MongoDB → MSSQL (upsert / replication-style)
+│
+├── kafka_to_mssql_sync/           # Kafka → MSSQL (upsert / replication-style)
 │
 ├── sales_inventory/               # فروش و موجودی چندمنبعی → Kafka
 │
@@ -73,6 +76,7 @@ dags/
 | Replication table | `ax_<table>_sync.py` | `ax_invent_table_sync.py` |
 | MySQL → MSSQL | `<name>_to_mssql_sync.py` | `example_table_to_mssql_sync.py` |
 | MongoDB → MSSQL | `<name>_to_mssql_sync.py` | `example_collection_to_mssql_sync.py` |
+| Kafka → MSSQL | `<name>_to_mssql_sync.py` | `example_topic_to_mssql_sync.py` |
 | ClickHouse optimize | `<name>_clickhouse_optimizer.py` | `com_dim_item_clickhouse_optimizer.py` |
 | Kafka health monitor | `<name>_health_monitor.py` | `dim_date_health_monitor.py` |
 
@@ -130,6 +134,8 @@ pipeline/
 │   ├── TableConfiguration.py
 │   ├── QueryConfiguration.py
 │   ├── MasterDataSyncConfig.py
+│   ├── MongoSyncConfig.py
+│   ├── KafkaSyncConfig.py
 │   ├── ConnectionConfig.py
 │   ├── KafkaTopicConfig.py
 │   ├── KafkaProducerConfig.py
@@ -152,12 +158,16 @@ pipeline/
 ├── kafka/
 │   ├── KafkaConnectionFactory.py   # Airflow conn → AdminClient / bootstrap
 │   ├── IdempotentKafkaProducer.py
+│   ├── KafkaDataConsumer.py        # batch consume for Kafka→MSSQL sync
 │   ├── KafkaTopicManager.py        # topic ops via KafkaConnectionFactory(conn_id)
 │   └── MessageSerializer.py
 │
 ├── core/
 │   ├── MSSQLDataTransferOrchestrator.py      # SQL → Kafka/CH
 │   ├── MSSQLToMSSQLQueryOrchestrator.py      # Publisher → Store
+│   ├── MySQLToMSSQLQueryOrchestrator.py      # MySQL → MSSQL
+│   ├── MongoDBToMSSQLQueryOrchestrator.py    # Mongo → MSSQL
+│   ├── KafkaToMSSQLQueryOrchestrator.py      # Kafka → MSSQL
 │   ├── ClickHouseOptimizationOrchestrator.py
 │   ├── DagSyncTrigger.py
 │   ├── ExecutionDateExtractor.py
@@ -181,7 +191,7 @@ pipeline/
 | `interfaces/` | قراردادها برای Dependency Inversion |
 | `config/` | جداسازی تنظیمات از منطق کسب‌وکار |
 | `database/` | دسترسی به SQL Server و ClickHouse |
-| `kafka/` | تولید پیام و مدیریت topic |
+| `kafka/` | تولید/مصرف پیام و مدیریت topic |
 | `core/` | هماهنگی انتقال و نتایج |
 | `utils/` | ابزارهای مشترک |
 | `compat/` | abstraction نسخه Airflow |
@@ -215,6 +225,8 @@ pipeline/
 | `MSSQL_TO_KAFKA_CLICKHOUSE_SYNC_GUIDE.md` | ساخت DAG همگام‌سازی SQL Server → Kafka |
 | `MASTERDATA_STORE_SYNC_GUIDE.md` | ساخت DAG Replication MD |
 | `MYSQL_TO_MSSQL_SYNC_GUIDE.md` | ساخت DAG همگام‌سازی MySQL → MSSQL |
+| `MONGO_TO_MSSQL_SYNC_GUIDE.md` | ساخت DAG همگام‌سازی MongoDB → MSSQL |
+| `KAFKA_TO_MSSQL_SYNC_GUIDE.md` | ساخت DAG همگام‌سازی Kafka → MSSQL |
 | `KAFKA_HEALTH_MONITOR_GUIDE.md` | ساخت DAG مانیتور سلامت Kafka |
 | `CLICKHOUSE_OPTIMIZER_GUIDE.md` | ساخت DAG بهینه‌سازی ClickHouse |
 
