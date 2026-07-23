@@ -153,9 +153,13 @@ temp/
 tmp/
 helpme.bash
 
-# Local DAGs (not tracked)
-dags/masterdata_store_sync/
-dags/mssql_to_kafka_clickhouse_sync/
+# Local DAGs (not tracked) — keep example_*.py samples in git
+dags/masterdata_store_sync/**
+!dags/masterdata_store_sync/
+!dags/masterdata_store_sync/example_*.py
+dags/mssql_to_kafka_clickhouse_sync/**
+!dags/mssql_to_kafka_clickhouse_sync/
+!dags/mssql_to_kafka_clickhouse_sync/example_*.py
 dags/sales_inventory/
 dags/clickhouse_optimizer/dwh/
 dags/clickhouse_optimizer/erp/
