@@ -7,7 +7,7 @@ Structure:
 ----------
 dags/
 ├── template/                      # Reusable DAG factories
-├── mssql_sync/                    # SQL Server → Kafka (± ClickHouse)
+├── mssql_to_kafka_clickhouse_sync/ # SQL Server → Kafka (± ClickHouse)
 ├── sales_inventory/               # Sales & inventory multi-source → Kafka
 ├── replication/                   # Replication MD repair (Publisher → Store)
 ├── clickhouse_optimizer/          # ClickHouse table optimization

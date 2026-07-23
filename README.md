@@ -24,7 +24,7 @@
 
 | جریان | منبع | مقصد | مسیر DAG |
 |-------|------|------|----------|
-| Table / Query Sync | SQL Server (DWH/ERP) | Kafka (اختیاری ClickHouse) | `dags/mssql_sync/` |
+| Table / Query Sync | SQL Server (DWH/ERP) | Kafka (اختیاری ClickHouse) | `dags/mssql_to_kafka_clickhouse_sync/` |
 | Sales & Inventory | فروشگاه‌ها + ERP AX | Kafka | `dags/sales_inventory/` |
 | Replication MD Sync | Publisher (`mssql_replication_md`) | دیتابیس فروشگاه | `dags/masterdata_store_sync/` |
 | ClickHouse Optimize | ClickHouse | ClickHouse | `dags/clickhouse_optimizer/` |
@@ -41,7 +41,7 @@ sqlserver-kafka-pipeline/
 │   │   ├── mssql_masterdata_to_mssql_store_sync_dag_factory.py
 │   │   ├── clickhouse_optimizer_dag_factory.py
 │   │   └── kafka_health_monitor_dag_factory.py
-│   ├── mssql_sync/               # Sync جداول/کوئری DWH و ERP → Kafka
+│   ├── mssql_to_kafka_clickhouse_sync/  # Sync جداول/کوئری DWH و ERP → Kafka
 │   │   ├── dwh/
 │   │   └── erp/
 │   ├── sales_inventory/          # فروش و موجودی چندمنبعی → Kafka

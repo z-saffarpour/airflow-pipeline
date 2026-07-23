@@ -37,7 +37,7 @@ dags/
 │   ├── clickhouse_optimizer_dag_factory.py
 │   └── kafka_health_monitor_dag_factory.py
 │
-├── mssql_sync/                    # SQL Server → Kafka (± ClickHouse)
+├── mssql_to_kafka_clickhouse_sync/ # SQL Server → Kafka (± ClickHouse)
 │   ├── dwh/                       # جداول و کوئری‌های DWH
 │   └── erp/                       # کوئری‌ها و orchestratorهای ERP/AX
 │
@@ -245,7 +245,7 @@ pytest tests/ -v
 ```
 $AIRFLOW_HOME/dags/
 ├── template/
-├── mssql_sync/
+├── mssql_to_kafka_clickhouse_sync/
 ├── sales_inventory/
 ├── replication/
 ├── clickhouse_optimizer/

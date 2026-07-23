@@ -129,7 +129,7 @@ airflow dags trigger query_inventory_and_sales_sync
 
 ### Table → Kafka
 
-1. از یک فایل مشابه در `dags/mssql_sync/dwh/` کپی بگیرید.
+1. از یک فایل مشابه در `dags/mssql_to_kafka_clickhouse_sync/dwh/` کپی بگیرید.
 2. `DAGConfig`، `TableConfiguration`، `KafkaTopicConfig` را تنظیم کنید.
 3. `create_table_sync_dag(...)` را فراخوانی کنید.
 
