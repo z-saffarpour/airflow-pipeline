@@ -8,7 +8,7 @@ Uses kafka_to_mssql_sync_dag_factory.
 
 Required Airflow connections:
   - kafka_default       (source)
-  - mssql_dwh_primary   (target)  — change as needed
+  - mssql_default   (target)  — change as needed
 
 Author: Zahra Saffarpour
 Version: 1.0
@@ -46,13 +46,13 @@ dag_config = DAGConfig(
             Variable.get("execution_timeout_hours_kafka_example_topic", default_var=8)
         )
     ),
-    tags=["kafka", "mssql", "replication", "kafka-sync"],
+    tags=["kafka", "mssql", "kafka-sync"],
     pool="kafka_to_mssql_sync_pool",
 )
 
 conn_config = ConnectionConfig(
     kafka_conn_id=Variable.get("kafka_source_conn_id", default_var="kafka_default"),
-    mssql_conn_id=Variable.get("mssql_target_conn_id", default_var="mssql_dwh_primary"),
+    mssql_conn_id=Variable.get("mssql_target_conn_id", default_var="mssql_default"),
 )
 
 # Replace topic / keys / target with your real Kafka source and MSSQL target.

@@ -6,7 +6,7 @@ Reads from an MSSQL table/query and upserts into MongoDB.
 Uses mssql_to_mongo_sync_dag_factory.
 
 Required Airflow connections:
-  - mssql_dwh_primary      (source)
+  - mssql_default      (source)
   - mongo_target_default   (target)  — change as needed
 
 Author: Zahra Saffarpour
@@ -45,12 +45,12 @@ dag_config = DAGConfig(
             Variable.get("execution_timeout_hours_mssql_example_table_mongo", default_var=8)
         )
     ),
-    tags=["mssql", "mongo", "mongodb", "replication", "mssql-to-mongo"],
+    tags=["mssql", "mongo", "mongodb", "mssql-to-mongo"],
     pool="mssql_to_mongo_sync_pool",
 )
 
 conn_config = ConnectionConfig(
-    mssql_conn_id=Variable.get("mssql_source_conn_id", default_var="mssql_dwh_primary"),
+    mssql_conn_id=Variable.get("mssql_source_conn_id", default_var="mssql_default"),
     mongo_conn_id=Variable.get("mongo_target_conn_id", default_var="mongo_target_default"),
 )
 

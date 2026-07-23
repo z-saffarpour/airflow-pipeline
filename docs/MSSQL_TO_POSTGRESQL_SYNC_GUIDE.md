@@ -41,7 +41,7 @@
 
 | Connection ID (نمونه) | نقش |
 |------------------------|-----|
-| `mssql_dwh_primary` | منبع — SQL Server |
+| `mssql_default` | منبع — SQL Server |
 | `postgres_target_default` | مقصد — PostgreSQL (قابل تغییر) |
 
 > نام connectionها از طریق `ConnectionConfig` یا Variable قابل تنظیم است.
@@ -61,7 +61,7 @@ airflow pools set mssql_to_postgresql_sync_pool 32 "MSSQL to PostgreSQL chunk sy
 | Variable | پیش‌فرض | توضیح |
 |----------|---------|-------|
 | `postgres_staging_schema` | `staging` | schema موقت staging در PostgreSQL |
-| `mssql_source_conn_id` | `mssql_dwh_primary` | Airflow conn منبع |
+| `mssql_source_conn_id` | `mssql_default` | Airflow conn منبع |
 | `postgres_target_conn_id` | `postgres_target_default` | Airflow conn مقصد |
 
 > در PostgreSQL، `target_schema` و `staging_schema` نام **schema** واقعی هستند (مثلاً `public`، `staging`). schema مربوط به staging باید از قبل وجود داشته باشد.
@@ -101,12 +101,12 @@ dag_config = DAGConfig(
     retries=2,
     retry_delay=timedelta(minutes=5),
     execution_timeout=timedelta(hours=8),
-    tags=["mssql", "postgresql", "replication", "mssql-to-postgresql"],
+    tags=["mssql", "postgresql", "mssql-to-postgresql"],
     pool="mssql_to_postgresql_sync_pool",
 )
 
 conn_config = ConnectionConfig(
-    mssql_conn_id=Variable.get("mssql_source_conn_id", default_var="mssql_dwh_primary"),
+    mssql_conn_id=Variable.get("mssql_source_conn_id", default_var="mssql_default"),
     postgres_conn_id=Variable.get("postgres_target_conn_id", default_var="postgres_target_default"),
 )
 

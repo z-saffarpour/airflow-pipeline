@@ -9,7 +9,7 @@ from typing import Dict, Any
 @dataclass(frozen=True)
 class ConnectionConfig:
     """Configuration for database and message broker connections. Immutable."""
-    mssql_conn_id: str = None # "mssql_default" (source, or sole MSSQL when only one is needed)
+    mssql_conn_id: str = "mssql_default"  # source, or sole MSSQL when only one is needed
     mssql_target_conn_id: str = None # "mssql_target_default" (MSSQL→MSSQL fixed-target path)
     mysql_conn_id: str = None # "mysql_default"
     postgres_conn_id: str = None # "postgres_default"

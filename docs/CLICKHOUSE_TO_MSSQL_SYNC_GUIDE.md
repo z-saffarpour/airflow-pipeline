@@ -1,6 +1,6 @@
 # راهنمای ایجاد DAG برای Sync داده از ClickHouse به MSSQL
 
-این راهنما نحوهٔ افزودن یک DAG جدید برای **همگام‌سازی** از **ClickHouse** به **SQL Server** را توضیح می‌دهد. داده با یک query از ClickHouse خوانده می‌شود و با **upsert / MERGE** (همان الگوی MySQL→MSSQL و Replication MD) در جدول مقصد MSSQL نوشته می‌شود.
+این راهنما نحوهٔ افزودن یک DAG جدید برای **همگام‌سازی** از **ClickHouse** به **SQL Server** را توضیح می‌دهد. داده با یک query از ClickHouse خوانده می‌شود و با **upsert / MERGE** در جدول مقصد MSSQL نوشته می‌شود.
 
 ---
 
@@ -45,7 +45,7 @@
 | Connection ID (نمونه) | نقش |
 |------------------------|-----|
 | `clickhouse_default` | منبع — ClickHouse |
-| `mssql_dwh_primary` | مقصد — SQL Server (قابل تغییر) |
+| `mssql_default` | مقصد — SQL Server (قابل تغییر) |
 
 > نام connectionها از طریق `ConnectionConfig` یا Variable قابل تنظیم است.
 
@@ -65,7 +65,7 @@ airflow pools set clickhouse_to_mssql_sync_pool 32 "ClickHouse to MSSQL chunk sy
 |----------|---------|-------|
 | `mssql_staging_schema` | `crt` | schema موقت staging در MSSQL |
 | `clickhouse_source_conn_id` | `clickhouse_default` | Airflow conn منبع |
-| `mssql_target_conn_id` | `mssql_dwh_primary` | Airflow conn مقصد |
+| `mssql_target_conn_id` | `mssql_default` | Airflow conn مقصد |
 | `max_global_parallel_chunks_clickhouse_to_mssql` | `32` | سقف chunk همزمان |
 
 ---
@@ -103,13 +103,13 @@ dag_config = DAGConfig(
     retries=int(Variable.get("retries_clickhouse_products", default_var=2)),
     retry_delay=timedelta(minutes=int(Variable.get("retry_delay_minutes_clickhouse_products", default_var=5))),
     execution_timeout=timedelta(hours=int(Variable.get("execution_timeout_hours_clickhouse_products", default_var=8))),
-    tags=["clickhouse", "mssql", "replication", "clickhouse-sync"],
+    tags=["clickhouse", "mssql", "clickhouse-sync"],
     pool="clickhouse_to_mssql_sync_pool",
 )
 
 conn_config = ConnectionConfig(
     clickhouse_conn_id=Variable.get("clickhouse_source_conn_id", default_var="clickhouse_default"),
-    mssql_conn_id=Variable.get("mssql_target_conn_id", default_var="mssql_dwh_primary"),
+    mssql_conn_id=Variable.get("mssql_target_conn_id", default_var="mssql_default"),
 )
 
 sync_config = MasterDataSyncConfig(
@@ -150,7 +150,7 @@ dag = create_dag(
 
 ## ۴. پارامترهای مهم `MasterDataSyncConfig`
 
-همان dataclass مشترک با MySQL→MSSQL / Replication MD:
+همان dataclass مشترک مسیرهای upsert به MSSQL:
 
 | پارامتر | الزامی | توضیح |
 |---------|--------|-------|

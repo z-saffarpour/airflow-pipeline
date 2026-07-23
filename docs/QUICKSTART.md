@@ -87,7 +87,7 @@ airflow connections add 'kafka_default' \
 |---------------|--------|
 | اتصالات DWH / ERP | `mssql_to_kafka_clickhouse_sync` و مسیرهای مرتبط |
 | `kafka_default` | تولید/مصرف پیام Kafka |
-| `mssql_replication_md` | Publisher Replication MD |
+| `mssql_replication_md` | Publisher Master Data |
 | `mssql_store_connectionInfo` | لیست/اطلاعات فروشگاه‌ها |
 | `mssql_store_template` | یوزر/پسورد الگوی دسترسی به فروشگاه |
 | ClickHouse conn | optimizer و sink / sync |
@@ -99,7 +99,7 @@ airflow connections add 'kafka_default' \
 
 ```bash
 airflow pools set data_sync_pool 5 "SQL to Kafka transfers"
-airflow pools set replication_md_store_sync_pool 32 "Replication MD store chunk sync"
+airflow pools set replication_md_store_sync_pool 32 "Master data store chunk sync"
 ```
 
 تعداد slot در `replication_md_store_sync_pool` باید ≥ `max_global_parallel_chunks` باشد.
@@ -112,8 +112,8 @@ airflow pools set replication_md_store_sync_pool 32 "Replication MD store chunk 
 
 | Variable | مثال / پیش‌فرض | توضیح |
 |----------|----------------|--------|
-| `mssql_staging_schema` | `crt` | schema staging در Subscriber |
-| `max_global_parallel_chunks_replication_md_store` | `32` | سقف chunk همزمان |
+| `mssql_staging_schema` | `crt` | schema staging در مقصد MSSQL / Subscriber |
+| `max_global_parallel_chunks_replication_md_store` | `32` | سقف chunk همزمان Master Data → Store |
 | Variableهای `delete_missing_*` | `true`/`false` | حذف رکوردهای گم‌شده در scope |
 
 تنظیمات batch/Kafka معمولاً در dataclassهای هر DAG تعریف می‌شوند؛ در صورت نیاز از Admin → Variables هم می‌توانید override کنید.
@@ -123,14 +123,15 @@ airflow pools set replication_md_store_sync_pool 32 "Replication MD store chunk 
 ## ۶. اولین اجرا
 
 ```bash
-# لیست DAGها
-airflow dags list | findstr /I sync
+# لیست نمونه‌ها
+airflow dags list | findstr /I example
 
-# نمونه table sync
-airflow dags trigger table_dwh_rtl_fact_sales_trans_sync
-
-# نمونه sales & inventory
-airflow dags trigger query_inventory_and_sales_sync
+# نمونه‌ها
+airflow dags trigger example_table_to_kafka_sync
+airflow dags trigger example_query_to_kafka_sync
+airflow dags trigger example_table_to_store_sync
+airflow dags trigger example_table_clickhouse_optimizer
+airflow dags trigger example_topic_health_monitor
 ```
 
 از UI هم می‌توانید DAG را Unpause و Trigger کنید.
@@ -143,15 +144,19 @@ airflow dags trigger query_inventory_and_sales_sync
 
 راهنمای کامل: [MSSQL_TO_KAFKA_CLICKHOUSE_SYNC_GUIDE.md](MSSQL_TO_KAFKA_CLICKHOUSE_SYNC_GUIDE.md)
 
-1. از یک فایل مشابه در `dags/mssql_to_kafka_clickhouse_sync/dwh/` یا `erp/` کپی بگیرید.
+1. از نمونه کپی بگیرید:
+   - Table: `dags/mssql_to_kafka_clickhouse_sync/example_table_to_kafka_sync.py`
+   - Query: `dags/mssql_to_kafka_clickhouse_sync/example_query_to_kafka_sync.py`
 2. برای Table: `DAGConfig`، `TableConfiguration`، `KafkaTopicConfig` و `create_table_sync_dag(...)`.
 3. برای Query: `QueryConfiguration` و `create_query_sync_dag(...)`؛ توکن‌های `{{ ds }}` / `{{ ds_nodash }}`.
 
-### Replication MD → Store
+### Master Data → Store
 
 راهنمای کامل: [MASTERDATA_STORE_SYNC_GUIDE.md](MASTERDATA_STORE_SYNC_GUIDE.md)
 
-پوشش فعلی حدود ۲۰۰+ جدول در `dags/masterdata_store_sync/tables/` است. برای فیلتر فروشگاهی، در query از `{store_number}` استفاده کنید.
+نمونه: `dags/masterdata_store_sync/example_table_to_store_sync.py` با `create_dag` از `mssql_masterdata_to_mssql_store_sync_dag_factory`.
+
+برای فیلتر فروشگاهی، در query از `{store_number}` استفاده کنید.
 
 ### MySQL → MSSQL Sync
 
@@ -225,28 +230,32 @@ airflow dags trigger query_inventory_and_sales_sync
 
 راهنمای کامل: [KAFKA_HEALTH_MONITOR_GUIDE.md](KAFKA_HEALTH_MONITOR_GUIDE.md)
 
-برای هر topic یکتای Kafka یک مانیتور در `dags/kafka_health_monitor/` (هم‌دسته با sync) بسازید:
+نمونه: `dags/kafka_health_monitor/example_topic_health_monitor.py` با `kafka_health_monitor_dag` از `kafka_health_monitor_dag_factory`.
+
+برای هر topic یکتای Kafka یک مانیتور بسازید:
 
 ```python
 from pipeline.config.ConnectionConfig import ConnectionConfig
 from template.kafka_health_monitor_dag_factory import kafka_health_monitor_dag
 
 conn_config = ConnectionConfig(kafka_conn_id="kafka_default")
-kafka_health_monitor_dag(DAG_CONFIG, conn_config, HEALTH_CONFIG)
+dag = kafka_health_monitor_dag(DAG_CONFIG, conn_config, HEALTH_CONFIG)
 ```
 
 ### ClickHouse Optimizer
 
 راهنمای کامل: [CLICKHOUSE_OPTIMIZER_GUIDE.md](CLICKHOUSE_OPTIMIZER_GUIDE.md)
 
-برای هر جدول ClickHouse یک DAG نازک در `dags/clickhouse_optimizer/` (یا `sales_inventory/`) بسازید:
+نمونه: `dags/clickhouse_optimizer/example_table_clickhouse_optimizer.py` با `clickhouse_optimizer_dag` از `clickhouse_optimizer_dag_factory`.
+
+برای هر جدول ClickHouse یک DAG نازک بسازید:
 
 ```python
 from pipeline.config.ConnectionConfig import ConnectionConfig
 from template.clickhouse_optimizer_dag_factory import clickhouse_optimizer_dag
 
 conn_config = ConnectionConfig(clickhouse_conn_id="clickhouse_default")
-clickhouse_optimizer_dag(DAG_CONFIG, conn_config, OPTIMIZE_CONFIG)
+dag = clickhouse_optimizer_dag(DAG_CONFIG, conn_config, OPTIMIZE_CONFIG)
 ```
 
 ---
@@ -281,7 +290,7 @@ pytest tests/ -v
 | DAG ظاهر نمی‌شود | مسیر import، `__init__.py`، لاگ parser، نصب `pipeline` |
 | خطای اتصال SQL | host/port/firewall؛ برای Kerberos extras و ticket را چک کنید |
 | HTTP 500 هنگام `git push` | فایل‌های بزرگ (`images/*.tar`) را commit نکنید |
-| Chunkهای Replication گیر کرده‌اند | اندازه pool و `max_global_parallel_chunks` را هم‌تراز کنید |
+| Chunkها گیر کرده‌اند | اندازه pool و `max_global_parallel_chunks` را هم‌تراز کنید |
 | Duplicate در Kafka | تنظیمات idempotent producer و key ستون را بررسی کنید |
 | Health monitor lag اشتباه | `consumer_group` را با group واقعی sink هم‌تراز کنید |
 
@@ -292,7 +301,7 @@ pytest tests/ -v
 - معماری: [ARCHITECTURE_FA.md](ARCHITECTURE_FA.md)
 - ساختار پوشه‌ها: [../PROJECT_STRUCTURE.md](../PROJECT_STRUCTURE.md)
 - SQL Server → Kafka: [MSSQL_TO_KAFKA_CLICKHOUSE_SYNC_GUIDE.md](MSSQL_TO_KAFKA_CLICKHOUSE_SYNC_GUIDE.md)
-- Replication MD: [MASTERDATA_STORE_SYNC_GUIDE.md](MASTERDATA_STORE_SYNC_GUIDE.md)
+- Master Data → Store: [MASTERDATA_STORE_SYNC_GUIDE.md](MASTERDATA_STORE_SYNC_GUIDE.md)
 - MySQL → MSSQL: [MYSQL_TO_MSSQL_SYNC_GUIDE.md](MYSQL_TO_MSSQL_SYNC_GUIDE.md)
 - MSSQL → MySQL: [MSSQL_TO_MYSQL_SYNC_GUIDE.md](MSSQL_TO_MYSQL_SYNC_GUIDE.md)
 - MSSQL → PostgreSQL: [MSSQL_TO_POSTGRESQL_SYNC_GUIDE.md](MSSQL_TO_POSTGRESQL_SYNC_GUIDE.md)

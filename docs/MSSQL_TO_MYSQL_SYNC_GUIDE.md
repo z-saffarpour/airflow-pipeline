@@ -20,7 +20,7 @@
 └───────────────────────────────────────────────────────────────────┘
 ```
 
-برخلاف Replication MD (که مقصد فروشگاه را از `ConnectionInfo` کشف می‌کند)، اینجا **منبع و مقصد هر دو Connection ثابت Airflow** هستند.
+منبع و مقصد هر دو **Connection ثابت Airflow** هستند.
 
 ### لایه‌های پروژه
 
@@ -41,7 +41,7 @@
 
 | Connection ID (نمونه) | نقش |
 |------------------------|-----|
-| `mssql_dwh_primary` | منبع — SQL Server |
+| `mssql_default` | منبع — SQL Server |
 | `mysql_target_default` | مقصد — MySQL (قابل تغییر) |
 
 > نام connectionها از طریق `ConnectionConfig` یا Variable قابل تنظیم است؛ الزامی نیست دقیقاً همین IDها باشند.
@@ -63,7 +63,7 @@ airflow pools set mssql_to_mysql_sync_pool 32 "MSSQL to MySQL chunk sync"
 | Variable | پیش‌فرض | توضیح |
 |----------|---------|-------|
 | `mysql_staging_schema` | `staging` | database موقت staging در MySQL |
-| `mssql_source_conn_id` | `mssql_dwh_primary` | Airflow conn منبع (در نمونه DAG) |
+| `mssql_source_conn_id` | `mssql_default` | Airflow conn منبع (در نمونه DAG) |
 | `mysql_target_conn_id` | `mysql_target_default` | Airflow conn مقصد (در نمونه DAG) |
 | `max_global_parallel_chunks_mssql_to_mysql` | `32` | سقف chunk همزمان (اگر Variable تعریف کنید) |
 
@@ -110,12 +110,12 @@ dag_config = DAGConfig(
     retries=int(Variable.get("retries_mssql_products_mysql", default_var=2)),
     retry_delay=timedelta(minutes=int(Variable.get("retry_delay_minutes_mssql_products_mysql", default_var=5))),
     execution_timeout=timedelta(hours=int(Variable.get("execution_timeout_hours_mssql_products_mysql", default_var=8))),
-    tags=["mssql", "mysql", "replication", "mssql-to-mysql"],
+    tags=["mssql", "mysql", "mssql-to-mysql"],
     pool="mssql_to_mysql_sync_pool",
 )
 
 conn_config = ConnectionConfig(
-    mssql_conn_id=Variable.get("mssql_source_conn_id", default_var="mssql_dwh_primary"),
+    mssql_conn_id=Variable.get("mssql_source_conn_id", default_var="mssql_default"),
     mysql_conn_id=Variable.get("mysql_target_conn_id", default_var="mysql_target_default"),
 )
 ```
@@ -170,7 +170,7 @@ dag = create_dag(
 
 ## ۴. پارامترهای مهم `MasterDataSyncConfig`
 
-همان dataclass مشترک با Replication MD / MySQL→MSSQL استفاده می‌شود:
+همان dataclass مشترک مسیرهای upsert استفاده می‌شود:
 
 | پارامتر | الزامی | توضیح |
 |---------|--------|-------|
@@ -312,12 +312,12 @@ dag_config = DAGConfig(
     retries=int(Variable.get(f"retries_{DAG_SUFFIX}_mysql", default_var=2)),
     retry_delay=timedelta(minutes=int(Variable.get(f"retry_delay_minutes_{DAG_SUFFIX}_mysql", default_var=5))),
     execution_timeout=timedelta(hours=int(Variable.get(f"execution_timeout_hours_{DAG_SUFFIX}_mysql", default_var=8))),
-    tags=["mssql", "mysql", "replication", "mssql-to-mysql"],
+    tags=["mssql", "mysql", "mssql-to-mysql"],
     pool="mssql_to_mysql_sync_pool",
 )
 
 conn_config = ConnectionConfig(
-    mssql_conn_id=Variable.get("mssql_source_conn_id", default_var="mssql_dwh_primary"),
+    mssql_conn_id=Variable.get("mssql_source_conn_id", default_var="mssql_default"),
     mysql_conn_id=Variable.get("mysql_target_conn_id", default_var="mysql_target_default"),
 )
 

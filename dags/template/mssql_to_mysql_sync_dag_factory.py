@@ -2,7 +2,7 @@
 MSSQL → MySQL sync DAG factory.
 
 Reads data from an MSSQL source (query) and upserts into a MySQL target table,
-mirroring the MySQL→MSSQL / Replication MD pattern (staging upsert, optional chunks,
+mirroring the MySQL→MSSQL upsert pattern (staging upsert, optional chunks,
 optional scoped delete_missing).
 
 Ops — chunk pool sizing (one-time setup, only if use_dynamic_tasks=True):
@@ -13,7 +13,7 @@ Only ``sync_mssql_to_mysql_chunk`` uses ``dag_config.pool``.
 Light tasks (validation, create_chunks, report) use ``default_pool``.
 
 Required Airflow connections:
-    - mssql_*  : source (e.g. mssql_dwh_primary)
+    - mssql_*  : source (e.g. mssql_default)
     - mysql_*  : target (e.g. mysql_target_default)
 """
 import logging

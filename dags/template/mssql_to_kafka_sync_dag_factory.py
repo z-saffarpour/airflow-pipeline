@@ -13,7 +13,7 @@ Only ``sync_mssql_to_kafka_chunk`` / ``sync_mssql_to_kafka`` use ``dag_config.po
 Light tasks (validation, ensure topic, create_chunks, report) use ``default_pool``.
 
 Required Airflow connections:
-    - mssql_*  : source (e.g. mssql_dwh_primary)
+    - mssql_*  : source (e.g. mssql_default)
     - kafka_*  : target (e.g. kafka_default)
 
 Notes:

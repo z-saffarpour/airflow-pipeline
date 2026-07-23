@@ -7,7 +7,7 @@ Reads from an MSSQL table/query and upserts into another MSSQL table
 Uses mssql_to_mssql_sync_dag_factory.
 
 Required Airflow connections:
-  - mssql_dwh_primary       (source)
+  - mssql_default       (source)
   - mssql_target_default    (target)  — change as needed
 
 Author: Zahra Saffarpour
@@ -48,12 +48,12 @@ dag_config = DAGConfig(
             )
         )
     ),
-    tags=["mssql", "replication", "mssql-to-mssql"],
+    tags=["mssql", "mssql-to-mssql"],
     pool="mssql_to_mssql_sync_pool",
 )
 
 conn_config = ConnectionConfig(
-    mssql_conn_id=Variable.get("mssql_source_conn_id", default_var="mssql_dwh_primary"),
+    mssql_conn_id=Variable.get("mssql_source_conn_id", default_var="mssql_default"),
     mssql_target_conn_id=Variable.get(
         "mssql_target_conn_id", default_var="mssql_target_default"
     ),

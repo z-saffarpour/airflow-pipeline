@@ -6,7 +6,7 @@ Reads from an MSSQL table/query and upserts into PostgreSQL.
 Uses mssql_to_postgresql_sync_dag_factory.
 
 Required Airflow connections:
-  - mssql_dwh_primary         (source)
+  - mssql_default         (source)
   - postgres_target_default   (target)  — change as needed
 
 Author: Zahra Saffarpour
@@ -49,12 +49,12 @@ dag_config = DAGConfig(
             )
         )
     ),
-    tags=["mssql", "postgresql", "replication", "mssql-to-postgresql"],
+    tags=["mssql", "postgresql", "mssql-to-postgresql"],
     pool="mssql_to_postgresql_sync_pool",
 )
 
 conn_config = ConnectionConfig(
-    mssql_conn_id=Variable.get("mssql_source_conn_id", default_var="mssql_dwh_primary"),
+    mssql_conn_id=Variable.get("mssql_source_conn_id", default_var="mssql_default"),
     postgres_conn_id=Variable.get(
         "postgres_target_conn_id", default_var="postgres_target_default"
     ),

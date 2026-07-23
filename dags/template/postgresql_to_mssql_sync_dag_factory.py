@@ -2,7 +2,7 @@
 PostgreSQL → MSSQL sync DAG factory.
 
 Reads data from a PostgreSQL source (query) and upserts into an MSSQL target table,
-mirroring the Replication MD store-sync pattern (MERGE/upsert, optional chunks,
+mirroring the MSSQL upsert pattern (MERGE/upsert, optional chunks,
 optional scoped delete_missing).
 
 Ops — chunk pool sizing (one-time setup, only if use_dynamic_tasks=True):
@@ -14,7 +14,7 @@ Light tasks (validation, create_chunks, report) use ``default_pool``.
 
 Required Airflow connections:
     - postgres_* : source (e.g. postgres_source_default)
-    - mssql_*    : target (e.g. mssql_dwh_primary)
+    - mssql_*    : target (e.g. mssql_default)
 """
 import logging
 from datetime import timedelta

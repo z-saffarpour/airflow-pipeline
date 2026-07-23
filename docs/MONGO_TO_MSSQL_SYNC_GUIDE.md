@@ -1,6 +1,6 @@
 # راهنمای ایجاد DAG برای Sync داده از MongoDB به MSSQL
 
-این راهنما نحوهٔ افزودن یک DAG جدید برای **همگام‌سازی** از **MongoDB** به **SQL Server** را توضیح می‌دهد. داده از یک collection (یا aggregation) خوانده می‌شود و با **upsert / MERGE** (همان الگوی MySQL→MSSQL و Replication MD) در جدول مقصد MSSQL نوشته می‌شود.
+این راهنما نحوهٔ افزودن یک DAG جدید برای **همگام‌سازی** از **MongoDB** به **SQL Server** را توضیح می‌دهد. داده از یک collection (یا aggregation) خوانده می‌شود و با **upsert / MERGE** در جدول مقصد MSSQL نوشته می‌شود.
 
 ---
 
@@ -43,7 +43,7 @@
 | Connection ID (نمونه) | نقش |
 |------------------------|-----|
 | `mongo_source_default` | منبع — MongoDB |
-| `mssql_dwh_primary` | مقصد — SQL Server |
+| `mssql_default` | مقصد — SQL Server |
 
 **تنظیم Connection MongoDB:**
 
@@ -88,7 +88,7 @@ airflow pools set mongo_to_mssql_sync_pool 32 "MongoDB to MSSQL chunk sync"
 |----------|---------|-------|
 | `mssql_staging_schema` | `crt` | schema موقت staging در MSSQL |
 | `mongo_source_conn_id` | `mongo_source_default` | Airflow conn منبع |
-| `mssql_target_conn_id` | `mssql_dwh_primary` | Airflow conn مقصد |
+| `mssql_target_conn_id` | `mssql_default` | Airflow conn مقصد |
 | `mongo_source_database` | (خالی) | override نام database |
 
 ---
@@ -122,13 +122,13 @@ dag_config = DAGConfig(
     start_date=datetime(2026, 7, 23),
     schedule=None,
     catchup=False,
-    tags=["mongo", "mssql", "replication", "mongo-sync"],
+    tags=["mongo", "mssql", "mongo-sync"],
     pool="mongo_to_mssql_sync_pool",
 )
 
 conn_config = ConnectionConfig(
     mongo_conn_id=Variable.get("mongo_source_conn_id", default_var="mongo_source_default"),
-    mssql_conn_id=Variable.get("mssql_target_conn_id", default_var="mssql_dwh_primary"),
+    mssql_conn_id=Variable.get("mssql_target_conn_id", default_var="mssql_default"),
 )
 
 sync_config = MongoSyncConfig(

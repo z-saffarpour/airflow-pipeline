@@ -7,7 +7,7 @@ Reads from an MSSQL table/query and produces batches to a Kafka topic
 Uses mssql_to_kafka_sync_dag_factory.
 
 Required Airflow connections:
-  - mssql_dwh_primary   (source)
+  - mssql_default   (source)
   - kafka_default       (target)  — change as needed
 
 Author: Zahra Saffarpour
@@ -55,7 +55,7 @@ dag_config = DAGConfig(
 )
 
 conn_config = ConnectionConfig(
-    mssql_conn_id=Variable.get("mssql_source_conn_id", default_var="mssql_dwh_primary"),
+    mssql_conn_id=Variable.get("mssql_source_conn_id", default_var="mssql_default"),
     kafka_conn_id=Variable.get("kafka_target_conn_id", default_var="kafka_default"),
 )
 

@@ -157,7 +157,7 @@ audit.log(
 
 فایل‌ها به‌صورت JSONL در مسیر audit (پیش‌فرض `/opt/airflow/logs/audit`) نوشته می‌شوند.
 
-در Sales/Inventory و Replication به‌طور گسترده استفاده شده است؛ در table/query templateهای ساده کمتر.
+در Sales/Inventory به‌طور گسترده استفاده شده است؛ در table/query templateهای ساده کمتر.
 
 ---
 
@@ -183,7 +183,7 @@ delete_missing = Variable.get("delete_missing_retail_discount_code", default_var
 
 ## ۷. فیلتر فروشگاهی با `{store_number}`
 
-در Factoryی Replication MD، اگر `source_query` یا `source_query_count` شامل `{store_number}` باشد، قبل از `plan_sync_chunks` / `sync_data` / `sync_data_chunk` جایگزین می‌شود:
+در Factoryی Master Data → Store، اگر `source_query` یا `source_query_count` شامل `{store_number}` باشد، قبل از `plan_sync_chunks` / `sync_data` / `sync_data_chunk` جایگزین می‌شود:
 
 ```python
 # داخل factory (خلاصه رفتار)
@@ -199,13 +199,13 @@ WHERE INVENTLOCATIONID = ''
    OR INVENTLOCATIONID = '{store_number}'
 ```
 
-مقدار فروشگاه برای SQL escape می‌شود (`'` → `''`). فایل‌های نمونه: `ax_invent_dim_sync.py`، `ax_pos_register_connected_efts_sync.py`.
+مقدار فروشگاه برای SQL escape می‌شود (`'` → `''`). نقطهٔ شروع در ریپو: `dags/masterdata_store_sync/example_table_to_store_sync.py`.
 
 ---
 
 ## ۸. Chunk موازی و Pool
 
-برای جداول بزرگ Replication:
+برای جداول بزرگ با `use_dynamic_tasks=True`:
 
 ```python
 MasterDataSyncConfig(
@@ -218,10 +218,10 @@ MasterDataSyncConfig(
 )
 ```
 
-و در Airflow:
+و در Airflow یک pool متناسب با سقف موازی‌سازی بسازید؛ برای Master Data → Store:
 
 ```bash
-airflow pools set replication_md_store_sync_pool 32 "Replication MD store chunk sync"
+airflow pools set replication_md_store_sync_pool 32 "Master data store chunk sync"
 ```
 
 `DAGConfig.pool` را روی همین pool بگذارید تا فقط taskهای chunk محدود شوند.
@@ -257,7 +257,7 @@ airflow pools set replication_md_store_sync_pool 32 "Replication MD store chunk 
 | Hook امن | `pipeline/database/SafeMsSqlHook.py` |
 | Audit | `pipeline/utils/AuditLogger.py` |
 | MD Orchestrator | `pipeline/core/MSSQLToMSSQLQueryOrchestrator.py` |
-| Replication factory | `dags/template/mssql_masterdata_to_mssql_store_sync_dag_factory.py` |
+| Master Data factory | `dags/template/mssql_masterdata_to_mssql_store_sync_dag_factory.py` |
 | Store-scoped resolve | `resolve_store_scoped_sync_config` در همان factory |
 
 ---

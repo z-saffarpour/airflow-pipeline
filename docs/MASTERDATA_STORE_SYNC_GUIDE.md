@@ -74,6 +74,7 @@ airflow pools set replication_md_store_sync_pool 32 "Replication MD store chunk 
 
 بهترین الگوها:
 
+- **نمونه رسمی ریپو:** `dags/masterdata_store_sync/example_table_to_store_sync.py`
 - **جدول کوچک / بدون chunk:** `ax_price_disc_group_sync.py`
 - **جدول بزرگ / با chunk موازی:** `ax_invent_table_sync.py` یا `ax_retail_periodic_discount_line_sync.py`
 - **فیلتر فروشگاهی (`{store_number}`):** `ax_invent_dim_sync.py` یا `ax_pos_register_connected_efts_sync.py`
@@ -98,7 +99,7 @@ dag_config = DAGConfig(
     retries=int(Variable.get("retries_my_new_table", default_var=2)),
     retry_delay=timedelta(minutes=int(Variable.get("retry_delay_minutes_my_new_table", default_var=5))),
     execution_timeout=timedelta(hours=int(Variable.get("execution_timeout_hours_my_new_table", default_var=8))),
-    tags=["mssql", "store", "master-data", "replication-md"],
+    tags=["mssql", "store", "master-data"],
     pool="replication_md_store_sync_pool",
 )
 ```
@@ -325,7 +326,7 @@ dag_config = DAGConfig(
     retries=int(Variable.get(f"retries_{DAG_SUFFIX}", default_var=2)),
     retry_delay=timedelta(minutes=int(Variable.get(f"retry_delay_minutes_{DAG_SUFFIX}", default_var=5))),
     execution_timeout=timedelta(hours=int(Variable.get(f"execution_timeout_hours_{DAG_SUFFIX}", default_var=8))),
-    tags=["mssql", "store", "master-data", "replication-md"],
+    tags=["mssql", "store", "master-data"],
     pool="replication_md_store_sync_pool",
 )
 
@@ -390,6 +391,7 @@ dag = create_dag(dag_config=dag_config, sync_config=sync_config)
 | فایل | کاربرد |
 |------|--------|
 | `dags/template/mssql_masterdata_to_mssql_store_sync_dag_factory.py` | Factory اصلی (+ `resolve_store_scoped_sync_config`) |
+| `dags/masterdata_store_sync/example_table_to_store_sync.py` | نمونه رسمی ریپو |
 | `pipeline/config/MasterDataSyncConfig.py` | تعریف پارامترهای sync |
 | `pipeline/config/DAGConfig.py` | تعریف پارامترهای DAG |
 | `pipeline/core/MSSQLToMSSQLQueryOrchestrator.py` | منطق خواندن/نوشتن |

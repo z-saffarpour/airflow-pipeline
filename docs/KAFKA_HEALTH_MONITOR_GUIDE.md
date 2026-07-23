@@ -31,17 +31,14 @@
 | **Config** | `pipeline/config/KafkaHealthMonitorConfig.py` + `ConnectionConfig` | topic، consumer group، thresholdها؛ اتصال Kafka از `ConnectionConfig` |
 | **DAGهای نازک** | `dags/kafka_health_monitor/` | فقط config + فراخوانی factory |
 
-دسته‌بندی مانیتورها **هم‌تراز** با DAGهای تولیدکننده به Kafka است:
+دسته‌بندی مانیتورها:
 
 ```
 dags/kafka_health_monitor/
-├── mssql_sync/
-│   ├── dwh/              # مانیتور topicهای DWH (۱۴)
-│   └── erp/              # مانیتور topicهای AX ERP (۴)
-└── sales_inventory/      # مانیتور topicهای فروش و موجودی (۶)
+└── example_topic_health_monitor.py
 ```
 
-در حال حاضر حدود **۲۴** مانیتور (یک مانیتور به‌ازای هر topic یکتا) پوشش داده شده است.
+برای افزودن مانیتور جدید: از نمونه کپی کنید و فایل را در مسیر دلخواه قرار دهید.
 
 ---
 
@@ -97,30 +94,23 @@ clickhouse-consumer.{topic_name}
 
 ### گام ۱ — انتخاب پوشه، نام فایل و `dag_id`
 
-| نوع sync | مسیر مانیتور | الگوی فایل | الگوی `dag_id` |
-|----------|--------------|------------|----------------|
+قرارداد نام‌گذاری پیشنهادی:
+
+| نوع sync | مسیر پیشنهادی مانیتور | الگوی فایل | الگوی `dag_id` |
+|----------|----------------------|------------|----------------|
 | DWH table/query | `kafka_health_monitor/mssql_sync/dwh/` | همان نام sync با `_health_monitor` | `{sync_dag_id بدون _sync}_health_monitor` یا معادل |
 | ERP query | `kafka_health_monitor/mssql_sync/erp/` | `query_ax_<name>_health_monitor.py` | `query_ax_<name>_health_monitor` |
 | Sales / Inventory | `kafka_health_monitor/sales_inventory/` | `query_inventory_<name>_health_monitor.py` | `query_inventory_<name>_health_monitor` |
 
-مثال‌ها:
+> **یک مانیتور به‌ازای هر topic یکتا.** اگر چند DAG روی یک topic می‌نویسند، فقط یک health monitor بسازید.
 
-| Sync DAG | Topic | Health Monitor |
-|----------|-------|----------------|
-| `table_dwh_com_dim_date_sync` | `dwh.table.curated.com.dim_date` | `table_dwh_com_dim_date_health_monitor` |
-| `query_ax_invent_dim_sync` (+ full) | `ax.query.raw.dbo.inventdim` | `query_ax_invent_dim_health_monitor` |
-| `query_inventory_purch_sync` | `ax.query.raw.inventory.purch` | `query_inventory_purch_health_monitor` |
+### گام ۲ — کپی از DAG نمونه
 
-> **یک مانیتور به‌ازای هر topic یکتا.** اگر چند DAG روی یک topic می‌نویسند (مثل inventdim incr + full)، فقط یک health monitor بسازید.
+از نمونه کپی کنید:
 
-### گام ۲ — کپی از یک DAG مشابه
+- **`dags/kafka_health_monitor/example_topic_health_monitor.py`**
 
-بهترین الگوها:
-
-- **Dimension استاتیک (manual):** `mssql_sync/dwh/table_com_dim_date_health_monitor.py`
-- **Fact پرترافیک:** `mssql_sync/dwh/table_rtl_fact_sales_trans_health_monitor.py`
-- **ERP query:** `mssql_sync/erp/query_ax_invent_dim_health_monitor.py`
-- **Sales / Inventory:** `sales_inventory/query_inventory_purch_health_monitor.py`
+سپس `kafka_topic`، `consumer_group` و آستانه‌ها را مطابق pipeline خودتان تنظیم کنید.
 
 ### گام ۳ — پیکربندی `DAGConfig`
 
@@ -227,52 +217,13 @@ kafka_health_monitor_dag(DAG_CONFIG, conn_config, HEALTH_CONFIG)
 
 ---
 
-## ۵. فهرست مانیتورهای فعلی
+## ۵. نمونه
 
-### ۵.۱ `mssql_sync/dwh` (۱۴)
+| فایل | dag_id |
+|------|--------|
+| `dags/kafka_health_monitor/example_topic_health_monitor.py` | `example_topic_health_monitor` |
 
-| dag_id | Topic | Related sync |
-|--------|-------|--------------|
-| `table_dwh_com_dim_date_health_monitor` | `dwh.table.curated.com.dim_date` | `table_dwh_com_dim_date_sync` |
-| `table_dwh_com_dim_item_health_monitor` | `dwh.table.curated.com.dim_item` | `table_dwh_com_dim_item_sync` |
-| `table_dwh_com_dim_time_health_monitor` | `dwh.table.curated.com.dim_time` | `table_dwh_com_dim_time_sync` |
-| `table_dwh_com_dim_invent_location_health_monitor` | `dwh.table.curated.com.dim_inventlocation` | `table_dwh_com_dim_invent_location_sync` |
-| `table_dwh_com_dim_invent_site_health_monitor` | `dwh.table.curated.com.dim_inventsite` | `table_dwh_com_dim_invent_site_sync` |
-| `table_dwh_hrm_dim_invent_location_chart_health_monitor` | `dwh.table.curated.hrm.dim_inventlocationchart` | `table_dwh_hrm_dim_invent_location_chart_sync` |
-| `table_dwh_rtl_dim_cost_amount_health_monitor` | `dwh.table.curated.rtl.dim_costamount` | `table_dwh_rtl_dim_cost_amount_sync` |
-| `table_dwh_rtl_dim_organization_disc_type_health_monitor` | `dwh.table.curated.rtl.dim_organizationdisctype` | `table_dwh_rtl_dim_organization_disc_type_sync` |
-| `table_dwh_rtl_dim_sale_is_return_sale_health_monitor` | `dwh.table.curated.rtl.dim_saleisreturnsale` | `table_dwh_rtl_dim_sale_is_return_sale_sync` |
-| `table_dwh_rtl_dim_sales_type_health_monitor` | `dwh.table.curated.rtl.dim_salestype` | `table_dwh_rtl_dim_sales_type_sync` |
-| `table_dwh_rtl_dim_system_type_health_monitor` | `dwh.table.curated.rtl.dim_systemtype` | `table_dwh_rtl_dim_system_type_sync` |
-| `table_dwh_rtl_fact_sales_trans_health_monitor` | `dwh.table.curated.rtl.fact_salestrans` | `table_dwh_rtl_fact_sales_trans_sync` |
-| `query_dwh_rtl_fact_sales_trans_health_monitor` | `dwh.query.curated.rtl.fact_salestrans` | `query_dwh_rtl_fact_sales_trans_sync` |
-| `table_dwh_scm_fact_invent_trend_health_monitor` | `dwh.table.curated.scm.fact_inventtrend` | `table_dwh_scm_fact_invent_trend_sync` |
-
-### ۵.۲ `mssql_sync/erp` (۴)
-
-| dag_id | Topic | Related sync |
-|--------|-------|--------------|
-| `query_ax_invent_dim_health_monitor` | `ax.query.raw.dbo.inventdim` | invent_dim incr + full |
-| `query_ax_invent_sum_health_monitor` | `ax.query.raw.dbo.inventsum` | invent_sum incr + full |
-| `query_ax_whs_invent_reserve_health_monitor` | `ax.query.raw.dbo.whsinventreserve` | `query_ax_whs_invent_reserve_full_sync` |
-| `query_ax_invent_trans_health_monitor` | `ax.query.raw.dbo.inventtrans` | `query_ax_invent_trans_full_sync` |
-
-### ۵.۳ `sales_inventory` (۶)
-
-| dag_id | Topic | Related sync |
-|--------|-------|--------------|
-| `query_inventory_sales_retail_health_monitor` | `store.query.raw.inventory.sales_retail` | retail sync + v01 |
-| `query_inventory_sales_retail_hq_health_monitor` | `ax.query.raw.inventory.sales_retail` | `query_inventory_sales_retail_hq_sync` |
-| `query_inventory_sales_online_health_monitor` | `ax.query.raw.inventory.sales_online` | `query_inventory_sales_online_sync` |
-| `query_inventory_sales_order_health_monitor` | `ax.query.raw.inventory.sales_order` | `query_inventory_sales_order_sync` |
-| `query_inventory_onhand_lite_health_monitor` | `ax.query.raw.inventory.onhand_lite` | `query_inventory_onhand_lite_sync` |
-| `query_inventory_purch_health_monitor` | `ax.query.raw.inventory.purch` | `query_inventory_purch_sync` |
-
-**بدون مانیتور (عمدی):**
-
-- Orchestratorها (`query_ax_onhand_sync_orchestrator`, `query_inventory_and_sales_sync_orchestrator`) — خودشان به Kafka نمی‌نویسند
-- DAGهای فقط ClickHouse در `sales_inventory`
-- DAG monolith `query_inventory_and_sales_sync` — topicهایش با مانیتورهای split پوشش داده شده‌اند
+برای هر topic یکتای Kafka یک مانیتور بسازید.
 
 ---
 
@@ -330,7 +281,7 @@ kafka_health_monitor_dag(DAG_CONFIG, conn_config, HEALTH_CONFIG)
 ## ۷. چک‌لیست قبل از Production
 
 - [ ] Topic دقیقاً با `KafkaTopicConfig.name` / `KAFKA_TOPIC` در sync یکی است
-- [ ] مانیتور در همان دستهٔ sync قرار گرفته (`mssql_sync/dwh` | `erp` | `sales_inventory`)
+- [ ] مانیتور برای topic یکتا ساخته شده (مثلاً هم‌دسته با sync)
 - [ ] برای topic مشترک، فقط **یک** مانیتور ساخته شده
 - [ ] `consumer_group` با group واقعی sink هماهنگ است
 - [ ] آستانه `max_lag_records` با حجم topic متناسب است
@@ -367,27 +318,14 @@ kafka_health_monitor_dag(DAG_CONFIG, conn_config, HEALTH_CONFIG)
 | `pipeline/utils/kafka_utils.py` | thin wrapper سازگاری با کد قدیمی |
 | `pipeline/utils/validation.py` | `validate_kafka_conn` |
 | `pipeline/kafka/KafkaTopicManager.py` | lag / stats / sample از روی `conn_id` |
-| `dags/kafka_health_monitor/mssql_sync/dwh/table_com_dim_date_health_monitor.py` | نمونه dimension |
-| `dags/kafka_health_monitor/mssql_sync/dwh/table_rtl_fact_sales_trans_health_monitor.py` | نمونه fact |
-| `dags/kafka_health_monitor/mssql_sync/erp/query_ax_invent_dim_health_monitor.py` | نمونه ERP |
-| `dags/kafka_health_monitor/sales_inventory/query_inventory_purch_health_monitor.py` | نمونه sales/inventory |
+| `dags/kafka_health_monitor/example_topic_health_monitor.py` | نمونه Health Monitor |
 
 ---
 
 ## ۱۰. اجرای نمونه
 
 ```bash
-# Dimension (manual)
-airflow dags trigger table_dwh_com_dim_date_health_monitor
-
-# Fact (scheduled every 4h; can also trigger manually)
-airflow dags trigger table_dwh_rtl_fact_sales_trans_health_monitor
-
-# ERP
-airflow dags trigger query_ax_invent_sum_health_monitor
-
-# Sales / Inventory
-airflow dags trigger query_inventory_onhand_lite_health_monitor
+airflow dags trigger example_topic_health_monitor
 ```
 
 در Airflow UI → DAG → آخرین run → task `generate_health_report` → XCom / Log را برای `overall_status` و `alerts` ببینید.

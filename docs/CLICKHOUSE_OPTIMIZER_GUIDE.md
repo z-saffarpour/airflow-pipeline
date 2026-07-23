@@ -31,22 +31,16 @@
 | **Config** | `pipeline/config/ClickHouseOptimizationConfig.py` + `ConnectionConfig` | database، table، partition، FINAL/DEDUPLICATE |
 | **Orchestrator** | `pipeline/core/ClickHouseOptimizationOrchestrator.py` | هماهنگی health + optimize |
 | **Optimizer** | `pipeline/database/ClickHouseTableOptimizer.py` | اجرای `OPTIMIZE TABLE` و خواندن `system.parts` |
-| **DAGهای نازک** | `dags/clickhouse_optimizer/` (+ گاهی `dags/sales_inventory/`) | فقط config + فراخوانی factory |
+| **DAGهای نازک** | `dags/clickhouse_optimizer/` | فقط config + فراخوانی factory |
 
 دسته‌بندی فعلی:
 
 ```
 dags/clickhouse_optimizer/
-├── dwh/     # جداول DWH (COM, RTL, HRM, …)
-└── erp/     # جداول AX ERP در ClickHouse
-
-dags/sales_inventory/
-└── inventory_onhand_clickhouse_optimizer.py   # بهینه‌سازی مرتبط با موجودی
+└── example_table_clickhouse_optimizer.py
 ```
 
-در حال حاضر حدود **۹** DAG در `clickhouse_optimizer/` و حداقل **۱** در `sales_inventory/` پوشش داده شده است.
-
-برای افزودن جدول جدید، معمولاً **فقط یک فایل DAG نازک** کافی است.
+برای افزودن جدول جدید: از نمونه کپی کنید و فایل را در مسیر دلخواه قرار دهید.
 
 ---
 
@@ -90,24 +84,22 @@ airflow pools set data_sync_pool 5 "SQL to Kafka transfers / ClickHouse optimize
 
 ### گام ۱ — انتخاب پوشه، نام فایل و `dag_id`
 
-قرارداد نام‌گذاری:
+قرارداد نام‌گذاری پیشنهادی:
 
-| نوع جدول | مسیر | الگوی فایل | الگوی `dag_id` |
-|----------|------|------------|----------------|
+| نوع جدول | مسیر پیشنهادی | الگوی فایل | الگوی `dag_id` |
+|----------|---------------|------------|----------------|
 | DWH | `dags/clickhouse_optimizer/dwh/` | `<name>_clickhouse_optimizer.py` | `<name>_clickhouse_optimizer` |
 | ERP / AX | `dags/clickhouse_optimizer/erp/` | `ax_<name>_clickhouse_optimizer.py` | `ax_<name>_clickhouse_optimizer` |
-| Sales / Inventory | `dags/sales_inventory/` | `<name>_clickhouse_optimizer.py` | `<name>_clickhouse_optimizer` |
 
 مثال: جدول `COM.Local_DIM_Item` → فایل `com_dim_item_clickhouse_optimizer.py` و `dag_id = 'com_dim_item_clickhouse_optimizer'`
 
-### گام ۲ — کپی از یک DAG مشابه
+### گام ۲ — کپی از DAG نمونه
 
-بهترین الگوها:
+از نمونه کپی کنید:
 
-- **Dimension / بدون partition:** `com_dim_date_clickhouse_optimizer.py`
-- **Fact با partition میلادی (YYYYMM):** `rtl_fact_sales_trans_clickhouse_optimizer.py`
-- **Fact با partition شمسی (Jalali):** `rtl_fact_sales_trans_v01_clickhouse_optimizer.py`
-- **جدول inventory:** `inventory_onhand_clickhouse_optimizer.py`
+- **`dags/clickhouse_optimizer/example_table_clickhouse_optimizer.py`**
+
+سپس `database`، `table_name`، partition و schedule را مطابق جدول خودتان تنظیم کنید.
 
 ### گام ۳ — پیکربندی `DAGConfig`
 
@@ -215,7 +207,7 @@ OPTIMIZE_CONFIG = ClickHouseOptimizationConfig(
 OPTIMIZE TABLE COM.Local_DIM_Date ON CLUSTER cluster_2S_2R FINAL DEDUPLICATE
 ```
 
-مثال: `com_dim_date_clickhouse_optimizer.py`، `inventory_onhand_clickhouse_optimizer.py`
+نقطهٔ شروع در ریپو: `example_table_clickhouse_optimizer.py`
 
 ### حالت partition میلادی
 
@@ -231,7 +223,7 @@ OPTIMIZE_CONFIG = ClickHouseOptimizationConfig(
 )
 ```
 
-مثال: `rtl_fact_sales_trans_clickhouse_optimizer.py`
+`partition_format='YYYYMM'` — از همان `example_table_clickhouse_optimizer.py` با تنظیم `partition_column` شروع کنید.
 
 ### حالت partition شمسی (Jalali)
 
@@ -247,7 +239,7 @@ OPTIMIZE_CONFIG = ClickHouseOptimizationConfig(
 )
 ```
 
-مثال: `rtl_fact_sales_trans_v01_clickhouse_optimizer.py`
+`partition_format='PERSIAN_YYYYMM'` (یا aliasهای `JALALI_*` / `SHAMSI_*`).
 
 > مقدار partition عددی بدون کوتیشن و مقدار رشته‌ای (مثل `1405/05/01`) با کوتیشن در SQL ساخته می‌شود.
 
@@ -295,6 +287,12 @@ check_table_health_after
 ## ۷. نحوهٔ اجرا
 
 ### اجرای دستی
+
+پس از نصب pipeline:
+
+```bash
+airflow dags trigger example_table_clickhouse_optimizer
+```
 
 در Airflow UI → DAG → **Trigger DAG**:
 
@@ -409,7 +407,4 @@ clickhouse_optimizer_dag(DAG_CONFIG, conn_config, OPTIMIZE_CONFIG)
 | `pipeline/core/ClickHouseOptimizationOrchestrator.py` | منطق health + optimize |
 | `pipeline/database/ClickHouseTableOptimizer.py` | اجرای SQL و خواندن `system.parts` |
 | `pipeline/core/OptimizationResult.py` | نتیجهٔ immutable |
-| `dags/clickhouse_optimizer/dwh/com_dim_date_clickhouse_optimizer.py` | نمونه بدون partition |
-| `dags/clickhouse_optimizer/dwh/rtl_fact_sales_trans_clickhouse_optimizer.py` | نمونه partition میلادی |
-| `dags/clickhouse_optimizer/dwh/rtl_fact_sales_trans_v01_clickhouse_optimizer.py` | نمونه partition شمسی |
-| `dags/sales_inventory/inventory_onhand_clickhouse_optimizer.py` | نمونه inventory |
+| `dags/clickhouse_optimizer/example_table_clickhouse_optimizer.py` | نمونه Optimizer |

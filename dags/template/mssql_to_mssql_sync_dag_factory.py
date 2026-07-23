@@ -1,13 +1,12 @@
 """
 MSSQL → MSSQL sync DAG factory (fixed Airflow connections).
 
-Reads data from an MSSQL source (query) and upserts into an MSSQL target table,
-mirroring the MSSQL→MySQL / Replication MD pattern (staging MERGE upsert,
-optional chunks, optional scoped delete_missing).
+Reads data from an MSSQL source (query) and upserts into an MSSQL target table
+(staging MERGE upsert, optional chunks, optional scoped delete_missing).
 
-Unlike ``mssql_masterdata_to_mssql_store_sync_dag_factory`` (dynamic store URI
-from ConnectionInfo), both source and target here are **fixed Airflow
-connection IDs**.
+Both source and target are **fixed Airflow connection IDs**.
+For dynamic Publisher → Store (per-store URI from ConnectionInfo), use
+``mssql_masterdata_to_mssql_store_sync_dag_factory`` instead.
 
 Ops — chunk pool sizing (one-time setup, only if use_dynamic_tasks=True):
     airflow pools set mssql_to_mssql_sync_pool 32 "MSSQL to MSSQL chunk sync"
@@ -17,7 +16,7 @@ Only ``sync_mssql_to_mssql_chunk`` uses ``dag_config.pool``.
 Light tasks (validation, create_chunks, report) use ``default_pool``.
 
 Required Airflow connections:
-    - mssql_* (source) : e.g. mssql_dwh_primary  → ConnectionConfig.mssql_conn_id
+    - mssql_* (source) : e.g. mssql_default  → ConnectionConfig.mssql_conn_id
     - mssql_* (target) : e.g. mssql_target_default → ConnectionConfig.mssql_target_conn_id
 """
 import logging

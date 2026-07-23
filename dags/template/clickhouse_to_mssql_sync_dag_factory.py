@@ -2,7 +2,7 @@
 ClickHouse → MSSQL sync DAG factory.
 
 Reads data from a ClickHouse source (query) and upserts into an MSSQL target table,
-mirroring the MySQL → MSSQL / Replication MD store-sync pattern (MERGE/upsert,
+mirroring the MySQL → MSSQL upsert pattern (MERGE/upsert,
 optional chunks, optional scoped delete_missing).
 
 Ops — chunk pool sizing (one-time setup, only if use_dynamic_tasks=True):
@@ -14,7 +14,7 @@ Light tasks (validation, create_chunks, report) use ``default_pool``.
 
 Required Airflow connections:
     - clickhouse_*  : source (e.g. clickhouse_default)
-    - mssql_*       : target (e.g. mssql_dwh_primary)
+    - mssql_*       : target (e.g. mssql_default)
 """
 import logging
 from datetime import timedelta

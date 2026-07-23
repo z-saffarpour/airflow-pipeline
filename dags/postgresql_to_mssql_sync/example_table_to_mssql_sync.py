@@ -7,7 +7,7 @@ Uses postgresql_to_mssql_sync_dag_factory.
 
 Required Airflow connections:
   - postgres_source_default  (source)
-  - mssql_dwh_primary        (target)  — change as needed
+  - mssql_default        (target)  — change as needed
 
 Author: Zahra Saffarpour
 Version: 1.0
@@ -45,7 +45,7 @@ dag_config = DAGConfig(
             Variable.get("execution_timeout_hours_postgresql_example_table", default_var=8)
         )
     ),
-    tags=["postgresql", "mssql", "replication", "postgresql-to-mssql"],
+    tags=["postgresql", "mssql", "postgresql-to-mssql"],
     pool="postgresql_to_mssql_sync_pool",
 )
 
@@ -53,7 +53,7 @@ conn_config = ConnectionConfig(
     postgres_conn_id=Variable.get(
         "postgres_source_conn_id", default_var="postgres_source_default"
     ),
-    mssql_conn_id=Variable.get("mssql_target_conn_id", default_var="mssql_dwh_primary"),
+    mssql_conn_id=Variable.get("mssql_target_conn_id", default_var="mssql_default"),
 )
 
 # Replace SELECT / COUNT / keys / target with your real PostgreSQL source and MSSQL target.

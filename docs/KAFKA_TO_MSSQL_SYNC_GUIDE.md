@@ -1,6 +1,6 @@
 # راهنمای ایجاد DAG برای Sync داده از Kafka به MSSQL
 
-این راهنما نحوهٔ افزودن یک DAG جدید برای **همگام‌سازی** از **Kafka** به **SQL Server** را توضیح می‌دهد. پیام‌های JSON از یک topic خوانده می‌شوند و با **upsert / MERGE** (همان الگوی MySQL/Mongo→MSSQL و Replication MD) در جدول مقصد MSSQL نوشته می‌شوند.
+این راهنما نحوهٔ افزودن یک DAG جدید برای **همگام‌سازی** از **Kafka** به **SQL Server** را توضیح می‌دهد. پیام‌های JSON از یک topic خوانده می‌شوند و با **upsert / MERGE** در جدول مقصد MSSQL نوشته می‌شوند.
 
 ---
 
@@ -45,7 +45,7 @@
 | Connection ID (نمونه) | نقش |
 |------------------------|-----|
 | `kafka_default` | منبع — Kafka cluster |
-| `mssql_dwh_primary` | مقصد — SQL Server |
+| `mssql_default` | مقصد — SQL Server |
 
 **تنظیم Connection Kafka:** همان تنظیمات موجود برای produce (bootstrap / SASL / SSL).
 
@@ -65,7 +65,7 @@ airflow pools set kafka_to_mssql_sync_pool 32 "Kafka to MSSQL partition sync"
 |----------|---------|-------|
 | `mssql_staging_schema` | `crt` | schema موقت staging در MSSQL |
 | `kafka_source_conn_id` | `kafka_default` | Airflow conn منبع |
-| `mssql_target_conn_id` | `mssql_dwh_primary` | Airflow conn مقصد |
+| `mssql_target_conn_id` | `mssql_default` | Airflow conn مقصد |
 
 ---
 
@@ -98,13 +98,13 @@ dag_config = DAGConfig(
     start_date=datetime(2026, 7, 23),
     schedule='*/15 * * * *',  # یا None
     catchup=False,
-    tags=["kafka", "mssql", "replication", "kafka-sync"],
+    tags=["kafka", "mssql", "kafka-sync"],
     pool="kafka_to_mssql_sync_pool",
 )
 
 conn_config = ConnectionConfig(
     kafka_conn_id=Variable.get("kafka_source_conn_id", default_var="kafka_default"),
-    mssql_conn_id=Variable.get("mssql_target_conn_id", default_var="mssql_dwh_primary"),
+    mssql_conn_id=Variable.get("mssql_target_conn_id", default_var="mssql_default"),
 )
 
 sync_config = KafkaSyncConfig(

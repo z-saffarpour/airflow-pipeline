@@ -43,7 +43,7 @@
 
 | Connection ID (نمونه) | نقش |
 |------------------------|-----|
-| `mssql_dwh_primary` | منبع — SQL Server |
+| `mssql_default` | منبع — SQL Server |
 | `kafka_default` | مقصد — Kafka brokers |
 
 > نام connectionها از طریق `ConnectionConfig` یا Variable قابل تنظیم است.
@@ -60,7 +60,7 @@ airflow pools set mssql_to_kafka_sync_pool 32 "MSSQL to Kafka chunk sync"
 
 | Variable | پیش‌فرض | توضیح |
 |----------|---------|-------|
-| `mssql_source_conn_id` | `mssql_dwh_primary` | Airflow conn منبع |
+| `mssql_source_conn_id` | `mssql_default` | Airflow conn منبع |
 | `kafka_target_conn_id` | `kafka_default` | Airflow conn مقصد |
 
 ### Topic مقصد
@@ -109,7 +109,7 @@ dag_config = DAGConfig(
 )
 
 conn_config = ConnectionConfig(
-    mssql_conn_id=Variable.get("mssql_source_conn_id", default_var="mssql_dwh_primary"),
+    mssql_conn_id=Variable.get("mssql_source_conn_id", default_var="mssql_default"),
     kafka_conn_id=Variable.get("kafka_target_conn_id", default_var="kafka_default"),
 )
 

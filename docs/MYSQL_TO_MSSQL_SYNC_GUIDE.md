@@ -1,6 +1,6 @@
 # راهنمای ایجاد DAG برای Sync داده از MySQL به MSSQL
 
-این راهنما نحوهٔ افزودن یک DAG جدید برای **همگام‌سازی** از **MySQL** به **SQL Server** را توضیح می‌دهد. داده با یک query از MySQL خوانده می‌شود و با **upsert / MERGE** (همان الگوی Replication MD) در جدول مقصد MSSQL نوشته می‌شود.
+این راهنما نحوهٔ افزودن یک DAG جدید برای **همگام‌سازی** از **MySQL** به **SQL Server** را توضیح می‌دهد. داده با یک query از MySQL خوانده می‌شود و با **upsert / MERGE** در جدول مقصد MSSQL نوشته می‌شود.
 
 ---
 
@@ -20,7 +20,7 @@
 └───────────────────────────────────────────────────────────────────┘
 ```
 
-برخلاف Replication MD (که مقصد فروشگاه را از `ConnectionInfo` کشف می‌کند)، اینجا **منبع و مقصد هر دو Connection ثابت Airflow** هستند.
+منبع و مقصد هر دو **Connection ثابت Airflow** هستند.
 
 ### لایه‌های پروژه
 
@@ -42,7 +42,7 @@
 | Connection ID (نمونه) | نقش |
 |------------------------|-----|
 | `mysql_source_default` | منبع — MySQL |
-| `mssql_dwh_primary` | مقصد — SQL Server (قابل تغییر) |
+| `mssql_default` | مقصد — SQL Server (قابل تغییر) |
 
 > نام connectionها از طریق `ConnectionConfig` یا Variable قابل تنظیم است؛ الزامی نیست دقیقاً همین IDها باشند.
 
@@ -64,7 +64,7 @@ airflow pools set mysql_to_mssql_sync_pool 32 "MySQL to MSSQL chunk sync"
 |----------|---------|-------|
 | `mssql_staging_schema` | `crt` | schema موقت staging در MSSQL |
 | `mysql_source_conn_id` | `mysql_source_default` | Airflow conn منبع (در نمونه DAG) |
-| `mssql_target_conn_id` | `mssql_dwh_primary` | Airflow conn مقصد (در نمونه DAG) |
+| `mssql_target_conn_id` | `mssql_default` | Airflow conn مقصد (در نمونه DAG) |
 | `max_global_parallel_chunks_mysql_to_mssql` | `32` | سقف chunk همزمان (اگر Variable تعریف کنید) |
 
 ---
@@ -108,13 +108,13 @@ dag_config = DAGConfig(
     retries=int(Variable.get("retries_mysql_products", default_var=2)),
     retry_delay=timedelta(minutes=int(Variable.get("retry_delay_minutes_mysql_products", default_var=5))),
     execution_timeout=timedelta(hours=int(Variable.get("execution_timeout_hours_mysql_products", default_var=8))),
-    tags=["mysql", "mssql", "replication", "mysql-sync"],
+    tags=["mysql", "mssql", "mysql-sync"],
     pool="mysql_to_mssql_sync_pool",
 )
 
 conn_config = ConnectionConfig(
     mysql_conn_id=Variable.get("mysql_source_conn_id", default_var="mysql_source_default"),
-    mssql_conn_id=Variable.get("mssql_target_conn_id", default_var="mssql_dwh_primary"),
+    mssql_conn_id=Variable.get("mssql_target_conn_id", default_var="mssql_default"),
 )
 ```
 
@@ -168,7 +168,7 @@ dag = create_dag(
 
 ## ۴. پارامترهای مهم `MasterDataSyncConfig`
 
-همان dataclass مشترک با Replication MD استفاده می‌شود:
+همان dataclass مشترک مسیرهای upsert به MSSQL استفاده می‌شود:
 
 | پارامتر | الزامی | توضیح |
 |---------|--------|-------|
@@ -312,13 +312,13 @@ dag_config = DAGConfig(
     retries=int(Variable.get(f"retries_{DAG_SUFFIX}", default_var=2)),
     retry_delay=timedelta(minutes=int(Variable.get(f"retry_delay_minutes_{DAG_SUFFIX}", default_var=5))),
     execution_timeout=timedelta(hours=int(Variable.get(f"execution_timeout_hours_{DAG_SUFFIX}", default_var=8))),
-    tags=["mysql", "mssql", "replication", "mysql-sync"],
+    tags=["mysql", "mssql", "mysql-sync"],
     pool="mysql_to_mssql_sync_pool",
 )
 
 conn_config = ConnectionConfig(
     mysql_conn_id=Variable.get("mysql_source_conn_id", default_var="mysql_source_default"),
-    mssql_conn_id=Variable.get("mssql_target_conn_id", default_var="mssql_dwh_primary"),
+    mssql_conn_id=Variable.get("mssql_target_conn_id", default_var="mssql_default"),
 )
 
 sync_config = MasterDataSyncConfig(
@@ -381,22 +381,7 @@ dag = create_dag(
 
 ---
 
-## ۱۱. تفاوت با Replication MD
-
-| مورد | Replication MD | MySQL → MSSQL |
-|------|----------------|---------------|
-| منبع | MSSQL Publisher | MySQL |
-| مقصد | فروشگاه پویا (از ConnectionInfo) | MSSQL با conn ثابت |
-| Factory | `mssql_masterdata_to_mssql_store_sync_dag_factory` | `mysql_to_mssql_sync_dag_factory` |
-| Orchestrator | `MSSQLToMSSQLQueryOrchestrator` | `MySQLToMSSQLQueryOrchestrator` |
-| پارامتر trigger | معمولاً `store_number` | نیاز نیست |
-| دیالکت source query | T-SQL | MySQL |
-| Writer مقصد | همان `MSSQLServerWriter` | همان `MSSQLServerWriter` |
-| Config sync | `MasterDataSyncConfig` | همان `MasterDataSyncConfig` |
-
----
-
-## ۱۲. فایل‌های مرجع
+## ۱۱. فایل‌های مرجع
 
 | فایل | کاربرد |
 |------|--------|
@@ -409,4 +394,3 @@ dag = create_dag(
 | `pipeline/config/ConnectionConfig.py` | `mysql_conn_id` + `mssql_conn_id` |
 | `pipeline/config/DAGConfig.py` | تعریف پارامترهای DAG |
 | `dags/mysql_to_mssql_sync/example_table_to_mssql_sync.py` | نمونه کامل |
-| `docs/MASTERDATA_STORE_SYNC_GUIDE.md` | الگوی مشابه MSSQL→MSSQL |

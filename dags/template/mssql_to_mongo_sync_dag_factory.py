@@ -2,7 +2,7 @@
 MSSQL → MongoDB sync DAG factory.
 
 Reads data from an MSSQL source (query) and upserts into a MongoDB collection,
-mirroring the MSSQL→MySQL / Replication MD pattern (bulk upsert, optional chunks,
+mirroring the MSSQL→MySQL upsert pattern (bulk upsert, optional chunks,
 optional scoped delete_missing).
 
 Convention:
@@ -18,7 +18,7 @@ Only ``sync_mssql_to_mongo_chunk`` uses ``dag_config.pool``.
 Light tasks (validation, create_chunks, report) use ``default_pool``.
 
 Required Airflow connections:
-    - mssql_*  : source (e.g. mssql_dwh_primary)
+    - mssql_*  : source (e.g. mssql_default)
     - mongo_*  : target (e.g. mongo_target_default)
 """
 import logging

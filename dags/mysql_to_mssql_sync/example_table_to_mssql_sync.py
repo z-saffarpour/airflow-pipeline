@@ -7,7 +7,7 @@ Uses mysql_to_mssql_sync_dag_factory.
 
 Required Airflow connections:
   - mysql_source_default  (source)
-  - mssql_dwh_primary     (target)  — change as needed
+  - mssql_default     (target)  — change as needed
 
 Author: Zahra Saffarpour
 Version: 1.0
@@ -41,13 +41,13 @@ dag_config = DAGConfig(
     execution_timeout=timedelta(
         hours=int(Variable.get("execution_timeout_hours_mysql_example_table", default_var=8))
     ),
-    tags=["mysql", "mssql", "replication", "mysql-sync"],
+    tags=["mysql", "mssql", "mysql-sync"],
     pool="mysql_to_mssql_sync_pool",
 )
 
 conn_config = ConnectionConfig(
     mysql_conn_id=Variable.get("mysql_source_conn_id", default_var="mysql_source_default"),
-    mssql_conn_id=Variable.get("mssql_target_conn_id", default_var="mssql_dwh_primary"),
+    mssql_conn_id=Variable.get("mssql_target_conn_id", default_var="mssql_default"),
 )
 
 # Replace SELECT / COUNT / keys / target with your real MySQL source and MSSQL target.

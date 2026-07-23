@@ -9,7 +9,7 @@
 ```
 ┌──────────────────────┐     stream batches      ┌─────────────────────┐
 │  SQL Server          │ ──────────────────────► │  Kafka Topic        │
-│  mssql_dwh_primary   │                         │  (idempotent prod.) │
+│  mssql_default   │                         │  (idempotent prod.) │
 │  یا mssql_erp_primary│                         └──────────┬──────────┘
 └──────────┬───────────┘                                    │
            │                                                │ (اختیاری)
@@ -20,20 +20,17 @@
                                                 └─────────────────────┘
 ```
 
-برخلاف Replication MD (که مقصد فروشگاه را از `ConnectionInfo` کشف می‌کند)، اینجا **منبع و مقصدها Connection ثابت Airflow** هستند و داده به‌صورت streaming / batch به Kafka (و اختیاری ClickHouse) منتقل می‌شود.
+منبع و مقصدها **Connection ثابت Airflow** هستند و داده به‌صورت streaming / batch به Kafka (و اختیاری ClickHouse) منتقل می‌شود.
 
 ### لایه‌های پروژه
 
 | لایه | مسیر | نقش |
 |------|------|-----|
-| **DWH Table Sync** | `dags/mssql_to_kafka_clickhouse_sync/dwh/table_*.py` | sync یک جدول DWH با `create_table_sync_dag` |
-| **DWH Query Sync** | `dags/mssql_to_kafka_clickhouse_sync/dwh/query_*.py` | sync نتیجهٔ query سفارشی DWH |
-| **ERP Query Sync** | `dags/mssql_to_kafka_clickhouse_sync/erp/query_*.py` | sync queryهای AX/ERP |
-| **Orchestrator** | `dags/mssql_to_kafka_clickhouse_sync/erp/*_orchestrator.py` | اجرای چند DAG وابسته به‌صورت زنجیره‌ای |
+| **Sample** | `dags/mssql_to_kafka_clickhouse_sync/example_*.py` | نقطهٔ شروع برای DAG جدید |
 | **Factory (Table)** | `dags/template/table_mssql_sync_dag_factory.py` | `create_table_sync_dag` |
 | **Factory (Query)** | `dags/template/mssql_to_kafka_clickhouse_sync_dag_factory.py` | `create_query_sync_dag` |
 
-برای افزودن جدول یا query جدید، معمولاً **فقط یک فایل در `dwh/` یا `erp/`** کافی است.
+برای افزودن جدول یا query جدید: از `example_*.py` کپی کنید، تنظیمات را عوض کنید، و فایل را در مسیر دلخواه (مثلاً `dwh/` یا `erp/`) قرار دهید.
 
 ---
 
@@ -43,7 +40,7 @@
 
 | Connection ID (نمونه) | نقش |
 |------------------------|-----|
-| `mssql_dwh_primary` | منبع — SQL Server DWH |
+| `mssql_default` | منبع — SQL Server DWH |
 | `mssql_erp_primary` | منبع — SQL Server ERP / AX |
 | `kafka_default` | مقصد Kafka |
 | `clickhouse_default` | مقصد ClickHouse (فقط اگر `is_send_clickhouse=True`) |
@@ -82,20 +79,20 @@ validation → setup (ensure topic) → processing (transfer) → verify_and_com
 
 ### گام ۱ — انتخاب نام فایل و `dag_id`
 
-قرارداد نام‌گذاری:
+قرارداد نام‌گذاری پیشنهادی:
 
 - **فایل:** `dags/mssql_to_kafka_clickhouse_sync/dwh/table_<domain>_<entity>_sync.py`
 - **`dag_id`:** `table_dwh_<domain>_<entity>_sync` (snake_case)
 
 مثال: `RTL.Fact_SalesTrans` → `table_rtl_fact_sales_trans_sync.py` و `dag_id = 'table_dwh_rtl_fact_sales_trans_sync'`
 
-### گام ۲ — کپی از یک DAG مشابه
+### گام ۲ — کپی از DAG نمونه
 
-بهترین الگوها:
+از نمونه کپی کنید:
 
-- **Fact incremental (با تاریخ):** `table_rtl_fact_sales_trans_sync.py`
-- **Dimension full (بدون فیلتر تاریخ):** `table_com_dim_item_sync.py`
-- **با تعریف ClickHouse:** `table_rtl_dim_system_type_sync.py`
+- **`dags/mssql_to_kafka_clickhouse_sync/example_table_to_kafka_sync.py`**
+
+سپس `dag_id`، جدول، ستون‌ها و topic را مطابق منبع خودتان عوض کنید.
 
 ### گام ۳ — پیکربندی
 
@@ -128,7 +125,7 @@ sync_config = SyncConfig(
 )
 
 conn_config = ConnectionConfig(
-    mssql_conn_id='mssql_dwh_primary',
+    mssql_conn_id='mssql_default',
     kafka_conn_id='kafka_default',
 )
 
@@ -161,7 +158,7 @@ create_table_sync_dag(
 
 ### گام ۴ — ایجاد در Airflow
 
-فایل را در `dags/mssql_to_kafka_clickhouse_sync/dwh/` ذخیره کنید. Airflow پس از parse، DAG را در UI نمایش می‌دهد.
+فایل را در مسیر دلخواه (مثلاً `dags/mssql_to_kafka_clickhouse_sync/dwh/`) ذخیره کنید. Airflow پس از parse، DAG را در UI نمایش می‌دهد.
 
 ---
 
@@ -175,11 +172,13 @@ create_table_sync_dag(
 | ERP | `erp/query_ax_<entity>_sync.py` | `query_ax_<entity>_sync` |
 | ERP full | `erp/query_ax_<entity>_full_sync.py` | `query_ax_<entity>_full_sync` |
 
-### گام ۲ — کپی از نمونه
+### گام ۲ — کپی از DAG نمونه
 
-- **Query با تاریخ (`{{ ds_nodash }}`):** `query_rtl_fact_sales_trans_sync.py`
-- **Incremental بدون توکن (مثلاً `MODIFIEDDATETIME`):** `query_ax_invent_sum_sync.py`
-- **Full load:** `query_ax_invent_sum_full_sync.py`
+از نمونه کپی کنید:
+
+- **`dags/mssql_to_kafka_clickhouse_sync/example_query_to_kafka_sync.py`**
+
+سپس query، `count_query`، `query_params` و topic را مطابق منبع خودتان عوض کنید.
 
 ### گام ۳ — پیکربندی
 
@@ -212,7 +211,7 @@ sync_config = SyncConfig(
 )
 
 conn_config = ConnectionConfig(
-    mssql_conn_id='mssql_dwh_primary',
+    mssql_conn_id='mssql_default',
     kafka_conn_id='kafka_default',
 )
 
@@ -324,7 +323,7 @@ table_config = TableConfiguration(
 sync_config = SyncConfig(date_offset=-1, batch_size=50000, is_send_kafka=True)
 ```
 
-مثال: `table_rtl_fact_sales_trans_sync.py`
+نقطهٔ شروع: `example_table_to_kafka_sync.py` (سپس `date_column` را ست کنید).
 
 ### Dimension / full table
 
@@ -339,7 +338,7 @@ table_config = TableConfiguration(
 # schedule روزانه یا None؛ catchup=False
 ```
 
-مثال: `table_com_dim_item_sync.py`
+نقطهٔ شروع: `example_table_to_kafka_sync.py` (`date_column=None`).
 
 ### Query incremental با watermark زمانی
 
@@ -349,7 +348,7 @@ table_config = TableConfiguration(
 WHERE MODIFIEDDATETIME >= DATEADD(HOUR, -3, GETUTCDATE())
 ```
 
-مثال: `query_ax_invent_sum_sync.py`
+نقطهٔ شروع: `example_query_to_kafka_sync.py` (فیلتر را در SQL خودتان بگذارید).
 
 ### ارسال همزمان به ClickHouse
 
@@ -360,7 +359,7 @@ sync_config = SyncConfig(
 )
 
 conn_config = ConnectionConfig(
-    mssql_conn_id='mssql_dwh_primary',
+    mssql_conn_id='mssql_default',
     kafka_conn_id='kafka_default',
     clickhouse_conn_id='clickhouse_default',
 )
@@ -403,9 +402,11 @@ clickhouse_config = ClickHouseConfig(
 
 ### اجرای دستی
 
+پس از نصب pipeline:
+
 ```bash
-airflow dags trigger table_dwh_rtl_fact_sales_trans_sync
-airflow dags trigger query_ax_invent_sum_sync
+airflow dags trigger example_table_to_kafka_sync
+airflow dags trigger example_query_to_kafka_sync
 ```
 
 از UI هم می‌توانید Unpause و Trigger کنید. برای backfill factها، `catchup=True` و بازهٔ تاریخ را در نظر بگیرید.
@@ -426,7 +427,7 @@ trigger_invent_sum = TriggerDagRunOperator(
 )
 ```
 
-الگو: `dags/mssql_to_kafka_clickhouse_sync/erp/query_ax_onhand_sync_orchestrator.py`
+orchestrator را با `TriggerDagRunOperator` در مسیر دلخواه بسازید.
 
 ---
 
@@ -464,7 +465,7 @@ sync_config = SyncConfig(
 )
 
 conn_config = ConnectionConfig(
-    mssql_conn_id='mssql_dwh_primary',
+    mssql_conn_id='mssql_default',
     kafka_conn_id='kafka_default',
 )
 
@@ -539,11 +540,8 @@ create_table_sync_dag(
 | `pipeline/config/KafkaTopicConfig.py` | نام و پارتیشن topic |
 | `pipeline/config/ClickHouseConfig.py` | مقصد ClickHouse |
 | `pipeline/core/MSSQLDataTransferOrchestrator.py` | منطق انتقال |
-| `dags/mssql_to_kafka_clickhouse_sync/dwh/table_rtl_fact_sales_trans_sync.py` | نمونه Fact incremental |
-| `dags/mssql_to_kafka_clickhouse_sync/dwh/table_com_dim_item_sync.py` | نمونه Dimension full |
-| `dags/mssql_to_kafka_clickhouse_sync/dwh/query_rtl_fact_sales_trans_sync.py` | نمونه Query با تاریخ |
-| `dags/mssql_to_kafka_clickhouse_sync/erp/query_ax_invent_sum_sync.py` | نمونه ERP incremental |
-| `dags/mssql_to_kafka_clickhouse_sync/erp/query_ax_onhand_sync_orchestrator.py` | نمونه Orchestrator |
+| `dags/mssql_to_kafka_clickhouse_sync/example_table_to_kafka_sync.py` | نمونه Table Sync |
+| `dags/mssql_to_kafka_clickhouse_sync/example_query_to_kafka_sync.py` | نمونه Query Sync |
 
 ### اسناد مرتبط
 
@@ -551,6 +549,6 @@ create_table_sync_dag(
 |-----|--------|
 | [QUICKSTART.md](QUICKSTART.md) | راه‌اندازی سریع |
 | [ARCHITECTURE_FA.md](ARCHITECTURE_FA.md) | معماری جریان Table/Query Sync |
-| [MASTERDATA_STORE_SYNC_GUIDE.md](MASTERDATA_STORE_SYNC_GUIDE.md) | الگوی مشابه MSSQL→Store |
+| [MASTERDATA_STORE_SYNC_GUIDE.md](MASTERDATA_STORE_SYNC_GUIDE.md) | Master Data → Store |
 | [KAFKA_HEALTH_MONITOR_GUIDE.md](KAFKA_HEALTH_MONITOR_GUIDE.md) | مانیتور lag برای topic جدید |
 | [CLICKHOUSE_OPTIMIZER_GUIDE.md](CLICKHOUSE_OPTIMIZER_GUIDE.md) | بهینه‌سازی جداول ClickHouse |

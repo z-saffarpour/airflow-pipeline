@@ -41,7 +41,7 @@
 | Connection ID (نمونه) | نقش |
 |------------------------|-----|
 | `postgres_source_default` | منبع — PostgreSQL |
-| `mssql_dwh_primary` | مقصد — SQL Server (قابل تغییر) |
+| `mssql_default` | مقصد — SQL Server (قابل تغییر) |
 
 Provider لازم روی ایمیج Airflow: `apache-airflow-providers-postgres` (+ `psycopg2`).
 
@@ -59,7 +59,7 @@ airflow pools set postgresql_to_mssql_sync_pool 32 "PostgreSQL to MSSQL chunk sy
 |----------|---------|-------|
 | `mssql_staging_schema` | `crt` | schema موقت staging در MSSQL |
 | `postgres_source_conn_id` | `postgres_source_default` | Airflow conn منبع |
-| `mssql_target_conn_id` | `mssql_dwh_primary` | Airflow conn مقصد |
+| `mssql_target_conn_id` | `mssql_default` | Airflow conn مقصد |
 
 ---
 
@@ -90,13 +90,13 @@ dag_config = DAGConfig(
     start_date=datetime(2026, 7, 23),
     schedule=None,
     catchup=False,
-    tags=["postgresql", "mssql", "replication", "postgresql-to-mssql"],
+    tags=["postgresql", "mssql", "postgresql-to-mssql"],
     pool="postgresql_to_mssql_sync_pool",
 )
 
 conn_config = ConnectionConfig(
     postgres_conn_id=Variable.get("postgres_source_conn_id", default_var="postgres_source_default"),
-    mssql_conn_id=Variable.get("mssql_target_conn_id", default_var="mssql_dwh_primary"),
+    mssql_conn_id=Variable.get("mssql_target_conn_id", default_var="mssql_default"),
 )
 
 sync_config = MasterDataSyncConfig(

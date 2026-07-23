@@ -4,7 +4,7 @@
 
 منبع و مقصد هر دو **Connection ثابت Airflow** هستند.
 
-> **تفاوت با Replication MD → Store:** مسیر `mssql_masterdata_to_mssql_store_sync_dag_factory` مقصد فروشگاه را به‌صورت پویا از `ConnectionInfo` می‌سازد. این راهنما برای دو connection از پیش‌تعریف‌شده است (مثلاً DWH → staging DB یا سرور A → سرور B).
+> **تفاوت با Master Data → Store:** مسیر `mssql_masterdata_to_mssql_store_sync_dag_factory` مقصد فروشگاه را به‌صورت پویا از `ConnectionInfo` می‌سازد. این راهنما برای دو connection از پیش‌تعریف‌شده است (مثلاً DWH → staging DB یا سرور A → سرور B).
 
 ---
 
@@ -44,7 +44,7 @@
 
 | Connection ID (نمونه) | نقش | فیلد `ConnectionConfig` |
 |------------------------|-----|-------------------------|
-| `mssql_dwh_primary` | منبع | `mssql_conn_id` |
+| `mssql_default` | منبع | `mssql_conn_id` |
 | `mssql_target_default` | مقصد | `mssql_target_conn_id` |
 
 > نام connectionها از طریق Variable قابل تنظیم است؛ الزامی نیست دقیقاً همین IDها باشند.
@@ -62,7 +62,7 @@ airflow pools set mssql_to_mssql_sync_pool 32 "MSSQL to MSSQL chunk sync"
 | Variable | پیش‌فرض | توضیح |
 |----------|---------|-------|
 | `mssql_staging_schema` | `crt` | schema موقت staging در مقصد |
-| `mssql_source_conn_id` | `mssql_dwh_primary` | Airflow conn منبع |
+| `mssql_source_conn_id` | `mssql_default` | Airflow conn منبع |
 | `mssql_target_conn_id` | `mssql_target_default` | Airflow conn مقصد |
 | `max_global_parallel_chunks_mssql_to_mssql` | `32` | سقف chunk همزمان |
 
@@ -103,12 +103,12 @@ dag_config = DAGConfig(
     retries=int(Variable.get("retries_mssql_products_mssql", default_var=2)),
     retry_delay=timedelta(minutes=int(Variable.get("retry_delay_minutes_mssql_products_mssql", default_var=5))),
     execution_timeout=timedelta(hours=int(Variable.get("execution_timeout_hours_mssql_products_mssql", default_var=8))),
-    tags=["mssql", "replication", "mssql-to-mssql"],
+    tags=["mssql", "mssql-to-mssql"],
     pool="mssql_to_mssql_sync_pool",
 )
 
 conn_config = ConnectionConfig(
-    mssql_conn_id=Variable.get("mssql_source_conn_id", default_var="mssql_dwh_primary"),
+    mssql_conn_id=Variable.get("mssql_source_conn_id", default_var="mssql_default"),
     mssql_target_conn_id=Variable.get("mssql_target_conn_id", default_var="mssql_target_default"),
 )
 ```
@@ -201,7 +201,7 @@ Chunkها با `NTILE` روی SQL Server منبع ساخته می‌شوند.
 | مسیر | Factory | مقصد | اتصال مقصد |
 |------|---------|------|------------|
 | **MSSQL → MSSQL (این راهنما)** | `mssql_to_mssql_sync_dag_factory` | SQL Server | ثابت (`mssql_target_conn_id`) |
-| **Replication MD → Store** | `mssql_masterdata_to_mssql_store_sync_dag_factory` | SQL Server فروشگاه | پویا از `ConnectionInfo` |
+| **Master Data → Store** | `mssql_masterdata_to_mssql_store_sync_dag_factory` | SQL Server فروشگاه | پویا از `ConnectionInfo` |
 | **MSSQL → MySQL** | `mssql_to_mysql_sync_dag_factory` | MySQL | ثابت (`mysql_conn_id`) |
 | **MSSQL → Kafka** | `table_mssql_sync_dag_factory` / query factory | Kafka (± CH) | ثابت |
 

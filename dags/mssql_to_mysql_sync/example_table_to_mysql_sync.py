@@ -6,7 +6,7 @@ Reads from an MSSQL table/query and upserts into MySQL.
 Uses mssql_to_mysql_sync_dag_factory.
 
 Required Airflow connections:
-  - mssql_dwh_primary      (source)
+  - mssql_default      (source)
   - mysql_target_default   (target)  — change as needed
 
 Author: Zahra Saffarpour
@@ -45,12 +45,12 @@ dag_config = DAGConfig(
             Variable.get("execution_timeout_hours_mssql_example_table_mysql", default_var=8)
         )
     ),
-    tags=["mssql", "mysql", "replication", "mssql-to-mysql"],
+    tags=["mssql", "mysql", "mssql-to-mysql"],
     pool="mssql_to_mysql_sync_pool",
 )
 
 conn_config = ConnectionConfig(
-    mssql_conn_id=Variable.get("mssql_source_conn_id", default_var="mssql_dwh_primary"),
+    mssql_conn_id=Variable.get("mssql_source_conn_id", default_var="mssql_default"),
     mysql_conn_id=Variable.get("mysql_target_conn_id", default_var="mysql_target_default"),
 )
 

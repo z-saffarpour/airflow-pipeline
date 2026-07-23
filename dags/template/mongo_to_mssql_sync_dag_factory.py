@@ -2,7 +2,7 @@
 MongoDB → MSSQL sync DAG factory.
 
 Reads documents from a MongoDB collection (or aggregation) and upserts into an
-MSSQL target table, mirroring the MySQL→MSSQL / Replication MD pattern
+MSSQL target table, mirroring the MySQL→MSSQL upsert pattern
 (MERGE/upsert, optional chunks via $bucketAuto, optional scoped delete_missing).
 
 Ops — chunk pool sizing (one-time setup, only if use_dynamic_tasks=True):
@@ -14,7 +14,7 @@ Light tasks (validation, create_chunks, report) use ``default_pool``.
 
 Required Airflow connections:
     - mongo_*  : source (e.g. mongo_default)
-    - mssql_*  : target (e.g. mssql_dwh_primary)
+    - mssql_*  : target (e.g. mssql_default)
 """
 import logging
 from datetime import timedelta

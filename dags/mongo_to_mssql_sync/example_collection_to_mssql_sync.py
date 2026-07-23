@@ -7,7 +7,7 @@ Uses mongo_to_mssql_sync_dag_factory.
 
 Required Airflow connections:
   - mongo_source_default  (source)
-  - mssql_dwh_primary     (target)  — change as needed
+  - mssql_default     (target)  — change as needed
 
 Author: Zahra Saffarpour
 Version: 1.0
@@ -45,13 +45,13 @@ dag_config = DAGConfig(
             Variable.get("execution_timeout_hours_mongo_example_collection", default_var=8)
         )
     ),
-    tags=["mongo", "mongodb", "mssql", "replication", "mongo-sync"],
+    tags=["mongo", "mongodb", "mssql", "mongo-sync"],
     pool="mongo_to_mssql_sync_pool",
 )
 
 conn_config = ConnectionConfig(
     mongo_conn_id=Variable.get("mongo_source_conn_id", default_var="mongo_source_default"),
-    mssql_conn_id=Variable.get("mssql_target_conn_id", default_var="mssql_dwh_primary"),
+    mssql_conn_id=Variable.get("mssql_target_conn_id", default_var="mssql_default"),
 )
 
 # Replace collection / projection / keys / target with your real Mongo source and MSSQL target.

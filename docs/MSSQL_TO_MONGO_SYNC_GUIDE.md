@@ -53,7 +53,7 @@
 
 | Connection ID (نمونه) | نقش |
 |------------------------|-----|
-| `mssql_dwh_primary` | منبع — SQL Server |
+| `mssql_default` | منبع — SQL Server |
 | `mongo_target_default` | مقصد — MongoDB (قابل تغییر) |
 
 > نام connectionها از طریق `ConnectionConfig` یا Variable قابل تنظیم است.
@@ -73,7 +73,7 @@ airflow pools set mssql_to_mongo_sync_pool 32 "MSSQL to MongoDB chunk sync"
 | Variable | پیش‌فرض | توضیح |
 |----------|---------|-------|
 | `mongo_staging_database` | `staging` | database موقت keys staging در MongoDB |
-| `mssql_source_conn_id` | `mssql_dwh_primary` | Airflow conn منبع |
+| `mssql_source_conn_id` | `mssql_default` | Airflow conn منبع |
 | `mongo_target_conn_id` | `mongo_target_default` | Airflow conn مقصد |
 | `max_global_parallel_chunks_mssql_to_mongo` | `32` | سقف chunk همزمان |
 
@@ -116,12 +116,12 @@ dag_config = DAGConfig(
     retries=int(Variable.get("retries_mssql_products_mongo", default_var=2)),
     retry_delay=timedelta(minutes=int(Variable.get("retry_delay_minutes_mssql_products_mongo", default_var=5))),
     execution_timeout=timedelta(hours=int(Variable.get("execution_timeout_hours_mssql_products_mongo", default_var=8))),
-    tags=["mssql", "mongo", "mongodb", "replication", "mssql-to-mongo"],
+    tags=["mssql", "mongo", "mongodb", "mssql-to-mongo"],
     pool="mssql_to_mongo_sync_pool",
 )
 
 conn_config = ConnectionConfig(
-    mssql_conn_id=Variable.get("mssql_source_conn_id", default_var="mssql_dwh_primary"),
+    mssql_conn_id=Variable.get("mssql_source_conn_id", default_var="mssql_default"),
     mongo_conn_id=Variable.get("mongo_target_conn_id", default_var="mongo_target_default"),
 )
 ```

@@ -7,7 +7,7 @@ Reads from an MSSQL table/query and bulk-inserts into ClickHouse
 Uses mssql_to_clickhouse_sync_dag_factory.
 
 Required Airflow connections:
-  - mssql_dwh_primary      (source)
+  - mssql_default      (source)
   - clickhouse_default     (target)  — change as needed
 
 Author: Zahra Saffarpour
@@ -51,7 +51,7 @@ dag_config = DAGConfig(
 )
 
 conn_config = ConnectionConfig(
-    mssql_conn_id=Variable.get("mssql_source_conn_id", default_var="mssql_dwh_primary"),
+    mssql_conn_id=Variable.get("mssql_source_conn_id", default_var="mssql_default"),
     clickhouse_conn_id=Variable.get(
         "clickhouse_target_conn_id", default_var="clickhouse_default"
     ),

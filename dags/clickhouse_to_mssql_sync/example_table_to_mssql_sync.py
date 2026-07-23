@@ -7,7 +7,7 @@ Uses clickhouse_to_mssql_sync_dag_factory.
 
 Required Airflow connections:
   - clickhouse_default  (source)
-  - mssql_dwh_primary   (target)  — change as needed
+  - mssql_default   (target)  — change as needed
 
 Author: Zahra Saffarpour
 Version: 1.0
@@ -49,7 +49,7 @@ dag_config = DAGConfig(
             )
         )
     ),
-    tags=["clickhouse", "mssql", "replication", "clickhouse-sync"],
+    tags=["clickhouse", "mssql", "clickhouse-sync"],
     pool="clickhouse_to_mssql_sync_pool",
 )
 
@@ -58,7 +58,7 @@ conn_config = ConnectionConfig(
         "clickhouse_source_conn_id", default_var="clickhouse_default"
     ),
     mssql_conn_id=Variable.get(
-        "mssql_target_conn_id", default_var="mssql_dwh_primary"
+        "mssql_target_conn_id", default_var="mssql_default"
     ),
 )
 

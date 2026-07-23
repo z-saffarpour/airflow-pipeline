@@ -2,7 +2,7 @@
 Kafka → MSSQL sync DAG factory.
 
 Consumes JSON row messages from a Kafka topic and upserts into an MSSQL target
-table, mirroring the MySQL/Mongo → MSSQL / Replication MD pattern (MERGE/upsert,
+table, mirroring the MySQL/Mongo → MSSQL upsert pattern (MERGE/upsert,
 optional parallel tasks per Kafka partition, optional scoped delete_missing).
 
 Ops — partition pool sizing (one-time setup, only if use_dynamic_tasks=True):
@@ -14,7 +14,7 @@ Light tasks (validation, create_chunks, report) use ``default_pool``.
 
 Required Airflow connections:
     - kafka_*  : source (e.g. kafka_default)
-    - mssql_*  : target (e.g. mssql_dwh_primary)
+    - mssql_*  : target (e.g. mssql_default)
 
 Message contract:
     Value = JSON object (same as IdempotentKafkaProducer / MessageSerializer).

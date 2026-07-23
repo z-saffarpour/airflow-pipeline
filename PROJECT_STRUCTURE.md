@@ -13,12 +13,11 @@ sqlserver-kafka-pipeline/
 ├── docker/               # Dockerfile و docker-compose با WinAuth
 ├── docs/                 # مستندات
 ├── tests/                # تست‌های واحد
-├── images/               # آرشیو Docker (در Git نیست)
+├── images/               # آرشیو Docker
 ├── scripts/              # اسکریپت‌های کمکی (در صورت وجود)
 ├── requirements.txt
 ├── setup.py
 ├── LICENSE
-├── .gitignore
 ├── README.md
 └── PROJECT_STRUCTURE.md  # این فایل
 ```
@@ -48,69 +47,73 @@ dags/
 │   └── kafka_health_monitor_dag_factory.py
 │
 ├── mssql_to_kafka_clickhouse_sync/ # SQL Server → Kafka (± ClickHouse)
-│   ├── dwh/                       # جداول و کوئری‌های DWH
-│   └── erp/                       # کوئری‌ها و orchestratorهای ERP/AX
+│   ├── example_table_to_kafka_sync.py
+│   └── example_query_to_kafka_sync.py
 │
 ├── mssql_to_kafka_sync/           # MSSQL → Kafka (idempotent produce + chunk)
+│   └── example_table_to_kafka_sync.py
 │
 ├── mysql_to_mssql_sync/           # MySQL → MSSQL (upsert)
+│   └── example_table_to_mssql_sync.py
 │
 ├── mssql_to_mysql_sync/           # MSSQL → MySQL (upsert)
+│   └── example_table_to_mysql_sync.py
 │
 ├── mssql_to_postgresql_sync/      # MSSQL → PostgreSQL (upsert)
+│   └── example_table_to_postgresql_sync.py
 │
 ├── postgresql_to_mssql_sync/      # PostgreSQL → MSSQL (upsert)
+│   └── example_table_to_mssql_sync.py
 │
 ├── mssql_to_mssql_sync/           # MSSQL → MSSQL (upsert / fixed connections)
+│   └── example_table_to_mssql_sync.py
 │
 ├── mssql_to_clickhouse_sync/      # MSSQL → ClickHouse (bulk INSERT)
+│   └── example_table_to_clickhouse_sync.py
 │
 ├── mssql_to_mongo_sync/           # MSSQL → MongoDB (upsert)
+│   └── example_table_to_mongo_sync.py
 │
 ├── mongo_to_mssql_sync/           # MongoDB → MSSQL (upsert)
+│   └── example_collection_to_mssql_sync.py
 │
 ├── kafka_to_mssql_sync/           # Kafka → MSSQL (upsert)
+│   └── example_topic_to_mssql_sync.py
 │
 ├── clickhouse_to_mssql_sync/      # ClickHouse → MSSQL (upsert)
+│   └── example_table_to_mssql_sync.py
 │
-├── sales_inventory/               # فروش و موجودی چندمنبعی → Kafka
-│
-├── masterdata_store_sync/         # تعمیر Replication MD
-│   ├── tables/                    # ~200+ DAG sync تک‌جدول برای فروشگاه
-│   ├── orchestrator/              # زنجیره چند جدول برای یک فروشگاه
-│   └── reconcile_and_sync/        # تشخیص gap و trigger خودکار
+├── masterdata_store_sync/         # Master Data Publisher → Store
+│   └── example_table_to_store_sync.py
 │
 ├── clickhouse_optimizer/          # بهینه‌سازی جداول ClickHouse
-│   ├── dwh/
-│   └── erp/
+│   └── example_table_clickhouse_optimizer.py
 │
 └── kafka_health_monitor/          # مانیتورینگ سلامت pipeline / Kafka
-    ├── mssql_sync/
-    │   ├── dwh/                   # مانیتور topicهای DWH
-    │   └── erp/                   # مانیتور topicهای AX ERP
-    └── sales_inventory/           # مانیتور topicهای فروش و موجودی
+    └── example_topic_health_monitor.py
 ```
 
 ### قرارداد نام‌گذاری DAGها
 
 | حوزه | الگوی فایل | مثال |
-|------|------------|------|
-| Table sync DWH | `table_<domain>_<name>_sync.py` | `table_rtl_fact_sales_trans_sync.py` |
-| Query sync ERP | `query_ax_<name>_sync.py` | `query_ax_invent_sum_sync.py` |
-| Replication table | `ax_<table>_sync.py` | `ax_invent_table_sync.py` |
+|------|------------|------------------|
+| Table/Query → Kafka | `example_*_to_kafka_sync.py` | `example_table_to_kafka_sync.py` |
+| Master Data → Store | `example_*_to_store_sync.py` | `example_table_to_store_sync.py` |
 | MySQL → MSSQL | `<name>_to_mssql_sync.py` | `example_table_to_mssql_sync.py` |
 | MSSQL → MySQL | `<name>_to_mysql_sync.py` | `example_table_to_mysql_sync.py` |
+| MSSQL → PostgreSQL | `<name>_to_postgresql_sync.py` | `example_table_to_postgresql_sync.py` |
+| PostgreSQL → MSSQL | `<name>_to_mssql_sync.py` | `example_table_to_mssql_sync.py` |
 | MSSQL → MSSQL | `<name>_to_mssql_sync.py` | `example_table_to_mssql_sync.py` |
 | MSSQL → ClickHouse | `<name>_to_clickhouse_sync.py` | `example_table_to_clickhouse_sync.py` |
-| MSSQL → Kafka | `<name>_to_kafka_sync.py` | `example_table_to_kafka_sync.py` |
+| MSSQL → Kafka (Gen-2) | `<name>_to_kafka_sync.py` | `example_table_to_kafka_sync.py` |
 | MSSQL → MongoDB | `<name>_to_mongo_sync.py` | `example_table_to_mongo_sync.py` |
 | MongoDB → MSSQL | `<name>_to_mssql_sync.py` | `example_collection_to_mssql_sync.py` |
 | Kafka → MSSQL | `<name>_to_mssql_sync.py` | `example_topic_to_mssql_sync.py` |
 | ClickHouse → MSSQL | `<name>_to_mssql_sync.py` | `example_table_to_mssql_sync.py` |
-| ClickHouse optimize | `<name>_clickhouse_optimizer.py` | `com_dim_item_clickhouse_optimizer.py` |
-| Kafka health monitor | `<name>_health_monitor.py` | `dim_date_health_monitor.py` |
+| ClickHouse optimize | `<name>_clickhouse_optimizer.py` | `example_table_clickhouse_optimizer.py` |
+| Kafka health monitor | `<name>_health_monitor.py` | `example_topic_health_monitor.py` |
 
-دامنه‌های رایج در `masterdata_store_sync/tables/`: `retail_*`، `invent_*`، `ecores_*`، `logistics_*`، `hcm_*`، `tax_*`، `om_*`، و جداول پایه مثل `company_*` / `currency` / `cust_*`.
+نام‌گذاری پیشنهادی برای DAGهای اختصاصی: `table_<domain>_<name>_sync.py`، `query_ax_<name>_sync.py`، `ax_<table>_sync.py`.
 
 برای جداول فیلترشده بر اساس فروشگاه، query می‌تواند `{store_number}` داشته باشد (جایگزینی در factory).
 
@@ -141,7 +144,7 @@ conn_config = ConnectionConfig(kafka_conn_id="kafka_default")
 kafka_health_monitor_dag(DAG_CONFIG, conn_config, HEALTH_CONFIG)
 ```
 
-DAGهای پیچیده (مثل `sales_inventory` و `reconcile_and_sync`) به‌صورت سفارشی نوشته شده‌اند.
+DAGهای پیچیده (مثل sales/inventory و reconcile) به‌صورت سفارشی نوشته می‌شوند؛ از نمونه‌های `example_*.py` و factoryها شروع کنید.
 
 ---
 
@@ -271,7 +274,7 @@ pipeline/
 | `QUICKSTART.md` | راه‌اندازی سریع |
 | `QUICK_START_IMPROVEMENTS.md` | راهنمای بهبودهای reliability |
 | `MSSQL_TO_KAFKA_CLICKHOUSE_SYNC_GUIDE.md` | ساخت DAG همگام‌سازی SQL Server → Kafka |
-| `MASTERDATA_STORE_SYNC_GUIDE.md` | ساخت DAG Replication MD |
+| `MASTERDATA_STORE_SYNC_GUIDE.md` | ساخت DAG Master Data → Store |
 | `MYSQL_TO_MSSQL_SYNC_GUIDE.md` | ساخت DAG همگام‌سازی MySQL → MSSQL |
 | `MSSQL_TO_MYSQL_SYNC_GUIDE.md` | ساخت DAG همگام‌سازی MSSQL → MySQL |
 | `MSSQL_TO_MSSQL_SYNC_GUIDE.md` | ساخت DAG همگام‌سازی MSSQL → MSSQL (conn ثابت) |
@@ -305,7 +308,7 @@ pytest tests/ -v
 
 ## `images/`
 
-آرشیو Docker image (`.tar`). در `.gitignore` است و به GitHub push نمی‌شود. برای استقرار، ایمیج را از registry بسازید یا فایل tar را جداگانه منتقل کنید.
+آرشیو Docker image (`.tar`). برای استقرار، ایمیج را از registry بسازید یا فایل tar را جداگانه منتقل کنید.
 
 ---
 
@@ -316,7 +319,7 @@ pytest tests/ -v
 ```
 $AIRFLOW_HOME/dags/
 ├── template/
-├── mssql_to_kafka_clickhouse_sync/
+├── mssql_to_kafka_clickhouse_sync/   # حداقل: example_*.py
 ├── mssql_to_kafka_sync/
 ├── mysql_to_mssql_sync/
 ├── mssql_to_mysql_sync/
@@ -328,10 +331,9 @@ $AIRFLOW_HOME/dags/
 ├── mongo_to_mssql_sync/
 ├── kafka_to_mssql_sync/
 ├── clickhouse_to_mssql_sync/
-├── sales_inventory/
-├── masterdata_store_sync/
-├── clickhouse_optimizer/
-├── kafka_health_monitor/
+├── masterdata_store_sync/            # حداقل: example_*.py
+├── clickhouse_optimizer/             # حداقل: example_*.py
+├── kafka_health_monitor/             # حداقل: example_*.py
 └── pipeline/          # کل پکیج pipeline
 ```
 

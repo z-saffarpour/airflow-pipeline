@@ -13,11 +13,12 @@
 | Table / Query Sync | SQL Server (DWH / ERP) | Kafka (± ClickHouse) |
 | MSSQL → Kafka / ClickHouse | SQL Server | Kafka یا ClickHouse |
 | MySQL ↔ MSSQL | MySQL / SQL Server | SQL Server / MySQL |
+| MSSQL ↔ PostgreSQL | SQL Server / PostgreSQL | PostgreSQL / SQL Server |
 | MSSQL ↔ MongoDB | SQL Server / MongoDB | MongoDB / SQL Server |
 | Kafka / ClickHouse → MSSQL | Kafka یا ClickHouse | SQL Server |
 | MSSQL → MSSQL (fixed) | SQL Server | SQL Server |
 | Sales & Inventory | فروشگاه‌ها + ERP AX | Kafka |
-| Replication MD Repair | Publisher (`mssql_replication_md`) | دیتابیس فروشگاه (Subscriber) |
+| Master Data → Store | Publisher (`mssql_replication_md`) | دیتابیس فروشگاه (Subscriber) |
 | ClickHouse Optimize | ClickHouse | ClickHouse |
 | Health Monitor | Kafka / SQL Server | گزارش سلامت |
 
@@ -102,11 +103,16 @@ validation → setup (ensure topic) → processing (transfer) → verify_and_com
 
 **Exactly-once در سمت Producer:** `enable.idempotence=true`، `acks=all` در `IdempotentKafkaProducer`.
 
+نمونه‌ها:
+
+- `dags/mssql_to_kafka_clickhouse_sync/example_table_to_kafka_sync.py`
+- `dags/mssql_to_kafka_clickhouse_sync/example_query_to_kafka_sync.py`
+
 جزئیات عملیاتی: [MSSQL_TO_KAFKA_CLICKHOUSE_SYNC_GUIDE.md](MSSQL_TO_KAFKA_CLICKHOUSE_SYNC_GUIDE.md)
 
 ### ۳.۲ Sales & Inventory → Kafka
 
-DAGهای سفارشی در `dags/sales_inventory/` (نه فقط template ساده):
+این جریان با DAGهای سفارشی در `dags/sales_inventory/` پیاده می‌شود. الگوی کلی:
 
 1. اعتبارسنجی اتصالات HQ / ERP / Kafka  
 2. ایجاد topicها  
@@ -117,7 +123,7 @@ DAGهای سفارشی در `dags/sales_inventory/` (نه فقط template ساد
 
 منابع نمونه: Retail POS، EC، Sales Order، On-hand Inventory.
 
-### ۳.۳ Replication MD → Store (MSSQL → MSSQL)
+### ۳.۳ Master Data → Store (MSSQL → MSSQL پویا)
 
 **Factory:** `mssql_masterdata_to_mssql_store_sync_dag_factory.create_dag`
 
@@ -139,21 +145,18 @@ DAGهای سفارشی در `dags/sales_inventory/` (نه فقط template ساد
 
 **`delete_missing`:** کلیدهای منبع در staging جمع می‌شوند؛ سپس ردیف‌هایی که داخل بازهٔ `[min, max]` ستون `delete_scope_column` (یا `chunk_column`) هستند ولی در staging نیستند حذف می‌شوند.
 
-پوشش فعلی: حدود **۲۰۰+** فایل در `dags/masterdata_store_sync/tables/` برای جداول AX/Retail master data.
-
-لایه‌های DAG:
+نمونه: `dags/masterdata_store_sync/example_table_to_store_sync.py`
 
 | لایه | مسیر |
 |------|------|
-| Table Sync | `dags/masterdata_store_sync/tables/` |
-| Orchestrator | `dags/masterdata_store_sync/orchestrator/` |
-| Reconcile & Sync | `dags/masterdata_store_sync/reconcile_and_sync/` (+ `DagSyncTrigger`) |
+| Sample | `dags/masterdata_store_sync/example_table_to_store_sync.py` |
+| Factory | `dags/template/mssql_masterdata_to_mssql_store_sync_dag_factory.py` |
 
 جزئیات عملیاتی: [MASTERDATA_STORE_SYNC_GUIDE.md](MASTERDATA_STORE_SYNC_GUIDE.md)
 
-### ۳.۳‌ب مسیرهای Sync با Connection ثابت (upsert)
+### ۳.۴ مسیرهای Sync با Connection ثابت (upsert)
 
-این مسیرها برخلاف Replication MD، منبع و مقصد را از **Connectionهای ازپیش‌تعریف‌شدهٔ Airflow** می‌گیرند (نه کشف پویای فروشگاه).
+منبع و مقصد از **Connectionهای ازپیش‌تعریف‌شدهٔ Airflow** خوانده می‌شوند (برخلاف مسیر ۳.۳ که مقصد فروشگاه را پویا resolve می‌کند).
 
 | مسیر | Factory | Orchestrator | راهنما |
 |------|---------|--------------|--------|
@@ -189,6 +192,8 @@ validate → health_before → OPTIMIZE (partition / FINAL / deduplicate) → he
 
 تنظیمات: `ClickHouseOptimizationConfig` (`partition_column`، `partition_format`، `final`، `deduplicate`).
 
+نمونه: `dags/clickhouse_optimizer/example_table_clickhouse_optimizer.py`
+
 جزئیات عملیاتی: [CLICKHOUSE_OPTIMIZER_GUIDE.md](CLICKHOUSE_OPTIMIZER_GUIDE.md)
 
 ### ۳.۵ Kafka Health Monitor
@@ -197,7 +202,7 @@ validate → health_before → OPTIMIZE (partition / FINAL / deduplicate) → he
 
 امضا: `kafka_health_monitor_dag(dag_config, conn_config, health_config)` — `conn_config.kafka_conn_id` الزامی است.
 
-**هدف:** مانیتور topicهایی که توسط `mssql_sync` و `sales_inventory` به Kafka نوشته می‌شوند (یک مانیتور به‌ازای هر topic یکتا).
+**هدف:** مانیتور topicهایی که توسط pipelineهای Kafka نوشته می‌شوند (یک مانیتور به‌ازای هر topic یکتا).
 
 ```
 health_checks (موازی):
@@ -208,13 +213,7 @@ health_checks (موازی):
 
 تنظیمات: `KafkaHealthMonitorConfig` (`kafka_topic`، `consumer_group`، `max_lag_records`، …) + `ConnectionConfig` برای Kafka.
 
-ساختار پوشه هم‌تراز با منبع sync:
-
-| مسیر | پوشش |
-|------|------|
-| `dags/kafka_health_monitor/mssql_sync/dwh/` | topicهای DWH |
-| `dags/kafka_health_monitor/mssql_sync/erp/` | topicهای AX ERP |
-| `dags/kafka_health_monitor/sales_inventory/` | topicهای فروش و موجودی |
+نمونه: `dags/kafka_health_monitor/example_topic_health_monitor.py`
 
 جزئیات عملیاتی: [KAFKA_HEALTH_MONITOR_GUIDE.md](KAFKA_HEALTH_MONITOR_GUIDE.md)
 
@@ -342,7 +341,6 @@ PipelineException
 
 جزئیات: [../docker/README.md](../docker/README.md)
 
-> آرشیوهای `.tar` ایمیج داخل Git نیستند (`images/` در `.gitignore`).
 
 ---
 
@@ -365,7 +363,7 @@ PipelineException
 | [MONGO_TO_MSSQL_SYNC_GUIDE.md](MONGO_TO_MSSQL_SYNC_GUIDE.md) | MongoDB → MSSQL |
 | [KAFKA_TO_MSSQL_SYNC_GUIDE.md](KAFKA_TO_MSSQL_SYNC_GUIDE.md) | Kafka → MSSQL |
 | [CLICKHOUSE_TO_MSSQL_SYNC_GUIDE.md](CLICKHOUSE_TO_MSSQL_SYNC_GUIDE.md) | ClickHouse → MSSQL |
-| [MASTERDATA_STORE_SYNC_GUIDE.md](MASTERDATA_STORE_SYNC_GUIDE.md) | Replication MD → Store |
+| [MASTERDATA_STORE_SYNC_GUIDE.md](MASTERDATA_STORE_SYNC_GUIDE.md) | Master Data → Store |
 | [KAFKA_HEALTH_MONITOR_GUIDE.md](KAFKA_HEALTH_MONITOR_GUIDE.md) | مانیتور سلامت Kafka |
 | [CLICKHOUSE_OPTIMIZER_GUIDE.md](CLICKHOUSE_OPTIMIZER_GUIDE.md) | بهینه‌سازی ClickHouse |
 

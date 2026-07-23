@@ -29,8 +29,8 @@ class MSSQLToMSSQLQueryOrchestrator:
             fail_on_error: Whether to fail the task on transfer errors
             batch_size: Batch size for read/write operations
             target_is_connection_string: If True (default), treat target as a
-                SQLAlchemy/ODBC URI (Replication MD → store). If False, treat
-                target as an Airflow connection ID (fixed MSSQL→MSSQL sync).
+                SQLAlchemy/ODBC URI. If False, treat target as an Airflow
+                connection ID (fixed MSSQL→MSSQL sync).
         """
         self.source_conn_id = source_conn_id
         self.target_connection_string = target_connection_string

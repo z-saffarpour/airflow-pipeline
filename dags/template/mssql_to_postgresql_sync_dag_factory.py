@@ -13,7 +13,7 @@ Only ``sync_mssql_to_postgresql_chunk`` uses ``dag_config.pool``.
 Light tasks (validation, create_chunks, report) use ``default_pool``.
 
 Required Airflow connections:
-    - mssql_*     : source (e.g. mssql_dwh_primary)
+    - mssql_*     : source (e.g. mssql_default)
     - postgres_*  : target (e.g. postgres_target_default)
 """
 import logging

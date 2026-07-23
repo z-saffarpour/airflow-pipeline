@@ -42,7 +42,7 @@
 
 | Connection ID (نمونه) | نقش |
 |------------------------|-----|
-| `mssql_dwh_primary` | منبع — SQL Server |
+| `mssql_default` | منبع — SQL Server |
 | `clickhouse_default` | مقصد — ClickHouse |
 
 > نام connectionها از طریق `ConnectionConfig` یا Variable قابل تنظیم است.
@@ -61,7 +61,7 @@ airflow pools set mssql_to_clickhouse_sync_pool 32 "MSSQL to ClickHouse chunk sy
 
 | Variable | پیش‌فرض | توضیح |
 |----------|---------|-------|
-| `mssql_source_conn_id` | `mssql_dwh_primary` | Airflow conn منبع |
+| `mssql_source_conn_id` | `mssql_default` | Airflow conn منبع |
 | `clickhouse_target_conn_id` | `clickhouse_default` | Airflow conn مقصد |
 | `max_global_parallel_chunks_mssql_to_ch` | `32` | سقف chunk همزمان (در صورت تعریف) |
 
@@ -113,7 +113,7 @@ dag_config = DAGConfig(
 )
 
 conn_config = ConnectionConfig(
-    mssql_conn_id=Variable.get("mssql_source_conn_id", default_var="mssql_dwh_primary"),
+    mssql_conn_id=Variable.get("mssql_source_conn_id", default_var="mssql_default"),
     clickhouse_conn_id=Variable.get("clickhouse_target_conn_id", default_var="clickhouse_default"),
 )
 
