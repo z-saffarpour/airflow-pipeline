@@ -26,12 +26,12 @@
 
 | لایه | مسیر | نقش |
 |------|------|-----|
-| **Table / Query Sync** | `dags/mysql_sync/` | یک DAG به‌ازای هر جدول/query |
+| **Table / Query Sync** | `dags/mysql_to_mssql_sync/` | یک DAG به‌ازای هر جدول/query |
 | **Factory** | `dags/template/mysql_to_mssql_sync_dag_factory.py` | ساخت TaskGroupهای validation / processing |
 | **Orchestrator** | `pipeline/core/MySQLToMSSQLQueryOrchestrator.py` | خواندن MySQL + upsert به MSSQL |
 | **Reader / Writer** | `pipeline/database/MySQLDataReader.py`، `MSSQLServerWriter.py` | stream و MERGE |
 
-برای افزودن جدول جدید، معمولاً **فقط یک فایل در `dags/mysql_sync/`** کافی است.
+برای افزودن جدول جدید، معمولاً **فقط یک فایل در `dags/mysql_to_mssql_sync/`** کافی است.
 
 ---
 
@@ -75,7 +75,7 @@ airflow pools set mysql_to_mssql_sync_pool 32 "MySQL to MSSQL chunk sync"
 
 قرارداد نام‌گذاری:
 
-- **فایل:** `dags/mysql_sync/<source_or_table>_to_mssql_sync.py`
+- **فایل:** `dags/mysql_to_mssql_sync/<source_or_table>_to_mssql_sync.py`
 - **`dag_id`:** `mysql_<name>_to_mssql_sync` (snake_case)
 
 مثال: جدول MySQL `products` → فایل `products_to_mssql_sync.py` و `dag_id = 'mysql_products_to_mssql_sync'`
@@ -84,7 +84,7 @@ airflow pools set mysql_to_mssql_sync_pool 32 "MySQL to MSSQL chunk sync"
 
 الگو:
 
-- **جدول کوچک / بدون chunk:** `dags/mysql_sync/example_table_to_mssql_sync.py`
+- **جدول کوچک / بدون chunk:** `dags/mysql_to_mssql_sync/example_table_to_mssql_sync.py`
 
 برای جداول بزرگ همان فایل را کپی کنید و `use_dynamic_tasks=True` را فعال کنید (بخش ۵).
 
@@ -162,7 +162,7 @@ dag = create_dag(
 
 ### گام ۶ — ایجاد DAG در Airflow
 
-فایل را در `dags/mysql_sync/` ذخیره کنید. Airflow پس از parse، DAG را در UI نمایش می‌دهد.
+فایل را در `dags/mysql_to_mssql_sync/` ذخیره کنید. Airflow پس از parse، DAG را در UI نمایش می‌دهد.
 
 ---
 
@@ -408,5 +408,5 @@ dag = create_dag(
 | `pipeline/config/MasterDataSyncConfig.py` | تعریف پارامترهای sync |
 | `pipeline/config/ConnectionConfig.py` | `mysql_conn_id` + `mssql_conn_id` |
 | `pipeline/config/DAGConfig.py` | تعریف پارامترهای DAG |
-| `dags/mysql_sync/example_table_to_mssql_sync.py` | نمونه کامل |
+| `dags/mysql_to_mssql_sync/example_table_to_mssql_sync.py` | نمونه کامل |
 | `docs/MASTERDATA_STORE_SYNC_GUIDE.md` | الگوی مشابه MSSQL→MSSQL |

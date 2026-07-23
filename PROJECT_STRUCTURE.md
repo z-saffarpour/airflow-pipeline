@@ -41,7 +41,7 @@ dags/
 │   ├── dwh/                       # جداول و کوئری‌های DWH
 │   └── erp/                       # کوئری‌ها و orchestratorهای ERP/AX
 │
-├── mysql_sync/                    # MySQL → MSSQL (upsert / replication-style)
+├── mysql_to_mssql_sync/           # MySQL → MSSQL (upsert / replication-style)
 │
 ├── sales_inventory/               # فروش و موجودی چندمنبعی → Kafka
 │

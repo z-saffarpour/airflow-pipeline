@@ -150,7 +150,7 @@ airflow dags trigger query_inventory_and_sales_sync
 
 راهنمای کامل: [MYSQL_TO_MSSQL_SYNC_GUIDE.md](MYSQL_TO_MSSQL_SYNC_GUIDE.md)
 
-نمونه: `dags/mysql_sync/example_table_to_mssql_sync.py` با `create_dag` از `mysql_to_mssql_sync_dag_factory`.
+نمونه: `dags/mysql_to_mssql_sync/example_table_to_mssql_sync.py` با `create_dag` از `mysql_to_mssql_sync_dag_factory`.
 
 ### Kafka Health Monitor
 
