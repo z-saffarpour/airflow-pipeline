@@ -1,1 +1,0 @@
-"""Kafka health monitor package."""
