@@ -125,7 +125,7 @@ kafka_health_monitor_dag(DAG_CONFIG, conn_config, HEALTH_CONFIG)
 | ماژول | نقش |
 |-------|-----|
 | `MSSQLDataTransferOrchestrator` | هماهنگی انتقال SQL Server → Kafka / ClickHouse |
-| `MSSQLToMSSQLQueryOrchestrator` | انتقال Publisher → Subscriber با staging و chunk |
+| `MSSQLToMSSQLQueryOrchestrator` | انتقال MSSQL → MSSQL (store پویا یا conn ثابت) با staging و chunk |
 | `ClickHouseOptimizationOrchestrator` | بهینه‌سازی جداول ClickHouse |
 | `MSSQLDataReader` / `MSSQLServerWriter` | خواندن streaming و نوشتن batch در SQL Server |
 | `IdempotentKafkaProducer` | Exactly-once با compression |

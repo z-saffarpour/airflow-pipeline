@@ -35,6 +35,7 @@ dags/
 │   ├── mssql_masterdata_to_mssql_store_sync_dag_factory.py
 │   ├── mysql_to_mssql_sync_dag_factory.py
 │   ├── mssql_to_mysql_sync_dag_factory.py
+│   ├── mssql_to_mssql_sync_dag_factory.py
 │   ├── mssql_to_mongo_sync_dag_factory.py
 │   ├── mongo_to_mssql_sync_dag_factory.py
 │   ├── kafka_to_mssql_sync_dag_factory.py
@@ -49,6 +50,8 @@ dags/
 ├── mysql_to_mssql_sync/           # MySQL → MSSQL (upsert / replication-style)
 │
 ├── mssql_to_mysql_sync/           # MSSQL → MySQL (upsert / replication-style)
+│
+├── mssql_to_mssql_sync/           # MSSQL → MSSQL (upsert / fixed connections)
 │
 ├── mssql_to_mongo_sync/           # MSSQL → MongoDB (upsert / replication-style)
 │
@@ -183,7 +186,7 @@ pipeline/
 │
 ├── core/
 │   ├── MSSQLDataTransferOrchestrator.py      # SQL → Kafka/CH
-│   ├── MSSQLToMSSQLQueryOrchestrator.py      # Publisher → Store
+│   ├── MSSQLToMSSQLQueryOrchestrator.py      # MSSQL → MSSQL (store URI یا conn ثابت)
 │   ├── MySQLToMSSQLQueryOrchestrator.py      # MySQL → MSSQL
 │   ├── MSSQLToMySQLQueryOrchestrator.py      # MSSQL → MySQL
 │   ├── MSSQLToMongoDBQueryOrchestrator.py    # MSSQL → MongoDB
@@ -248,6 +251,7 @@ pipeline/
 | `MASTERDATA_STORE_SYNC_GUIDE.md` | ساخت DAG Replication MD |
 | `MYSQL_TO_MSSQL_SYNC_GUIDE.md` | ساخت DAG همگام‌سازی MySQL → MSSQL |
 | `MSSQL_TO_MYSQL_SYNC_GUIDE.md` | ساخت DAG همگام‌سازی MSSQL → MySQL |
+| `MSSQL_TO_MSSQL_SYNC_GUIDE.md` | ساخت DAG همگام‌سازی MSSQL → MSSQL (conn ثابت) |
 | `MSSQL_TO_MONGO_SYNC_GUIDE.md` | ساخت DAG همگام‌سازی MSSQL → MongoDB |
 | `MONGO_TO_MSSQL_SYNC_GUIDE.md` | ساخت DAG همگام‌سازی MongoDB → MSSQL |
 | `KAFKA_TO_MSSQL_SYNC_GUIDE.md` | ساخت DAG همگام‌سازی Kafka → MSSQL |
@@ -290,6 +294,7 @@ $AIRFLOW_HOME/dags/
 ├── mssql_to_kafka_clickhouse_sync/
 ├── mysql_to_mssql_sync/
 ├── mssql_to_mysql_sync/
+├── mssql_to_mssql_sync/
 ├── mssql_to_mongo_sync/
 ├── mongo_to_mssql_sync/
 ├── kafka_to_mssql_sync/

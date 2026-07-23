@@ -12,27 +12,39 @@ from pipeline.database.SQLQueryBuilder import SQLQueryBuilder
 
 class MSSQLToMSSQLQueryOrchestrator:
     def __init__(
-        self, 
-        source_conn_id: str, 
+        self,
+        source_conn_id: str,
         target_connection_string: str,
         fail_on_error: bool,
         batch_size: int = 5000,
-        ) -> None:
+        target_is_connection_string: bool = True,
+    ) -> None:
         """
         Initialize orchestrator with connection parameters.
 
         Args:
-            mssql_conn_id: Airflow connection ID for SQL Server
-            target_connection_string: Target SQL Server connection string
+            source_conn_id: Airflow connection ID for source SQL Server
+            target_connection_string: Target SQL Server connection string **or**
+                Airflow connection ID (when ``target_is_connection_string=False``)
             fail_on_error: Whether to fail the task on transfer errors
             batch_size: Batch size for read/write operations
+            target_is_connection_string: If True (default), treat target as a
+                SQLAlchemy/ODBC URI (Replication MD → store). If False, treat
+                target as an Airflow connection ID (fixed MSSQL→MSSQL sync).
         """
         self.source_conn_id = source_conn_id
         self.target_connection_string = target_connection_string
-        self.fail_on_error= fail_on_error
-        self.batch_size= batch_size
-            
+        self.target_is_connection_string = target_is_connection_string
+        self.fail_on_error = fail_on_error
+        self.batch_size = batch_size
+
         self.logger = logging.getLogger(self.__class__.__name__)
+
+    def _create_writer(self) -> MSSQLServerWriter:
+        return MSSQLServerWriter(
+            conn_id=self.target_connection_string,
+            is_connection_string=self.target_is_connection_string,
+        )
 
     @staticmethod
     def _resolve_chunk_column(sync_config: MasterDataSyncConfig) -> str:
@@ -350,10 +362,7 @@ class MSSQLToMSSQLQueryOrchestrator:
                 conn_id=self.source_conn_id,
                 batch_size=self.batch_size,
             )
-            writer = MSSQLServerWriter(
-                conn_id=self.target_connection_string,
-                is_connection_string=True,
-            )
+            writer = self._create_writer()
             staging_schema = self._resolve_staging_schema(sync_config)
             primary_keys = list(sync_config.primary_keys)
             keys_staging_table = None
@@ -538,10 +547,7 @@ class MSSQLToMSSQLQueryOrchestrator:
                     )
 
                     if delete_missing:
-                        writer = MSSQLServerWriter(
-                            conn_id=self.target_connection_string,
-                            is_connection_string=True,
-                        )
+                        writer = self._create_writer()
                         keys_suffix = self._sanitize_staging_suffix(execution_date)
                         keys_staging_table = writer.prepare_keys_staging_table(
                             schema=sync_config.target_schema,
@@ -573,10 +579,7 @@ class MSSQLToMSSQLQueryOrchestrator:
                         
             # Stream and transfer data
             batch_number = 0
-            writer = MSSQLServerWriter(
-                conn_id=self.target_connection_string,
-                is_connection_string=True,
-            )
+            writer = self._create_writer()
             primary_keys = list(sync_config.primary_keys)
             keys_staging_table = None
 

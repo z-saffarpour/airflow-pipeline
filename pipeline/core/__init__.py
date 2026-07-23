@@ -5,6 +5,7 @@ Contains core orchestration and utility components.
 """
 
 from pipeline.core.MSSQLDataTransferOrchestrator import MSSQLDataTransferOrchestrator
+from pipeline.core.MSSQLToMSSQLQueryOrchestrator import MSSQLToMSSQLQueryOrchestrator
 from pipeline.core.MySQLToMSSQLQueryOrchestrator import MySQLToMSSQLQueryOrchestrator
 from pipeline.core.MSSQLToMySQLQueryOrchestrator import MSSQLToMySQLQueryOrchestrator
 from pipeline.core.MSSQLToMongoDBQueryOrchestrator import MSSQLToMongoDBQueryOrchestrator
@@ -43,6 +44,7 @@ from pipeline.core.exceptions import (
 
 __all__ = [
     "MSSQLDataTransferOrchestrator",
+    "MSSQLToMSSQLQueryOrchestrator",
     "MySQLToMSSQLQueryOrchestrator",
     "MSSQLToMySQLQueryOrchestrator",
     "MSSQLToMongoDBQueryOrchestrator",
