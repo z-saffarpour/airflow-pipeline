@@ -30,6 +30,7 @@
 | MSSQL → ClickHouse Sync | SQL Server | ClickHouse | `dags/mssql_to_clickhouse_sync/` |
 | MySQL → MSSQL | MySQL | SQL Server | `dags/mysql_to_mssql_sync/` |
 | MSSQL → MySQL | SQL Server | MySQL | `dags/mssql_to_mysql_sync/` |
+| MSSQL → PostgreSQL | SQL Server | PostgreSQL | `dags/mssql_to_postgresql_sync/` |
 | MSSQL → MSSQL | SQL Server | SQL Server | `dags/mssql_to_mssql_sync/` |
 | MSSQL → MongoDB | SQL Server | MongoDB | `dags/mssql_to_mongo_sync/` |
 | MongoDB → MSSQL | MongoDB | SQL Server | `dags/mongo_to_mssql_sync/` |
@@ -51,6 +52,7 @@ sqlserver-kafka-pipeline/
 │   ├── mssql_to_clickhouse_sync/      # MSSQL → ClickHouse
 │   ├── mysql_to_mssql_sync/           # MySQL → MSSQL
 │   ├── mssql_to_mysql_sync/           # MSSQL → MySQL
+│   ├── mssql_to_postgresql_sync/      # MSSQL → PostgreSQL
 │   ├── mssql_to_mssql_sync/           # MSSQL → MSSQL (conn ثابت)
 │   ├── mssql_to_mongo_sync/           # MSSQL → MongoDB
 │   ├── mongo_to_mssql_sync/           # MongoDB → MSSQL
@@ -96,6 +98,7 @@ sqlserver-kafka-pipeline/
 | `mssql_to_clickhouse_sync_dag_factory` | Sync مستقیم MSSQL → ClickHouse |
 | `mysql_to_mssql_sync_dag_factory` | Sync MySQL → MSSQL (upsert) |
 | `mssql_to_mysql_sync_dag_factory` | Sync MSSQL → MySQL (upsert) |
+| `mssql_to_postgresql_sync_dag_factory` | Sync MSSQL → PostgreSQL (upsert) |
 | `mssql_to_mssql_sync_dag_factory` | Sync MSSQL → MSSQL با connection ثابت |
 | `mssql_to_mongo_sync_dag_factory` | Sync MSSQL → MongoDB |
 | `mongo_to_mssql_sync_dag_factory` | Sync MongoDB → MSSQL |
@@ -144,6 +147,7 @@ kafka_health_monitor_dag(DAG_CONFIG, conn_config, HEALTH_CONFIG)
 | `MSSQLToClickHouseQueryOrchestrator` | همگام‌سازی مستقیم MSSQL → ClickHouse (bulk INSERT + chunk) |
 | `MSSQLToMSSQLQueryOrchestrator` | انتقال MSSQL → MSSQL (store پویا یا conn ثابت) با staging و chunk |
 | `MySQLToMSSQLQueryOrchestrator` / `MSSQLToMySQLQueryOrchestrator` | همگام‌سازی MySQL ↔ MSSQL |
+| `MSSQLToPostgreSQLQueryOrchestrator` | همگام‌سازی MSSQL → PostgreSQL |
 | `MSSQLToMongoDBQueryOrchestrator` / `MongoDBToMSSQLQueryOrchestrator` | همگام‌سازی Mongo ↔ MSSQL |
 | `KafkaToMSSQLQueryOrchestrator` | مصرف Kafka و upsert به MSSQL |
 | `ClickHouseToMSSQLQueryOrchestrator` | خواندن ClickHouse و upsert به MSSQL |
@@ -244,6 +248,7 @@ pytest tests/ -v
 | [docs/MSSQL_TO_CLICKHOUSE_SYNC_GUIDE.md](docs/MSSQL_TO_CLICKHOUSE_SYNC_GUIDE.md) | MSSQL → ClickHouse |
 | [docs/MYSQL_TO_MSSQL_SYNC_GUIDE.md](docs/MYSQL_TO_MSSQL_SYNC_GUIDE.md) | MySQL → MSSQL |
 | [docs/MSSQL_TO_MYSQL_SYNC_GUIDE.md](docs/MSSQL_TO_MYSQL_SYNC_GUIDE.md) | MSSQL → MySQL |
+| [docs/MSSQL_TO_POSTGRESQL_SYNC_GUIDE.md](docs/MSSQL_TO_POSTGRESQL_SYNC_GUIDE.md) | MSSQL → PostgreSQL |
 | [docs/MSSQL_TO_MSSQL_SYNC_GUIDE.md](docs/MSSQL_TO_MSSQL_SYNC_GUIDE.md) | MSSQL → MSSQL (conn ثابت) |
 | [docs/MSSQL_TO_MONGO_SYNC_GUIDE.md](docs/MSSQL_TO_MONGO_SYNC_GUIDE.md) | MSSQL → MongoDB |
 | [docs/MONGO_TO_MSSQL_SYNC_GUIDE.md](docs/MONGO_TO_MSSQL_SYNC_GUIDE.md) | MongoDB → MSSQL |
