@@ -1,6 +1,6 @@
 # راهنمای ایجاد DAG برای Sync داده از MySQL به MSSQL
 
-این راهنما نحوهٔ افزودن یک DAG جدید برای **همگام‌سازی (replication-style)** از **MySQL** به **SQL Server** را توضیح می‌دهد. داده با یک query از MySQL خوانده می‌شود و با **upsert / MERGE** (همان الگوی Replication MD) در جدول مقصد MSSQL نوشته می‌شود.
+این راهنما نحوهٔ افزودن یک DAG جدید برای **همگام‌سازی** از **MySQL** به **SQL Server** را توضیح می‌دهد. داده با یک query از MySQL خوانده می‌شود و با **upsert / MERGE** (همان الگوی Replication MD) در جدول مقصد MSSQL نوشته می‌شود.
 
 ---
 

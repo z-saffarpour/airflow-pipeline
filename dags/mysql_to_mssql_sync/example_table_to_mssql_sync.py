@@ -1,7 +1,7 @@
 """
 Airflow DAG: MySQL → MSSQL table sync (example)
 ================================================
-Reads from a MySQL table and upserts into MSSQL (replication-style).
+Reads from a MySQL table and upserts into MSSQL.
 
 Uses mysql_to_mssql_sync_dag_factory.
 
@@ -26,7 +26,7 @@ from template.mysql_to_mssql_sync_dag_factory import create_dag
 
 dag_config = DAGConfig(
     dag_id="mysql_example_table_to_mssql_sync",
-    description="Example: sync MySQL table to MSSQL (upsert/replication-style)",
+    description="Example: sync MySQL table to MSSQL (upsert)",
     owner="Zahra Saffarpour",
     start_date=datetime(2026, 7, 23),
     schedule=None,

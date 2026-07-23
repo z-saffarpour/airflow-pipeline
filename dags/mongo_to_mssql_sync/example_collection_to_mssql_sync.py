@@ -1,7 +1,7 @@
 """
 Airflow DAG: MongoDB → MSSQL collection sync (example)
 ======================================================
-Reads from a MongoDB collection and upserts into MSSQL (replication-style).
+Reads from a MongoDB collection and upserts into MSSQL.
 
 Uses mongo_to_mssql_sync_dag_factory.
 
@@ -26,7 +26,7 @@ from template.mongo_to_mssql_sync_dag_factory import create_dag
 
 dag_config = DAGConfig(
     dag_id="mongo_example_collection_to_mssql_sync",
-    description="Example: sync MongoDB collection to MSSQL (upsert/replication-style)",
+    description="Example: sync MongoDB collection to MSSQL (upsert)",
     owner="Zahra Saffarpour",
     start_date=datetime(2026, 7, 23),
     schedule=None,

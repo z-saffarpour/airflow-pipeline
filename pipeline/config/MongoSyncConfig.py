@@ -1,5 +1,5 @@
 """
-Configuration for MongoDB → MSSQL replication-style sync.
+Configuration for MongoDB → MSSQL sync.
 """
 from dataclasses import dataclass
 from typing import Any, Dict, Optional, Tuple

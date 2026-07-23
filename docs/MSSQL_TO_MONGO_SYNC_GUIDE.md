@@ -1,6 +1,6 @@
 # راهنمای ایجاد DAG برای Sync داده از MSSQL به MongoDB
 
-این راهنما نحوهٔ افزودن یک DAG جدید برای **همگام‌سازی (replication-style)** از **SQL Server** به **MongoDB** را توضیح می‌دهد. داده با یک query از MSSQL خوانده می‌شود و با **bulk upsert** در collection مقصد MongoDB نوشته می‌شود.
+این راهنما نحوهٔ افزودن یک DAG جدید برای **همگام‌سازی** از **SQL Server** به **MongoDB** را توضیح می‌دهد. داده با یک query از MSSQL خوانده می‌شود و با **bulk upsert** در collection مقصد MongoDB نوشته می‌شود.
 
 ---
 

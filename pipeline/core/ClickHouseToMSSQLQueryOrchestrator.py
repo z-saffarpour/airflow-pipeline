@@ -1,5 +1,5 @@
 """
-Orchestrator for syncing query results from ClickHouse to MSSQL (upsert/replication-style).
+Orchestrator for syncing query results from ClickHouse to MSSQL (upsert).
 """
 import logging
 import math

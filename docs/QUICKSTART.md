@@ -8,7 +8,7 @@
 
 - Python ≥ 3.8
 - Apache Airflow ≥ 2.8
-- دسترسی شبکه به SQL Server و (در صورت نیاز) Kafka / ClickHouse
+- دسترسی شبکه به SQL Server و (در صورت نیاز) Kafka / ClickHouse / MySQL / MongoDB
 - برای WinAuth: ODBC Driver 18 + تنظیمات Kerberos مناسب محیط
 
 ---
@@ -16,11 +16,10 @@
 ## ۱. کلون و نصب
 
 ```bash
-
 python -m venv .venv
 # Windows:
 .venv\Scripts\activate
-راهنمای کامل: [MASTERDATA_STORE_SYNC_GUIDE.md](MASTERDATA_STORE_SYNC_GUIDE.md)
+# Linux/macOS:
 # source .venv/bin/activate
 
 pip install -r requirements.txt
@@ -58,6 +57,7 @@ airflow connections add 'mssql_default' \
 
 > برای مسیر پیش‌فرض `pymssql`، Extra را از کلیدهای مخصوص ODBC خالی نگه دارید.
 
+### SQL Server (Windows Auth / Kerberos)
 
 Extra نمونه:
 
@@ -72,6 +72,7 @@ Extra نمونه:
 ```
 
 ### Kafka
+
 ```bash
 airflow connections add 'kafka_default' \
   --conn-type 'http' \
@@ -79,22 +80,33 @@ airflow connections add 'kafka_default' \
   --conn-port 9092 \
   --conn-extra '{"bootstrap_servers": "kafka-broker:9092", "client_id": "airflow"}'
 ```
+
 ### Connections رایج پروژه
 
 | Connection ID | کاربرد |
 |---------------|--------|
-| اتصالات DWH / ERP | `mssql_sync` |
-| `kafka_default` | تولید پیام Kafka |
+| اتصالات DWH / ERP | `mssql_to_kafka_clickhouse_sync` و مسیرهای مرتبط |
+| `kafka_default` | تولید/مصرف پیام Kafka |
 | `mssql_replication_md` | Publisher Replication MD |
 | `mssql_store_connectionInfo` | لیست/اطلاعات فروشگاه‌ها |
 | `mssql_store_template` | یوزر/پسورد الگوی دسترسی به فروشگاه |
-| ClickHouse conn | optimizer و sink اختیاری |
+| ClickHouse conn | optimizer و sink / sync |
+| MySQL / Mongo conn | مسیرهای MySQL↔MSSQL و Mongo↔MSSQL |
 
 ---
+
 ## ۴. Poolها
 
 ```bash
+airflow pools set data_sync_pool 5 "SQL to Kafka transfers"
+airflow pools set replication_md_store_sync_pool 32 "Replication MD store chunk sync"
+```
 
+تعداد slot در `replication_md_store_sync_pool` باید ≥ `max_global_parallel_chunks` باشد.
+
+---
+
+## ۵. Variables
 
 بسته به DAG، Variableهای زیر ممکن است لازم باشد:
 
@@ -178,6 +190,12 @@ airflow dags trigger query_inventory_and_sales_sync
 راهنمای کامل: [MSSQL_TO_MONGO_SYNC_GUIDE.md](MSSQL_TO_MONGO_SYNC_GUIDE.md)
 
 نمونه: `dags/mssql_to_mongo_sync/example_table_to_mongo_sync.py` با `create_dag` از `mssql_to_mongo_sync_dag_factory`.
+
+### MongoDB → MSSQL Sync
+
+راهنمای کامل: [MONGO_TO_MSSQL_SYNC_GUIDE.md](MONGO_TO_MSSQL_SYNC_GUIDE.md)
+
+نمونه: `dags/mongo_to_mssql_sync/example_collection_to_mssql_sync.py` با `create_dag` از `mongo_to_mssql_sync_dag_factory`.
 
 ### Kafka → MSSQL Sync
 
@@ -269,6 +287,7 @@ pytest tests/ -v
 - MSSQL → ClickHouse: [MSSQL_TO_CLICKHOUSE_SYNC_GUIDE.md](MSSQL_TO_CLICKHOUSE_SYNC_GUIDE.md)
 - MSSQL → Kafka (Gen-2): [MSSQL_TO_KAFKA_SYNC_GUIDE.md](MSSQL_TO_KAFKA_SYNC_GUIDE.md)
 - MSSQL → MongoDB: [MSSQL_TO_MONGO_SYNC_GUIDE.md](MSSQL_TO_MONGO_SYNC_GUIDE.md)
+- MongoDB → MSSQL: [MONGO_TO_MSSQL_SYNC_GUIDE.md](MONGO_TO_MSSQL_SYNC_GUIDE.md)
 - Kafka → MSSQL: [KAFKA_TO_MSSQL_SYNC_GUIDE.md](KAFKA_TO_MSSQL_SYNC_GUIDE.md)
 - ClickHouse → MSSQL: [CLICKHOUSE_TO_MSSQL_SYNC_GUIDE.md](CLICKHOUSE_TO_MSSQL_SYNC_GUIDE.md)
 - Kafka Health Monitor: [KAFKA_HEALTH_MONITOR_GUIDE.md](KAFKA_HEALTH_MONITOR_GUIDE.md)

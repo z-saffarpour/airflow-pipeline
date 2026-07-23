@@ -51,25 +51,25 @@ dags/
 │
 ├── mssql_to_kafka_sync/           # MSSQL → Kafka (idempotent produce + chunk)
 │
-├── mysql_to_mssql_sync/           # MySQL → MSSQL (upsert / replication-style)
+├── mysql_to_mssql_sync/           # MySQL → MSSQL (upsert)
 │
-├── mssql_to_mysql_sync/           # MSSQL → MySQL (upsert / replication-style)
+├── mssql_to_mysql_sync/           # MSSQL → MySQL (upsert)
 │
 ├── mssql_to_mssql_sync/           # MSSQL → MSSQL (upsert / fixed connections)
 │
 ├── mssql_to_clickhouse_sync/      # MSSQL → ClickHouse (bulk INSERT)
 │
-├── mssql_to_mongo_sync/           # MSSQL → MongoDB (upsert / replication-style)
+├── mssql_to_mongo_sync/           # MSSQL → MongoDB (upsert)
 │
-├── mongo_to_mssql_sync/           # MongoDB → MSSQL (upsert / replication-style)
+├── mongo_to_mssql_sync/           # MongoDB → MSSQL (upsert)
 │
-├── kafka_to_mssql_sync/           # Kafka → MSSQL (upsert / replication-style)
+├── kafka_to_mssql_sync/           # Kafka → MSSQL (upsert)
 │
-├── clickhouse_to_mssql_sync/      # ClickHouse → MSSQL (upsert / replication-style)
+├── clickhouse_to_mssql_sync/      # ClickHouse → MSSQL (upsert)
 │
 ├── sales_inventory/               # فروش و موجودی چندمنبعی → Kafka
 │
-├── replication/                   # تعمیر Replication MD
+├── masterdata_store_sync/         # تعمیر Replication MD
 │   ├── tables/                    # ~200+ DAG sync تک‌جدول برای فروشگاه
 │   ├── orchestrator/              # زنجیره چند جدول برای یک فروشگاه
 │   └── reconcile_and_sync/        # تشخیص gap و trigger خودکار
@@ -94,6 +94,7 @@ dags/
 | Replication table | `ax_<table>_sync.py` | `ax_invent_table_sync.py` |
 | MySQL → MSSQL | `<name>_to_mssql_sync.py` | `example_table_to_mssql_sync.py` |
 | MSSQL → MySQL | `<name>_to_mysql_sync.py` | `example_table_to_mysql_sync.py` |
+| MSSQL → MSSQL | `<name>_to_mssql_sync.py` | `example_table_to_mssql_sync.py` |
 | MSSQL → ClickHouse | `<name>_to_clickhouse_sync.py` | `example_table_to_clickhouse_sync.py` |
 | MSSQL → Kafka | `<name>_to_kafka_sync.py` | `example_table_to_kafka_sync.py` |
 | MSSQL → MongoDB | `<name>_to_mongo_sync.py` | `example_table_to_mongo_sync.py` |
@@ -103,7 +104,7 @@ dags/
 | ClickHouse optimize | `<name>_clickhouse_optimizer.py` | `com_dim_item_clickhouse_optimizer.py` |
 | Kafka health monitor | `<name>_health_monitor.py` | `dim_date_health_monitor.py` |
 
-دامنه‌های رایج در `replication/tables/`: `retail_*`، `invent_*`، `ecores_*`، `logistics_*`، `hcm_*`، `tax_*`، `om_*`، و جداول پایه مثل `company_*` / `currency` / `cust_*`.
+دامنه‌های رایج در `masterdata_store_sync/tables/`: `retail_*`، `invent_*`، `ecores_*`، `logistics_*`، `hcm_*`، `tax_*`، `om_*`، و جداول پایه مثل `company_*` / `currency` / `cust_*`.
 
 برای جداول فیلترشده بر اساس فروشگاه، query می‌تواند `{store_number}` داشته باشد (جایگزینی در factory).
 
@@ -226,7 +227,7 @@ pipeline/
 |------|---------|
 | `interfaces/` | قراردادها برای Dependency Inversion |
 | `config/` | جداسازی تنظیمات از منطق کسب‌وکار |
-| `database/` | دسترسی به SQL Server و ClickHouse |
+| `database/` | دسترسی به SQL Server، MySQL، MongoDB و ClickHouse |
 | `kafka/` | تولید/مصرف پیام و مدیریت topic |
 | `core/` | هماهنگی انتقال و نتایج |
 | `utils/` | ابزارهای مشترک |
@@ -315,7 +316,7 @@ $AIRFLOW_HOME/dags/
 ├── kafka_to_mssql_sync/
 ├── clickhouse_to_mssql_sync/
 ├── sales_inventory/
-├── replication/
+├── masterdata_store_sync/
 ├── clickhouse_optimizer/
 ├── kafka_health_monitor/
 └── pipeline/          # کل پکیج pipeline

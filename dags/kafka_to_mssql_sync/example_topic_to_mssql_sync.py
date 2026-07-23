@@ -2,7 +2,7 @@
 Airflow DAG: Kafka → MSSQL topic sync (example)
 ================================================
 Consumes JSON messages from a Kafka topic and upserts into MSSQL
-(replication-style MERGE).
+(MERGE).
 
 Uses kafka_to_mssql_sync_dag_factory.
 
@@ -27,7 +27,7 @@ from template.kafka_to_mssql_sync_dag_factory import create_dag
 
 dag_config = DAGConfig(
     dag_id="kafka_example_topic_to_mssql_sync",
-    description="Example: sync Kafka topic to MSSQL (upsert/replication-style)",
+    description="Example: sync Kafka topic to MSSQL (upsert)",
     owner="Zahra Saffarpour",
     start_date=datetime(2026, 7, 23),
     schedule=None,

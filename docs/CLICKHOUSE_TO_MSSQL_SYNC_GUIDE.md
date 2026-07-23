@@ -1,6 +1,6 @@
 # راهنمای ایجاد DAG برای Sync داده از ClickHouse به MSSQL
 
-این راهنما نحوهٔ افزودن یک DAG جدید برای **همگام‌سازی (replication-style)** از **ClickHouse** به **SQL Server** را توضیح می‌دهد. داده با یک query از ClickHouse خوانده می‌شود و با **upsert / MERGE** (همان الگوی MySQL→MSSQL و Replication MD) در جدول مقصد MSSQL نوشته می‌شود.
+این راهنما نحوهٔ افزودن یک DAG جدید برای **همگام‌سازی** از **ClickHouse** به **SQL Server** را توضیح می‌دهد. داده با یک query از ClickHouse خوانده می‌شود و با **upsert / MERGE** (همان الگوی MySQL→MSSQL و Replication MD) در جدول مقصد MSSQL نوشته می‌شود.
 
 ---
 

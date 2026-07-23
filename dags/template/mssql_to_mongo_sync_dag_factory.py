@@ -455,7 +455,7 @@ def create_dag(
     conn_config: ConnectionConfig,
 ) -> DAG:
     """
-    Create an MSSQL → MongoDB replication-style sync DAG.
+    Create an MSSQL → MongoDB sync DAG.
 
     Args:
         dag_config: Airflow DAG settings
@@ -491,7 +491,7 @@ def create_dag(
     with DAG(
         dag_id=dag_config.dag_id,
         description=dag_config.description
-        or "Sync MSSQL source query data to MongoDB target (upsert/replication-style)",
+        or "Sync MSSQL source query data to MongoDB target (upsert)",
         start_date=dag_config.start_date,
         schedule=dag_config.schedule,
         catchup=dag_config.catchup,

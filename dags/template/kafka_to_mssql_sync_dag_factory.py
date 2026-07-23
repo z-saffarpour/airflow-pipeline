@@ -454,7 +454,7 @@ def create_dag(
     conn_config: ConnectionConfig,
 ) -> DAG:
     """
-    Create a Kafka → MSSQL replication-style sync DAG.
+    Create a Kafka → MSSQL sync DAG.
 
     Args:
         dag_config: Airflow DAG settings
@@ -489,7 +489,7 @@ def create_dag(
     with DAG(
         dag_id=dag_config.dag_id,
         description=dag_config.description
-        or "Sync Kafka topic data to MSSQL target (upsert/replication-style)",
+        or "Sync Kafka topic data to MSSQL target (upsert)",
         start_date=dag_config.start_date,
         schedule=dag_config.schedule,
         catchup=dag_config.catchup,

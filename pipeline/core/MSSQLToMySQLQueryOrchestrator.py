@@ -1,5 +1,5 @@
 """
-Orchestrator for syncing query results from MSSQL to MySQL (upsert/replication-style).
+Orchestrator for syncing query results from MSSQL to MySQL (upsert).
 """
 import logging
 import math

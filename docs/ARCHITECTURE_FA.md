@@ -11,6 +11,11 @@
 | جریان | منبع | مقصد |
 |-------|------|------|
 | Table / Query Sync | SQL Server (DWH / ERP) | Kafka (± ClickHouse) |
+| MSSQL → Kafka / ClickHouse | SQL Server | Kafka یا ClickHouse |
+| MySQL ↔ MSSQL | MySQL / SQL Server | SQL Server / MySQL |
+| MSSQL ↔ MongoDB | SQL Server / MongoDB | MongoDB / SQL Server |
+| Kafka / ClickHouse → MSSQL | Kafka یا ClickHouse | SQL Server |
+| MSSQL → MSSQL (fixed) | SQL Server | SQL Server |
 | Sales & Inventory | فروشگاه‌ها + ERP AX | Kafka |
 | Replication MD Repair | Publisher (`mssql_replication_md`) | دیتابیس فروشگاه (Subscriber) |
 | ClickHouse Optimize | ClickHouse | ClickHouse |
@@ -19,8 +24,8 @@
 ```
 ┌─────────────────┐     ┌──────────────────────┐     ┌─────────────────┐
 │  SQL Server     │────►│  Airflow DAG         │────►│  Kafka Topics   │
-│  ERP / DWH /    │     │  + pipeline/         │     │  ClickHouse     │
-│  Store / MD     │◄────│  Orchestrators       │────►│  Store DBs      │
+│  MySQL / Mongo  │◄───►│  + pipeline/         │────►│  ClickHouse     │
+│  Kafka / CH     │     │  Orchestrators       │────►│  Store DBs      │
 └─────────────────┘     └──────────────────────┘     └─────────────────┘
 ```
 
@@ -36,8 +41,8 @@ dags/                  ← تعریف و ثبت DAG (thin layer)
 pipeline/
   ├── interfaces/      ← قراردادها (ABC)
   ├── config/          ← dataclassهای پیکربندی
-  ├── database/        ← خواندن/نوشتن SQL Server و ClickHouse
-  ├── kafka/           ← producer و مدیریت topic
+  ├── database/        ← خواندن/نوشتن SQL Server، MySQL، MongoDB و ClickHouse
+  ├── kafka/           ← producer، consumer و مدیریت topic
   ├── core/            ← orchestratorها و نتایج
   ├── utils/           ← validation، retry، audit
   └── compat/          ← سازگاری نسخه‌های Airflow
@@ -53,9 +58,15 @@ DAG / Factory
     │      ├─ IdempotentKafkaProducer
     │      └─ ClickHouseWriter (اختیاری)
     │
+    ├─► MSSQLToKafkaQueryOrchestrator / MSSQLToClickHouseQueryOrchestrator
+    │
     ├─► MSSQLToMSSQLQueryOrchestrator
-    │      ├─ MSSQLDataReader (Publisher)
-    │      └─ MSSQLServerWriter (Store)  [upsert + delete_missing]
+    │      ├─ MSSQLDataReader (منبع)
+    │      └─ MSSQLServerWriter (مقصد)  [upsert + delete_missing]
+    │
+    ├─► MySQLToMSSQLQueryOrchestrator / MSSQLToMySQLQueryOrchestrator
+    ├─► MongoDBToMSSQLQueryOrchestrator / MSSQLToMongoDBQueryOrchestrator
+    ├─► KafkaToMSSQLQueryOrchestrator / ClickHouseToMSSQLQueryOrchestrator
     │
     ├─► ClickHouseOptimizationOrchestrator
     │      └─ ClickHouseTableOptimizer
@@ -140,19 +151,29 @@ DAGهای سفارشی در `dags/sales_inventory/` (نه فقط template ساد
 
 جزئیات عملیاتی: [MASTERDATA_STORE_SYNC_GUIDE.md](MASTERDATA_STORE_SYNC_GUIDE.md)
 
-### ۳.۳‌ب MySQL → MSSQL Sync
+### ۳.۳‌ب مسیرهای Sync با Connection ثابت (upsert)
 
-**Factory:** `mysql_to_mssql_sync_dag_factory.create_dag`
+این مسیرها برخلاف Replication MD، منبع و مقصد را از **Connectionهای ازپیش‌تعریف‌شدهٔ Airflow** می‌گیرند (نه کشف پویای فروشگاه).
 
-امضا: `create_dag(dag_config, sync_config, conn_config)` — `mysql_conn_id` و `mssql_conn_id` الزامی‌اند.
+| مسیر | Factory | Orchestrator | راهنما |
+|------|---------|--------------|--------|
+| MySQL → MSSQL | `mysql_to_mssql_sync_dag_factory` | `MySQLToMSSQLQueryOrchestrator` | [MYSQL_TO_MSSQL_SYNC_GUIDE.md](MYSQL_TO_MSSQL_SYNC_GUIDE.md) |
+| MSSQL → MySQL | `mssql_to_mysql_sync_dag_factory` | `MSSQLToMySQLQueryOrchestrator` | [MSSQL_TO_MYSQL_SYNC_GUIDE.md](MSSQL_TO_MYSQL_SYNC_GUIDE.md) |
+| MSSQL → MSSQL | `mssql_to_mssql_sync_dag_factory` | `MSSQLToMSSQLQueryOrchestrator` | [MSSQL_TO_MSSQL_SYNC_GUIDE.md](MSSQL_TO_MSSQL_SYNC_GUIDE.md) |
+| MSSQL → MongoDB | `mssql_to_mongo_sync_dag_factory` | `MSSQLToMongoDBQueryOrchestrator` | [MSSQL_TO_MONGO_SYNC_GUIDE.md](MSSQL_TO_MONGO_SYNC_GUIDE.md) |
+| MongoDB → MSSQL | `mongo_to_mssql_sync_dag_factory` | `MongoDBToMSSQLQueryOrchestrator` | [MONGO_TO_MSSQL_SYNC_GUIDE.md](MONGO_TO_MSSQL_SYNC_GUIDE.md) |
+| Kafka → MSSQL | `kafka_to_mssql_sync_dag_factory` | `KafkaToMSSQLQueryOrchestrator` | [KAFKA_TO_MSSQL_SYNC_GUIDE.md](KAFKA_TO_MSSQL_SYNC_GUIDE.md) |
+| ClickHouse → MSSQL | `clickhouse_to_mssql_sync_dag_factory` | `ClickHouseToMSSQLQueryOrchestrator` | [CLICKHOUSE_TO_MSSQL_SYNC_GUIDE.md](CLICKHOUSE_TO_MSSQL_SYNC_GUIDE.md) |
+| MSSQL → ClickHouse | `mssql_to_clickhouse_sync_dag_factory` | `MSSQLToClickHouseQueryOrchestrator` | [MSSQL_TO_CLICKHOUSE_SYNC_GUIDE.md](MSSQL_TO_CLICKHOUSE_SYNC_GUIDE.md) |
+| MSSQL → Kafka (Gen-2) | `mssql_to_kafka_sync_dag_factory` | `MSSQLToKafkaQueryOrchestrator` | [MSSQL_TO_KAFKA_SYNC_GUIDE.md](MSSQL_TO_KAFKA_SYNC_GUIDE.md) |
+
+الگوی مشترک Task:
 
 ```
-validation (MySQL + MSSQL) → sync (± chunks) → report
+validation → sync (± chunks) → report
 ```
 
-خواندن از MySQL با `MySQLDataReader`؛ نوشتن با همان `MSSQLServerWriter.upsert_batch` (الگوی Replication MD). تنظیمات: `MasterDataSyncConfig`.
-
-جزئیات عملیاتی: [MYSQL_TO_MSSQL_SYNC_GUIDE.md](MYSQL_TO_MSSQL_SYNC_GUIDE.md)
+تنظیمات اغلب روی `MasterDataSyncConfig` / `MongoSyncConfig` / `KafkaSyncConfig` / `MSSQLToKafkaSyncConfig` سوار می‌شوند؛ نوشتن به MSSQL با `MSSQLServerWriter.upsert_batch` (همان الگوی MERGE/staging).
 
 ### ۳.۴ بهینه‌سازی ClickHouse
 
@@ -206,10 +227,14 @@ health_checks (موازی):
 | `TableConfiguration` | `TableConfiguration.py` | `table_name`, `primary_key_column`, `order_by_column`, `date_column`, `columns` |
 | `QueryConfiguration` | `QueryConfiguration.py` | `query`, `key_column`, `query_params`, `min_expected_records` |
 | `MasterDataSyncConfig` | `MasterDataSyncConfig.py` | `source_query`, `target_schema/table`, `primary_keys`, `chunk_column`, `delete_missing`, `delete_scope_column` |
-| `ConnectionConfig` | `ConnectionConfig.py` | `mssql_conn_id`, `kafka_conn_id`, `clickhouse_conn_id` |
+| `MongoSyncConfig` | `MongoSyncConfig.py` | collection / aggregation + upsert به MSSQL |
+| `KafkaSyncConfig` | `KafkaSyncConfig.py` | topic / consumer + upsert به MSSQL |
+| `MSSQLToKafkaSyncConfig` | `MSSQLToKafkaSyncConfig.py` | query + topic برای مسیر Gen-2 |
+| `ConnectionConfig` | `ConnectionConfig.py` | `mssql_conn_id`, `kafka_conn_id`, `clickhouse_conn_id`, … |
 | `KafkaTopicConfig` | `KafkaTopicConfig.py` | `name`, `num_partitions`, `replication_factor` |
 | `KafkaHealthMonitorConfig` | `KafkaHealthMonitorConfig.py` | `kafka_topic`, `consumer_group`, `max_lag_records`, `include_message_sampling` |
 | `ClickHouseConfig` | `ClickHouseConfig.py` | `database`, `table_name` |
+| `ClickHouseOptimizationConfig` | `ClickHouseOptimizationConfig.py` | `partition_column`, `final`, `deduplicate` |
 
 الگوی استفاده در DAGهای واقعی: ساخت dataclassها در فایل DAG و فراخوانی factory در زمان import (ثبت DAG).
 
@@ -299,7 +324,7 @@ PipelineException
 
 ### Validation
 
-`validate_mssql_conn` / `validate_kafka_conn` / `validate_clickhouse_conn` نتیجهٔ ساخت‌یافته برای XCom برمی‌گردانند.
+`validate_mssql_conn` / `validate_mysql_conn` / `validate_mongo_conn` / `validate_kafka_conn` / `validate_clickhouse_conn` نتیجهٔ ساخت‌یافته برای XCom برمی‌گردانند.
 
 ### متریک‌ها
 
@@ -326,11 +351,19 @@ PipelineException
 | [../PROJECT_STRUCTURE.md](../PROJECT_STRUCTURE.md) | درخت پوشه‌ها و نقش هر مسیر |
 | [QUICKSTART.md](QUICKSTART.md) | راه‌اندازی سریع |
 | [QUICK_START_IMPROVEMENTS.md](QUICK_START_IMPROVEMENTS.md) | استفاده از بهبودهای reliability |
-| [MSSQL_TO_KAFKA_CLICKHOUSE_SYNC_GUIDE.md](MSSQL_TO_KAFKA_CLICKHOUSE_SYNC_GUIDE.md) | ساخت DAG همگام‌سازی SQL Server → Kafka |
-| [MASTERDATA_STORE_SYNC_GUIDE.md](MASTERDATA_STORE_SYNC_GUIDE.md) | ساخت DAG Replication MD |
-| [MYSQL_TO_MSSQL_SYNC_GUIDE.md](MYSQL_TO_MSSQL_SYNC_GUIDE.md) | ساخت DAG همگام‌سازی MySQL → MSSQL |
-| [KAFKA_HEALTH_MONITOR_GUIDE.md](KAFKA_HEALTH_MONITOR_GUIDE.md) | ساخت DAG مانیتور سلامت Kafka |
-| [CLICKHOUSE_OPTIMIZER_GUIDE.md](CLICKHOUSE_OPTIMIZER_GUIDE.md) | ساخت DAG بهینه‌سازی ClickHouse |
+| [MSSQL_TO_KAFKA_CLICKHOUSE_SYNC_GUIDE.md](MSSQL_TO_KAFKA_CLICKHOUSE_SYNC_GUIDE.md) | SQL Server → Kafka (± ClickHouse) |
+| [MSSQL_TO_KAFKA_SYNC_GUIDE.md](MSSQL_TO_KAFKA_SYNC_GUIDE.md) | MSSQL → Kafka (Gen-2) |
+| [MSSQL_TO_CLICKHOUSE_SYNC_GUIDE.md](MSSQL_TO_CLICKHOUSE_SYNC_GUIDE.md) | MSSQL → ClickHouse |
+| [MYSQL_TO_MSSQL_SYNC_GUIDE.md](MYSQL_TO_MSSQL_SYNC_GUIDE.md) | MySQL → MSSQL |
+| [MSSQL_TO_MYSQL_SYNC_GUIDE.md](MSSQL_TO_MYSQL_SYNC_GUIDE.md) | MSSQL → MySQL |
+| [MSSQL_TO_MSSQL_SYNC_GUIDE.md](MSSQL_TO_MSSQL_SYNC_GUIDE.md) | MSSQL → MSSQL (conn ثابت) |
+| [MSSQL_TO_MONGO_SYNC_GUIDE.md](MSSQL_TO_MONGO_SYNC_GUIDE.md) | MSSQL → MongoDB |
+| [MONGO_TO_MSSQL_SYNC_GUIDE.md](MONGO_TO_MSSQL_SYNC_GUIDE.md) | MongoDB → MSSQL |
+| [KAFKA_TO_MSSQL_SYNC_GUIDE.md](KAFKA_TO_MSSQL_SYNC_GUIDE.md) | Kafka → MSSQL |
+| [CLICKHOUSE_TO_MSSQL_SYNC_GUIDE.md](CLICKHOUSE_TO_MSSQL_SYNC_GUIDE.md) | ClickHouse → MSSQL |
+| [MASTERDATA_STORE_SYNC_GUIDE.md](MASTERDATA_STORE_SYNC_GUIDE.md) | Replication MD → Store |
+| [KAFKA_HEALTH_MONITOR_GUIDE.md](KAFKA_HEALTH_MONITOR_GUIDE.md) | مانیتور سلامت Kafka |
+| [CLICKHOUSE_OPTIMIZER_GUIDE.md](CLICKHOUSE_OPTIMIZER_GUIDE.md) | بهینه‌سازی ClickHouse |
 
 ---
 

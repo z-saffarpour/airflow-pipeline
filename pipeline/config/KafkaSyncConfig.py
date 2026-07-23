@@ -1,5 +1,5 @@
 """
-Configuration for Kafka → MSSQL replication-style sync.
+Configuration for Kafka → MSSQL sync.
 """
 from dataclasses import dataclass
 from typing import Optional, Tuple

@@ -1,5 +1,5 @@
 """
-Orchestrator for syncing Kafka topic data to MSSQL (upsert/replication-style).
+Orchestrator for syncing Kafka topic data to MSSQL (upsert).
 """
 import logging
 import re

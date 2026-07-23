@@ -1,6 +1,6 @@
 # راهنمای ایجاد DAG برای Sync داده از Kafka به MSSQL
 
-این راهنما نحوهٔ افزودن یک DAG جدید برای **همگام‌سازی (replication-style)** از **Kafka** به **SQL Server** را توضیح می‌دهد. پیام‌های JSON از یک topic خوانده می‌شوند و با **upsert / MERGE** (همان الگوی MySQL/Mongo→MSSQL و Replication MD) در جدول مقصد MSSQL نوشته می‌شوند.
+این راهنما نحوهٔ افزودن یک DAG جدید برای **همگام‌سازی** از **Kafka** به **SQL Server** را توضیح می‌دهد. پیام‌های JSON از یک topic خوانده می‌شوند و با **upsert / MERGE** (همان الگوی MySQL/Mongo→MSSQL و Replication MD) در جدول مقصد MSSQL نوشته می‌شوند.
 
 ---
 

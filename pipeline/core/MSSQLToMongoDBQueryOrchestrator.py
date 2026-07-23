@@ -1,5 +1,5 @@
 """
-Orchestrator for syncing query results from MSSQL to MongoDB (upsert/replication-style).
+Orchestrator for syncing query results from MSSQL to MongoDB (upsert).
 """
 import logging
 import math
