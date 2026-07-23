@@ -6,17 +6,10 @@ import logging
 from typing import Any, Dict, List, Optional, Tuple
 from contextlib import contextmanager
 
-from pipeline.core.exceptions import DatabaseException
-
-
-class PostgreSQLConnectionError(DatabaseException):
-    """Raised when a PostgreSQL connection fails."""
-    pass
-
-
-class PostgreSQLQueryError(DatabaseException):
-    """Raised when a PostgreSQL query execution fails."""
-    pass
+from pipeline.core.exceptions import (
+    PostgreSQLConnectionError,
+    PostgreSQLQueryError,
+)
 
 
 class PostgreSQLConnectionFactory:

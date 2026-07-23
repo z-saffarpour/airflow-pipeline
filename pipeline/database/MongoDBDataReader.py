@@ -9,11 +9,8 @@ from typing import Any, Dict, Generator, List, Optional, Sequence, Tuple
 
 from airflow.exceptions import AirflowException  # type: ignore
 
-from pipeline.core.exceptions import DataReadError
-from pipeline.database.MongoDBConnectionFactory import (
-    MongoDBConnectionFactory,
-    MongoDBQueryError,
-)
+from pipeline.core.exceptions import DataReadError, MongoDBQueryError
+from pipeline.database.MongoDBConnectionFactory import MongoDBConnectionFactory
 from pipeline.interfaces.DataReader import DataReader
 
 

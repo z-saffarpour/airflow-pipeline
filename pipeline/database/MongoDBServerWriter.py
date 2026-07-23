@@ -14,10 +14,8 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
 
-from pipeline.database.MongoDBConnectionFactory import (
-    MongoDBConnectionFactory,
-    MongoDBQueryError,
-)
+from pipeline.core.exceptions import MongoDBQueryError
+from pipeline.database.MongoDBConnectionFactory import MongoDBConnectionFactory
 from pipeline.database.SQLQueryBuilder import SQLQueryBuilder
 from pipeline.interfaces.DataWriter import DataWriter
 

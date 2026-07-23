@@ -6,17 +6,10 @@ import logging
 from typing import Any, Dict, List, Optional, Tuple
 from contextlib import contextmanager
 
-from pipeline.core.exceptions import DatabaseException
-
-
-class MySQLConnectionError(DatabaseException):
-    """Raised when a MySQL connection fails."""
-    pass
-
-
-class MySQLQueryError(DatabaseException):
-    """Raised when a MySQL query execution fails."""
-    pass
+from pipeline.core.exceptions import (
+    MySQLConnectionError,
+    MySQLQueryError,
+)
 
 
 class MySQLConnectionFactory:

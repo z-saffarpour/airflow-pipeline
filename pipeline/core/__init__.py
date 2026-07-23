@@ -28,6 +28,12 @@ from pipeline.core.exceptions import (
     DatabaseException,
     SQLServerConnectionError,
     SQLServerQueryError,
+    PostgreSQLConnectionError,
+    PostgreSQLQueryError,
+    MySQLConnectionError,
+    MySQLQueryError,
+    MongoDBConnectionError,
+    MongoDBQueryError,
     DataReadError,
     KafkaException,
     KafkaConnectionError,
@@ -43,7 +49,7 @@ from pipeline.core.exceptions import (
     DataTransferException,
     TransferTimeoutError,
     TransferVerificationError,
-    ClickHouseConnectionError
+    ClickHouseConnectionError,
 )
 
 __all__ = [
@@ -69,6 +75,12 @@ __all__ = [
     "DatabaseException",
     "SQLServerConnectionError",
     "SQLServerQueryError",
+    "PostgreSQLConnectionError",
+    "PostgreSQLQueryError",
+    "MySQLConnectionError",
+    "MySQLQueryError",
+    "MongoDBConnectionError",
+    "MongoDBQueryError",
     "DataReadError",
     "KafkaException",
     "KafkaConnectionError",
@@ -84,5 +96,5 @@ __all__ = [
     "DataTransferException",
     "TransferTimeoutError",
     "TransferVerificationError",
-    "ClickHouseConnectionError"
+    "ClickHouseConnectionError",
 ]

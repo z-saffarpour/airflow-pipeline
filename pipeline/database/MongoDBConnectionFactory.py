@@ -9,17 +9,10 @@ from typing import Any, Dict, List, Optional
 from urllib.parse import quote_plus
 
 from pipeline.compat.airflow_compat import get_connection
-from pipeline.core.exceptions import DatabaseException
-
-
-class MongoDBConnectionError(DatabaseException):
-    """Raised when a MongoDB connection fails."""
-    pass
-
-
-class MongoDBQueryError(DatabaseException):
-    """Raised when a MongoDB operation fails."""
-    pass
+from pipeline.core.exceptions import (
+    MongoDBConnectionError,
+    MongoDBQueryError,
+)
 
 
 class MongoDBConnectionFactory:

@@ -6,11 +6,8 @@ from typing import Any, Dict, Generator, List, Optional, Tuple
 
 from airflow.exceptions import AirflowException  # type: ignore
 
-from pipeline.core.exceptions import DataReadError
-from pipeline.database.PostgreSQLConnectionFactory import (
-    PostgreSQLConnectionFactory,
-    PostgreSQLQueryError,
-)
+from pipeline.core.exceptions import DataReadError, PostgreSQLQueryError
+from pipeline.database.PostgreSQLConnectionFactory import PostgreSQLConnectionFactory
 from pipeline.database.SQLQueryBuilder import SQLQueryBuilder
 from pipeline.interfaces.DataReader import DataReader
 

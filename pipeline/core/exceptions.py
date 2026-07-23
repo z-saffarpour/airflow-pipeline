@@ -37,6 +37,36 @@ class SQLServerDeadlockError(SQLServerQueryError):
     pass
 
 
+class PostgreSQLConnectionError(DatabaseException):
+    """Raised when a PostgreSQL connection fails."""
+    pass
+
+
+class PostgreSQLQueryError(DatabaseException):
+    """Raised when a PostgreSQL query execution fails."""
+    pass
+
+
+class MySQLConnectionError(DatabaseException):
+    """Raised when a MySQL connection fails."""
+    pass
+
+
+class MySQLQueryError(DatabaseException):
+    """Raised when a MySQL query execution fails."""
+    pass
+
+
+class MongoDBConnectionError(DatabaseException):
+    """Raised when a MongoDB connection fails."""
+    pass
+
+
+class MongoDBQueryError(DatabaseException):
+    """Raised when a MongoDB operation fails."""
+    pass
+
+
 def is_sql_server_deadlock(exc: BaseException) -> bool:
     """Return True if exc represents a SQL Server deadlock (error 1205 / SQLSTATE 40001)."""
     seen: Set[int] = set()
