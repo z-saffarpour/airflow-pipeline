@@ -9,6 +9,7 @@ from pipeline.core.MySQLToMSSQLQueryOrchestrator import MySQLToMSSQLQueryOrchest
 from pipeline.core.MSSQLToMySQLQueryOrchestrator import MSSQLToMySQLQueryOrchestrator
 from pipeline.core.MongoDBToMSSQLQueryOrchestrator import MongoDBToMSSQLQueryOrchestrator
 from pipeline.core.KafkaToMSSQLQueryOrchestrator import KafkaToMSSQLQueryOrchestrator
+from pipeline.core.ClickHouseToMSSQLQueryOrchestrator import ClickHouseToMSSQLQueryOrchestrator
 from pipeline.core.TransferMetrics import TransferMetrics
 from pipeline.core.TransferResult import TransferResult
 from pipeline.core.ExecutionDateExtractor import ExecutionDateExtractor
@@ -45,6 +46,7 @@ __all__ = [
     "MSSQLToMySQLQueryOrchestrator",
     "MongoDBToMSSQLQueryOrchestrator",
     "KafkaToMSSQLQueryOrchestrator",
+    "ClickHouseToMSSQLQueryOrchestrator",
     "TransferMetrics",
     "TransferResult",
     "ExecutionDateExtractor",

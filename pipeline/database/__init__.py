@@ -14,6 +14,7 @@ from pipeline.database.MySQLServerWriter import MySQLServerWriter
 from pipeline.database.MongoDBConnectionFactory import MongoDBConnectionFactory
 from pipeline.database.MongoDBDataReader import MongoDBDataReader
 from pipeline.database.ClickHouseConnectionFactory import ClickHouseConnectionFactory
+from pipeline.database.ClickHouseDataReader import ClickHouseDataReader
 from pipeline.database.ClickHouseWriter import ClickHouseWriter
 
 __all__ = [
@@ -28,5 +29,6 @@ __all__ = [
     "MongoDBConnectionFactory",
     "MongoDBDataReader",
     "ClickHouseConnectionFactory",
+    "ClickHouseDataReader",
     "ClickHouseWriter"
 ]

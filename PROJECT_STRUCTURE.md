@@ -37,6 +37,7 @@ dags/
 │   ├── mssql_to_mysql_sync_dag_factory.py
 │   ├── mongo_to_mssql_sync_dag_factory.py
 │   ├── kafka_to_mssql_sync_dag_factory.py
+│   ├── clickhouse_to_mssql_sync_dag_factory.py
 │   ├── clickhouse_optimizer_dag_factory.py
 │   └── kafka_health_monitor_dag_factory.py
 │
@@ -51,6 +52,8 @@ dags/
 ├── mongo_to_mssql_sync/           # MongoDB → MSSQL (upsert / replication-style)
 │
 ├── kafka_to_mssql_sync/           # Kafka → MSSQL (upsert / replication-style)
+│
+├── clickhouse_to_mssql_sync/      # ClickHouse → MSSQL (upsert / replication-style)
 │
 ├── sales_inventory/               # فروش و موجودی چندمنبعی → Kafka
 │
@@ -81,6 +84,7 @@ dags/
 | MSSQL → MySQL | `<name>_to_mysql_sync.py` | `example_table_to_mysql_sync.py` |
 | MongoDB → MSSQL | `<name>_to_mssql_sync.py` | `example_collection_to_mssql_sync.py` |
 | Kafka → MSSQL | `<name>_to_mssql_sync.py` | `example_topic_to_mssql_sync.py` |
+| ClickHouse → MSSQL | `<name>_to_mssql_sync.py` | `example_table_to_mssql_sync.py` |
 | ClickHouse optimize | `<name>_clickhouse_optimizer.py` | `com_dim_item_clickhouse_optimizer.py` |
 | Kafka health monitor | `<name>_health_monitor.py` | `dim_date_health_monitor.py` |
 
@@ -159,6 +163,7 @@ pipeline/
 │   ├── MySQLDataReader.py
 │   ├── MySQLServerWriter.py
 │   ├── ClickHouseConnectionFactory.py
+│   ├── ClickHouseDataReader.py
 │   ├── ClickHouseWriter.py
 │   └── ClickHouseTableOptimizer.py
 │
@@ -176,6 +181,7 @@ pipeline/
 │   ├── MSSQLToMySQLQueryOrchestrator.py      # MSSQL → MySQL
 │   ├── MongoDBToMSSQLQueryOrchestrator.py    # Mongo → MSSQL
 │   ├── KafkaToMSSQLQueryOrchestrator.py      # Kafka → MSSQL
+│   ├── ClickHouseToMSSQLQueryOrchestrator.py # ClickHouse → MSSQL
 │   ├── ClickHouseOptimizationOrchestrator.py
 │   ├── DagSyncTrigger.py
 │   ├── ExecutionDateExtractor.py
@@ -236,6 +242,7 @@ pipeline/
 | `MSSQL_TO_MYSQL_SYNC_GUIDE.md` | ساخت DAG همگام‌سازی MSSQL → MySQL |
 | `MONGO_TO_MSSQL_SYNC_GUIDE.md` | ساخت DAG همگام‌سازی MongoDB → MSSQL |
 | `KAFKA_TO_MSSQL_SYNC_GUIDE.md` | ساخت DAG همگام‌سازی Kafka → MSSQL |
+| `CLICKHOUSE_TO_MSSQL_SYNC_GUIDE.md` | ساخت DAG همگام‌سازی ClickHouse → MSSQL |
 | `KAFKA_HEALTH_MONITOR_GUIDE.md` | ساخت DAG مانیتور سلامت Kafka |
 | `CLICKHOUSE_OPTIMIZER_GUIDE.md` | ساخت DAG بهینه‌سازی ClickHouse |
 
@@ -272,6 +279,9 @@ pytest tests/ -v
 $AIRFLOW_HOME/dags/
 ├── template/
 ├── mssql_to_kafka_clickhouse_sync/
+├── mysql_to_mssql_sync/
+├── kafka_to_mssql_sync/
+├── clickhouse_to_mssql_sync/
 ├── sales_inventory/
 ├── replication/
 ├── clickhouse_optimizer/

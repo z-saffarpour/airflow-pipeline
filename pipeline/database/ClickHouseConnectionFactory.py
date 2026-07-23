@@ -97,14 +97,14 @@ class ClickHouseConnectionFactory:
 
     def execute_query(self, query: str, params: Optional[dict] = None) -> Any:
         """
-        Execute a query and return results.
+        Execute a query and return raw row tuples.
 
         Args:
             query: SQL query to execute
             params: Query parameters for parameterized queries
 
         Returns:
-            Query results
+            Query results (list of tuples)
         """
         try:
             with self.get_connection() as client:
@@ -112,7 +112,61 @@ class ClickHouseConnectionFactory:
         except Exception as e:
             self.logger.error(f"Query execution failed: {e}")
             raise
-        
+
+    def execute_query_as_dicts(
+        self,
+        query: str,
+        params: Optional[dict] = None,
+    ) -> list:
+        """
+        Execute a SELECT and return rows as list of dictionaries.
+
+        Args:
+            query: SQL query to execute
+            params: Named query parameters (clickhouse_driver ``%(name)s`` style)
+
+        Returns:
+            List of row dicts keyed by column name
+        """
+        try:
+            with self.get_connection() as client:
+                result = client.execute(
+                    query,
+                    params or {},
+                    with_column_types=True,
+                )
+                if not result:
+                    return []
+                rows, columns_with_types = result
+                if not rows:
+                    return []
+                column_names = [col[0] for col in columns_with_types]
+                return [dict(zip(column_names, row)) for row in rows]
+        except Exception as e:
+            self.logger.error(f"Query (as dicts) execution failed: {e}")
+            raise
+
+    def execute_scalar(self, query: str, params: Optional[dict] = None) -> Any:
+        """
+        Execute a query and return the first cell of the first row.
+
+        Args:
+            query: SQL query expected to return a single scalar
+            params: Named query parameters
+
+        Returns:
+            Scalar value or None if empty
+        """
+        try:
+            with self.get_connection() as client:
+                result = client.execute(query, params or {})
+                if not result:
+                    return None
+                return result[0][0]
+        except Exception as e:
+            self.logger.error(f"Scalar query execution failed: {e}")
+            raise
+
     def close_client(self) -> None:
         """Close client connection."""
         # client = self.get_connection()
