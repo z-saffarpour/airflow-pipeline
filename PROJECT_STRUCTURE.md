@@ -35,6 +35,7 @@ dags/
 │   ├── mssql_masterdata_to_mssql_store_sync_dag_factory.py
 │   ├── mysql_to_mssql_sync_dag_factory.py
 │   ├── mssql_to_mysql_sync_dag_factory.py
+│   ├── mssql_to_mongo_sync_dag_factory.py
 │   ├── mongo_to_mssql_sync_dag_factory.py
 │   ├── kafka_to_mssql_sync_dag_factory.py
 │   ├── clickhouse_to_mssql_sync_dag_factory.py
@@ -48,6 +49,8 @@ dags/
 ├── mysql_to_mssql_sync/           # MySQL → MSSQL (upsert / replication-style)
 │
 ├── mssql_to_mysql_sync/           # MSSQL → MySQL (upsert / replication-style)
+│
+├── mssql_to_mongo_sync/           # MSSQL → MongoDB (upsert / replication-style)
 │
 ├── mongo_to_mssql_sync/           # MongoDB → MSSQL (upsert / replication-style)
 │
@@ -82,6 +85,7 @@ dags/
 | Replication table | `ax_<table>_sync.py` | `ax_invent_table_sync.py` |
 | MySQL → MSSQL | `<name>_to_mssql_sync.py` | `example_table_to_mssql_sync.py` |
 | MSSQL → MySQL | `<name>_to_mysql_sync.py` | `example_table_to_mysql_sync.py` |
+| MSSQL → MongoDB | `<name>_to_mongo_sync.py` | `example_table_to_mongo_sync.py` |
 | MongoDB → MSSQL | `<name>_to_mssql_sync.py` | `example_collection_to_mssql_sync.py` |
 | Kafka → MSSQL | `<name>_to_mssql_sync.py` | `example_topic_to_mssql_sync.py` |
 | ClickHouse → MSSQL | `<name>_to_mssql_sync.py` | `example_table_to_mssql_sync.py` |
@@ -162,6 +166,9 @@ pipeline/
 │   ├── MySQLConnectionFactory.py
 │   ├── MySQLDataReader.py
 │   ├── MySQLServerWriter.py
+│   ├── MongoDBConnectionFactory.py
+│   ├── MongoDBDataReader.py
+│   ├── MongoDBServerWriter.py
 │   ├── ClickHouseConnectionFactory.py
 │   ├── ClickHouseDataReader.py
 │   ├── ClickHouseWriter.py
@@ -179,6 +186,7 @@ pipeline/
 │   ├── MSSQLToMSSQLQueryOrchestrator.py      # Publisher → Store
 │   ├── MySQLToMSSQLQueryOrchestrator.py      # MySQL → MSSQL
 │   ├── MSSQLToMySQLQueryOrchestrator.py      # MSSQL → MySQL
+│   ├── MSSQLToMongoDBQueryOrchestrator.py    # MSSQL → MongoDB
 │   ├── MongoDBToMSSQLQueryOrchestrator.py    # Mongo → MSSQL
 │   ├── KafkaToMSSQLQueryOrchestrator.py      # Kafka → MSSQL
 │   ├── ClickHouseToMSSQLQueryOrchestrator.py # ClickHouse → MSSQL
@@ -240,6 +248,7 @@ pipeline/
 | `MASTERDATA_STORE_SYNC_GUIDE.md` | ساخت DAG Replication MD |
 | `MYSQL_TO_MSSQL_SYNC_GUIDE.md` | ساخت DAG همگام‌سازی MySQL → MSSQL |
 | `MSSQL_TO_MYSQL_SYNC_GUIDE.md` | ساخت DAG همگام‌سازی MSSQL → MySQL |
+| `MSSQL_TO_MONGO_SYNC_GUIDE.md` | ساخت DAG همگام‌سازی MSSQL → MongoDB |
 | `MONGO_TO_MSSQL_SYNC_GUIDE.md` | ساخت DAG همگام‌سازی MongoDB → MSSQL |
 | `KAFKA_TO_MSSQL_SYNC_GUIDE.md` | ساخت DAG همگام‌سازی Kafka → MSSQL |
 | `CLICKHOUSE_TO_MSSQL_SYNC_GUIDE.md` | ساخت DAG همگام‌سازی ClickHouse → MSSQL |
@@ -280,6 +289,9 @@ $AIRFLOW_HOME/dags/
 ├── template/
 ├── mssql_to_kafka_clickhouse_sync/
 ├── mysql_to_mssql_sync/
+├── mssql_to_mysql_sync/
+├── mssql_to_mongo_sync/
+├── mongo_to_mssql_sync/
 ├── kafka_to_mssql_sync/
 ├── clickhouse_to_mssql_sync/
 ├── sales_inventory/

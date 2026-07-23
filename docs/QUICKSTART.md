@@ -153,6 +153,12 @@ airflow dags trigger query_inventory_and_sales_sync
 
 نمونه: `dags/mssql_to_mysql_sync/example_table_to_mysql_sync.py` با `create_dag` از `mssql_to_mysql_sync_dag_factory`.
 
+### MSSQL → MongoDB Sync
+
+راهنمای کامل: [MSSQL_TO_MONGO_SYNC_GUIDE.md](MSSQL_TO_MONGO_SYNC_GUIDE.md)
+
+نمونه: `dags/mssql_to_mongo_sync/example_table_to_mongo_sync.py` با `create_dag` از `mssql_to_mongo_sync_dag_factory`.
+
 ### Kafka → MSSQL Sync
 
 راهنمای کامل: [KAFKA_TO_MSSQL_SYNC_GUIDE.md](KAFKA_TO_MSSQL_SYNC_GUIDE.md)
@@ -239,6 +245,7 @@ pytest tests/ -v
 - Replication MD: [MASTERDATA_STORE_SYNC_GUIDE.md](MASTERDATA_STORE_SYNC_GUIDE.md)
 - MySQL → MSSQL: [MYSQL_TO_MSSQL_SYNC_GUIDE.md](MYSQL_TO_MSSQL_SYNC_GUIDE.md)
 - MSSQL → MySQL: [MSSQL_TO_MYSQL_SYNC_GUIDE.md](MSSQL_TO_MYSQL_SYNC_GUIDE.md)
+- MSSQL → MongoDB: [MSSQL_TO_MONGO_SYNC_GUIDE.md](MSSQL_TO_MONGO_SYNC_GUIDE.md)
 - Kafka → MSSQL: [KAFKA_TO_MSSQL_SYNC_GUIDE.md](KAFKA_TO_MSSQL_SYNC_GUIDE.md)
 - ClickHouse → MSSQL: [CLICKHOUSE_TO_MSSQL_SYNC_GUIDE.md](CLICKHOUSE_TO_MSSQL_SYNC_GUIDE.md)
 - Kafka Health Monitor: [KAFKA_HEALTH_MONITOR_GUIDE.md](KAFKA_HEALTH_MONITOR_GUIDE.md)
