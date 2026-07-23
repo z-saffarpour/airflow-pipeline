@@ -160,6 +160,12 @@ airflow dags trigger query_inventory_and_sales_sync
 
 پوشش فعلی حدود ۲۰۰+ جدول در `dags/replication/tables/` است. برای فیلتر فروشگاهی، در query از `{store_number}` استفاده کنید.
 
+### MySQL → MSSQL Sync
+
+راهنمای کامل: [MYSQL_TO_MSSQL_SYNC_GUIDE.md](MYSQL_TO_MSSQL_SYNC_GUIDE.md)
+
+نمونه: `dags/mysql_sync/example_table_to_mssql_sync.py` با `create_dag` از `mysql_to_mssql_sync_dag_factory`.
+
 ### Kafka Health Monitor
 
 راهنمای کامل: [KAFKA_HEALTH_MONITOR_GUIDE.md](KAFKA_HEALTH_MONITOR_GUIDE.md)
@@ -217,6 +223,7 @@ pytest tests/ -v
 - معماری: [ARCHITECTURE_FA.md](ARCHITECTURE_FA.md)
 - ساختار پوشه‌ها: [../PROJECT_STRUCTURE.md](../PROJECT_STRUCTURE.md)
 - Replication MD: [REPLICATION_MD_STORE_SYNC_GUIDE.md](REPLICATION_MD_STORE_SYNC_GUIDE.md)
+- MySQL → MSSQL: [MYSQL_TO_MSSQL_SYNC_GUIDE.md](MYSQL_TO_MSSQL_SYNC_GUIDE.md)
 - Kafka Health Monitor: [KAFKA_HEALTH_MONITOR_GUIDE.md](KAFKA_HEALTH_MONITOR_GUIDE.md)
 - بهبودهای reliability: [QUICK_START_IMPROVEMENTS.md](QUICK_START_IMPROVEMENTS.md)
 

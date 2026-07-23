@@ -33,12 +33,15 @@ dags/
 │   ├── table_mssql_sync_dag_factory.py
 │   ├── query_mssql_sync_dag_factory.py
 │   ├── query_mssql_replication_md_store_sync_dag_factory.py
+│   ├── mysql_to_mssql_sync_dag_factory.py
 │   ├── clickhouse_optimizer_dag_factory.py
 │   └── kafka_health_monitor_dag_factory.py
 │
 ├── mssql_sync/                    # SQL Server → Kafka (± ClickHouse)
 │   ├── dwh/                       # جداول و کوئری‌های DWH
 │   └── erp/                       # کوئری‌ها و orchestratorهای ERP/AX
+│
+├── mysql_sync/                    # MySQL → MSSQL (upsert / replication-style)
 │
 ├── sales_inventory/               # فروش و موجودی چندمنبعی → Kafka
 │
@@ -65,6 +68,7 @@ dags/
 | Table sync DWH | `table_<domain>_<name>_sync.py` | `table_rtl_fact_sales_trans_sync.py` |
 | Query sync ERP | `query_ax_<name>_sync.py` | `query_ax_invent_sum_sync.py` |
 | Replication table | `ax_<table>_sync.py` | `ax_invent_table_sync.py` |
+| MySQL → MSSQL | `<name>_to_mssql_sync.py` | `example_table_to_mssql_sync.py` |
 | ClickHouse optimize | `<name>_clickhouse_optimizer.py` | `com_dim_item_clickhouse_optimizer.py` |
 | Kafka health monitor | `<name>_health_monitor.py` | `dim_date_health_monitor.py` |
 
@@ -205,6 +209,7 @@ pipeline/
 | `QUICKSTART.md` | راه‌اندازی سریع |
 | `QUICK_START_IMPROVEMENTS.md` | راهنمای بهبودهای reliability |
 | `REPLICATION_MD_STORE_SYNC_GUIDE.md` | ساخت DAG Replication MD |
+| `MYSQL_TO_MSSQL_SYNC_GUIDE.md` | ساخت DAG همگام‌سازی MySQL → MSSQL |
 | `KAFKA_HEALTH_MONITOR_GUIDE.md` | ساخت DAG مانیتور سلامت Kafka |
 
 ---

@@ -5,6 +5,7 @@ Contains core orchestration and utility components.
 """
 
 from pipeline.core.MSSQLDataTransferOrchestrator import MSSQLDataTransferOrchestrator
+from pipeline.core.MySQLToMSSQLQueryOrchestrator import MySQLToMSSQLQueryOrchestrator
 from pipeline.core.TransferMetrics import TransferMetrics
 from pipeline.core.TransferResult import TransferResult
 from pipeline.core.ExecutionDateExtractor import ExecutionDateExtractor
@@ -36,6 +37,7 @@ from pipeline.core.exceptions import (
 
 __all__ = [
     "MSSQLDataTransferOrchestrator",
+    "MySQLToMSSQLQueryOrchestrator",
     "TransferMetrics",
     "TransferResult",
     "ExecutionDateExtractor",

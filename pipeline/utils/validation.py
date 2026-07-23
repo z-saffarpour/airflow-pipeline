@@ -14,6 +14,7 @@ from dataclasses import dataclass, asdict
 from airflow.exceptions import AirflowException # type: ignore
 
 from pipeline.database.ConnectionFactory import ConnectionFactory
+from pipeline.database.MySQLConnectionFactory import MySQLConnectionFactory
 from pipeline.database.ClickHouseConnectionFactory import ClickHouseConnectionFactory
 from pipeline.kafka.KafkaConnectionFactory import KafkaConnectionFactory
 # ============================================================================
@@ -177,6 +178,42 @@ def validate_mssql_conn(conn_id: str) -> dict:
         raise AirflowException(f"SQL Server validation failed for {conn_id}: {exc}")
 
         
+def validate_mysql_conn(conn_id: str) -> dict:
+    """
+    Validate a MySQL connection by executing a simple query.
+
+    Args:
+        conn_id: Airflow Connection ID for the MySQL instance.
+
+    Returns:
+        dict with keys: status, conn_id, timestamp
+
+    Raises:
+        AirflowException: If the connection fails or query execution fails.
+    """
+    logger.info("Validating MySQL connection: %s", conn_id)
+
+    try:
+        factory = MySQLConnectionFactory(conn_id=conn_id)
+        result = factory.test_connection()
+
+        if result is False:
+            raise AirflowException(f"MySQL test query returned no results: {conn_id}")
+
+        validation_result = ValidationResult(
+            status="ok",
+            conn_id=conn_id,
+            timestamp=datetime.now().isoformat(),
+        )
+
+        logger.info("MySQL validated: %s", conn_id)
+        return validation_result.to_dict()
+
+    except Exception as exc:
+        logger.exception("MySQL validation failed: %s", conn_id)
+        raise AirflowException(f"MySQL validation failed for {conn_id}: {exc}")
+
+
 def validate_clickhouse_conn(conn_id: str) -> dict:
     """
     Validate a ClickHouse connection by executing a simple query.

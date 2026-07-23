@@ -138,6 +138,20 @@ DAGهای سفارشی در `dags/sales_inventory/` (نه فقط template ساد
 
 جزئیات عملیاتی: [REPLICATION_MD_STORE_SYNC_GUIDE.md](REPLICATION_MD_STORE_SYNC_GUIDE.md)
 
+### ۳.۳‌ب MySQL → MSSQL Sync
+
+**Factory:** `mysql_to_mssql_sync_dag_factory.create_dag`
+
+امضا: `create_dag(dag_config, sync_config, conn_config)` — `mysql_conn_id` و `mssql_conn_id` الزامی‌اند.
+
+```
+validation (MySQL + MSSQL) → sync (± chunks) → report
+```
+
+خواندن از MySQL با `MySQLDataReader`؛ نوشتن با همان `MSSQLServerWriter.upsert_batch` (الگوی Replication MD). تنظیمات: `MasterDataSyncConfig`.
+
+جزئیات عملیاتی: [MYSQL_TO_MSSQL_SYNC_GUIDE.md](MYSQL_TO_MSSQL_SYNC_GUIDE.md)
+
 ### ۳.۴ بهینه‌سازی ClickHouse
 
 **Factory:** `clickhouse_optimizer_dag_factory.clickhouse_optimizer_dag`
@@ -309,6 +323,7 @@ PipelineException
 | [QUICKSTART.md](QUICKSTART.md) | راه‌اندازی سریع |
 | [QUICK_START_IMPROVEMENTS.md](QUICK_START_IMPROVEMENTS.md) | استفاده از بهبودهای reliability |
 | [REPLICATION_MD_STORE_SYNC_GUIDE.md](REPLICATION_MD_STORE_SYNC_GUIDE.md) | ساخت DAG Replication MD |
+| [MYSQL_TO_MSSQL_SYNC_GUIDE.md](MYSQL_TO_MSSQL_SYNC_GUIDE.md) | ساخت DAG همگام‌سازی MySQL → MSSQL |
 | [KAFKA_HEALTH_MONITOR_GUIDE.md](KAFKA_HEALTH_MONITOR_GUIDE.md) | ساخت DAG مانیتور سلامت Kafka |
 
 ---

@@ -10,6 +10,7 @@ from typing import Dict, Any
 class ConnectionConfig:
     """Configuration for database and message broker connections. Immutable."""
     mssql_conn_id: str = None # "mssql_default"
+    mysql_conn_id: str = None # "mysql_default"
     kafka_conn_id: str = None # "kafka_default"
     clickhouse_conn_id: str = None # "clickhouse_default"
 
@@ -17,6 +18,7 @@ class ConnectionConfig:
         """Convert configuration to dictionary."""
         return {
             'mssql_conn_id': self.mssql_conn_id,
+            'mysql_conn_id': self.mysql_conn_id,
             'kafka_conn_id': self.kafka_conn_id,
             'clickhouse_conn_id': self.clickhouse_conn_id,
         }

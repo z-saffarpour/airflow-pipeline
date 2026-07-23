@@ -8,6 +8,8 @@ from pipeline.database.ConnectionFactory import ConnectionFactory
 from pipeline.database.SafeMsSqlHook import SafeMsSqlHook, sanitize_mssql_extra_kwargs
 from pipeline.database.SQLQueryBuilder import SQLQueryBuilder
 from pipeline.database.MSSQLDataReader import MSSQLDataReader
+from pipeline.database.MySQLConnectionFactory import MySQLConnectionFactory
+from pipeline.database.MySQLDataReader import MySQLDataReader
 from pipeline.database.ClickHouseConnectionFactory import ClickHouseConnectionFactory
 from pipeline.database.ClickHouseWriter import ClickHouseWriter
 
@@ -17,6 +19,8 @@ __all__ = [
     "sanitize_mssql_extra_kwargs",   
     "SQLQueryBuilder",
     "MSSQLDataReader",
+    "MySQLConnectionFactory",
+    "MySQLDataReader",
     "ClickHouseConnectionFactory",
     "ClickHouseWriter"
 ]

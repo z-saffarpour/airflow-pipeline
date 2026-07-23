@@ -22,6 +22,10 @@ class DatabaseHookConfig:
                 from airflow.providers.microsoft.mssql.hooks.mssql import MsSqlHook # type: ignore
                 self.hook_class = MsSqlHook
 
+            elif self.database_type == "mysql":
+                from airflow.providers.mysql.hooks.mysql import MySqlHook # type: ignore
+                self.hook_class = MySqlHook
+
             elif self.database_type == "clickhouse":
                 from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook # type: ignore
                 self.hook_class = ClickHouseHook
