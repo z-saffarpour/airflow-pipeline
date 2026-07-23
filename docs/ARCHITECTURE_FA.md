@@ -126,17 +126,17 @@ DAGهای سفارشی در `dags/sales_inventory/` (نه فقط template ساد
 
 **`delete_missing`:** کلیدهای منبع در staging جمع می‌شوند؛ سپس ردیف‌هایی که داخل بازهٔ `[min, max]` ستون `delete_scope_column` (یا `chunk_column`) هستند ولی در staging نیستند حذف می‌شوند.
 
-پوشش فعلی: حدود **۲۰۰+** فایل در `dags/replication/tables/` برای جداول AX/Retail master data.
+پوشش فعلی: حدود **۲۰۰+** فایل در `dags/masterdata_store_sync/tables/` برای جداول AX/Retail master data.
 
 لایه‌های DAG:
 
 | لایه | مسیر |
 |------|------|
-| Table Sync | `dags/replication/tables/` |
-| Orchestrator | `dags/replication/orchestrator/` |
-| Reconcile & Sync | `dags/replication/reconcile_and_sync/` (+ `DagSyncTrigger`) |
+| Table Sync | `dags/masterdata_store_sync/tables/` |
+| Orchestrator | `dags/masterdata_store_sync/orchestrator/` |
+| Reconcile & Sync | `dags/masterdata_store_sync/reconcile_and_sync/` (+ `DagSyncTrigger`) |
 
-جزئیات عملیاتی: [REPLICATION_MD_STORE_SYNC_GUIDE.md](REPLICATION_MD_STORE_SYNC_GUIDE.md)
+جزئیات عملیاتی: [MASTERDATA_STORE_SYNC_GUIDE.md](MASTERDATA_STORE_SYNC_GUIDE.md)
 
 ### ۳.۳‌ب MySQL → MSSQL Sync
 
@@ -324,7 +324,7 @@ PipelineException
 | [../PROJECT_STRUCTURE.md](../PROJECT_STRUCTURE.md) | درخت پوشه‌ها و نقش هر مسیر |
 | [QUICKSTART.md](QUICKSTART.md) | راه‌اندازی سریع |
 | [QUICK_START_IMPROVEMENTS.md](QUICK_START_IMPROVEMENTS.md) | استفاده از بهبودهای reliability |
-| [REPLICATION_MD_STORE_SYNC_GUIDE.md](REPLICATION_MD_STORE_SYNC_GUIDE.md) | ساخت DAG Replication MD |
+| [MASTERDATA_STORE_SYNC_GUIDE.md](MASTERDATA_STORE_SYNC_GUIDE.md) | ساخت DAG Replication MD |
 | [MYSQL_TO_MSSQL_SYNC_GUIDE.md](MYSQL_TO_MSSQL_SYNC_GUIDE.md) | ساخت DAG همگام‌سازی MySQL → MSSQL |
 | [KAFKA_HEALTH_MONITOR_GUIDE.md](KAFKA_HEALTH_MONITOR_GUIDE.md) | ساخت DAG مانیتور سلامت Kafka |
 | [CLICKHOUSE_OPTIMIZER_GUIDE.md](CLICKHOUSE_OPTIMIZER_GUIDE.md) | ساخت DAG بهینه‌سازی ClickHouse |

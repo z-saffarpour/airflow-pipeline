@@ -409,4 +409,4 @@ dag = create_dag(
 | `pipeline/config/ConnectionConfig.py` | `mysql_conn_id` + `mssql_conn_id` |
 | `pipeline/config/DAGConfig.py` | تعریف پارامترهای DAG |
 | `dags/mysql_sync/example_table_to_mssql_sync.py` | نمونه کامل |
-| `docs/REPLICATION_MD_STORE_SYNC_GUIDE.md` | الگوی مشابه MSSQL→MSSQL |
+| `docs/MASTERDATA_STORE_SYNC_GUIDE.md` | الگوی مشابه MSSQL→MSSQL |

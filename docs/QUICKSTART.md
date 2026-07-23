@@ -16,13 +16,11 @@
 ## ۱. کلون و نصب
 
 ```bash
-git clone https://github.com/z-saffarpour/sqlserver-pipeline.git
-cd sqlserver-pipeline
 
 python -m venv .venv
 # Windows:
 .venv\Scripts\activate
-# Linux/macOS:
+راهنمای کامل: [MASTERDATA_STORE_SYNC_GUIDE.md](MASTERDATA_STORE_SYNC_GUIDE.md)
 # source .venv/bin/activate
 
 pip install -r requirements.txt
@@ -60,7 +58,6 @@ airflow connections add 'mssql_default' \
 
 > برای مسیر پیش‌فرض `pymssql`، Extra را از کلیدهای مخصوص ODBC خالی نگه دارید.
 
-### SQL Server (Windows Auth / Kerberos)
 
 Extra نمونه:
 
@@ -75,7 +72,6 @@ Extra نمونه:
 ```
 
 ### Kafka
-
 ```bash
 airflow connections add 'kafka_default' \
   --conn-type 'http' \
@@ -83,7 +79,6 @@ airflow connections add 'kafka_default' \
   --conn-port 9092 \
   --conn-extra '{"bootstrap_servers": "kafka-broker:9092", "client_id": "airflow"}'
 ```
-
 ### Connections رایج پروژه
 
 | Connection ID | کاربرد |
@@ -96,19 +91,10 @@ airflow connections add 'kafka_default' \
 | ClickHouse conn | optimizer و sink اختیاری |
 
 ---
-
 ## ۴. Poolها
 
 ```bash
-airflow pools set data_sync_pool 5 "SQL to Kafka transfers"
-airflow pools set replication_md_store_sync_pool 32 "Replication MD store chunk sync"
-```
 
-تعداد slot در `replication_md_store_sync_pool` باید ≥ `max_global_parallel_chunks` باشد.
-
----
-
-## ۵. Variables پیشنهادی
 
 بسته به DAG، Variableهای زیر ممکن است لازم باشد:
 
@@ -156,9 +142,9 @@ airflow dags trigger query_inventory_and_sales_sync
 
 ### Replication MD → Store
 
-راهنمای کامل: [REPLICATION_MD_STORE_SYNC_GUIDE.md](REPLICATION_MD_STORE_SYNC_GUIDE.md)
+راهنمای کامل: [MASTERDATA_STORE_SYNC_GUIDE.md](MASTERDATA_STORE_SYNC_GUIDE.md)
 
-پوشش فعلی حدود ۲۰۰+ جدول در `dags/replication/tables/` است. برای فیلتر فروشگاهی، در query از `{store_number}` استفاده کنید.
+پوشش فعلی حدود ۲۰۰+ جدول در `dags/masterdata_store_sync/tables/` است. برای فیلتر فروشگاهی، در query از `{store_number}` استفاده کنید.
 
 ### MySQL → MSSQL Sync
 
@@ -236,7 +222,7 @@ pytest tests/ -v
 
 - معماری: [ARCHITECTURE_FA.md](ARCHITECTURE_FA.md)
 - ساختار پوشه‌ها: [../PROJECT_STRUCTURE.md](../PROJECT_STRUCTURE.md)
-- Replication MD: [REPLICATION_MD_STORE_SYNC_GUIDE.md](REPLICATION_MD_STORE_SYNC_GUIDE.md)
+- Replication MD: [MASTERDATA_STORE_SYNC_GUIDE.md](MASTERDATA_STORE_SYNC_GUIDE.md)
 - MySQL → MSSQL: [MYSQL_TO_MSSQL_SYNC_GUIDE.md](MYSQL_TO_MSSQL_SYNC_GUIDE.md)
 - Kafka Health Monitor: [KAFKA_HEALTH_MONITOR_GUIDE.md](KAFKA_HEALTH_MONITOR_GUIDE.md)
 - ClickHouse Optimizer: [CLICKHOUSE_OPTIMIZER_GUIDE.md](CLICKHOUSE_OPTIMIZER_GUIDE.md)

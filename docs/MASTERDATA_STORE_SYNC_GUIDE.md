@@ -20,13 +20,13 @@
 
 | لایه | مسیر | نقش |
 |------|------|-----|
-| **Table Sync** | `dags/replication/tables/` | sync یک جدول برای یک فروشگاه |
-| **Orchestrator** | `dags/replication/orchestrator/` | اجرای چند DAG sync به‌صورت زنجیره‌ای برای یک فروشگاه |
-| **Reconcile & Sync** | `dags/replication/reconcile_and_sync/` | تشخیص gap در replication و trigger خودکار orchestratorها |
+| **Table Sync** | `dags/masterdata_store_sync/tables/` | sync یک جدول برای یک فروشگاه |
+| **Orchestrator** | `dags/masterdata_store_sync/orchestrator/` | اجرای چند DAG sync به‌صورت زنجیره‌ای برای یک فروشگاه |
+| **Reconcile & Sync** | `dags/masterdata_store_sync/reconcile_and_sync/` | تشخیص gap در replication و trigger خودکار orchestratorها |
 
 برای افزودن جدول جدید، معمولاً **فقط یک فایل در `tables/`** کافی است. در صورت نیاز، orchestrator و mapping reconcile را هم به‌روز می‌کنید.
 
-در حال حاضر حدود **۲۰۰+** DAG در `dags/replication/tables/` پوشش جداول master data خرده‌فروشی/AX را فراهم می‌کند (موجودی، قیمت، تخفیف، کانال، لجستیک، مالیات، سازمان و …).
+در حال حاضر حدود **۲۰۰+** DAG در `dags/masterdata_store_sync/tables/` پوشش جداول master data خرده‌فروشی/AX را فراهم می‌کند (موجودی، قیمت، تخفیف، کانال، لجستیک، مالیات، سازمان و …).
 
 ---
 
@@ -65,7 +65,7 @@ airflow pools set replication_md_store_sync_pool 32 "Replication MD store chunk 
 
 قرارداد نام‌گذاری:
 
-- **فایل:** `dags/replication/tables/ax_<table_name>_sync.py`
+- **فایل:** `dags/masterdata_store_sync/tables/ax_<table_name>_sync.py`
 - **`dag_id`:** `ax_<table_name>_sync` (با snake_case)
 
 مثال: جدول `ax.MyNewTable` → فایل `ax_my_new_table_sync.py` و `dag_id = 'ax_my_new_table_sync'`
@@ -139,7 +139,7 @@ dag = create_dag(dag_config=dag_config, sync_config=sync_config)
 
 ### گام ۶ — ایجاد DAG در Airflow
 
-فایل را در `dags/replication/tables/` ذخیره کنید. Airflow پس از parse، DAG را در UI نمایش می‌دهد.
+فایل را در `dags/masterdata_store_sync/tables/` ذخیره کنید. Airflow پس از parse، DAG را در UI نمایش می‌دهد.
 
 ---
 
@@ -259,7 +259,7 @@ Factory در `dags/template/mssql_masterdata_to_mssql_store_sync_dag_factory.py`
 
 ### اجرا از Orchestrator
 
-اگر چند جدول وابسته دارید، یک orchestrator در `dags/replication/orchestrator/` بسازید:
+اگر چند جدول وابسته دارید، یک orchestrator در `dags/masterdata_store_sync/orchestrator/` بسازید:
 
 ```python
 trigger_my_table = TriggerDagRunOperator(
@@ -280,7 +280,7 @@ trigger_my_table = TriggerDagRunOperator(
 
 اگر می‌خواهید DAG جدید پس از تشخیص gap در replication به‌صورت خودکار اجرا شود، mapping را در فایل reconcile مربوطه اضافه کنید:
 
-**فایل:** `dags/replication/reconcile_and_sync/masterdata_replication_reconcile_and_sync.py`
+**فایل:** `dags/masterdata_store_sync/reconcile_and_sync/masterdata_replication_reconcile_and_sync.py`
 
 ```python
 TABLE_SYNC_DAG_MAPPING = """
@@ -393,8 +393,8 @@ dag = create_dag(dag_config=dag_config, sync_config=sync_config)
 | `pipeline/config/MasterDataSyncConfig.py` | تعریف پارامترهای sync |
 | `pipeline/config/DAGConfig.py` | تعریف پارامترهای DAG |
 | `pipeline/core/MSSQLToMSSQLQueryOrchestrator.py` | منطق خواندن/نوشتن |
-| `dags/replication/tables/ax_price_disc_group_sync.py` | نمونه ساده |
-| `dags/replication/tables/ax_invent_table_sync.py` | نمونه chunk موازی |
-| `dags/replication/tables/ax_invent_dim_sync.py` | نمونه فیلتر `{store_number}` |
-| `dags/replication/orchestrator/` | نمونه orchestrator |
-| `dags/replication/reconcile_and_sync/` | reconcile و trigger خودکار |
+| `dags/masterdata_store_sync/tables/ax_price_disc_group_sync.py` | نمونه ساده |
+| `dags/masterdata_store_sync/tables/ax_invent_table_sync.py` | نمونه chunk موازی |
+| `dags/masterdata_store_sync/tables/ax_invent_dim_sync.py` | نمونه فیلتر `{store_number}` |
+| `dags/masterdata_store_sync/orchestrator/` | نمونه orchestrator |
+| `dags/masterdata_store_sync/reconcile_and_sync/` | reconcile و trigger خودکار |

@@ -208,7 +208,7 @@ pipeline/
 | `ARCHITECTURE_FA.md` | معماری سیستم |
 | `QUICKSTART.md` | راه‌اندازی سریع |
 | `QUICK_START_IMPROVEMENTS.md` | راهنمای بهبودهای reliability |
-| `REPLICATION_MD_STORE_SYNC_GUIDE.md` | ساخت DAG Replication MD |
+| `MASTERDATA_STORE_SYNC_GUIDE.md` | ساخت DAG Replication MD |
 | `MYSQL_TO_MSSQL_SYNC_GUIDE.md` | ساخت DAG همگام‌سازی MySQL → MSSQL |
 | `KAFKA_HEALTH_MONITOR_GUIDE.md` | ساخت DAG مانیتور سلامت Kafka |
 | `CLICKHOUSE_OPTIMIZER_GUIDE.md` | ساخت DAG بهینه‌سازی ClickHouse |
