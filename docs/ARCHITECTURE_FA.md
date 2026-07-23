@@ -57,8 +57,12 @@ DAG / Factory
     │      ├─ MSSQLDataReader (Publisher)
     │      └─ MSSQLServerWriter (Store)  [upsert + delete_missing]
     │
-    └─► ClickHouseOptimizationOrchestrator
-           └─ ClickHouseTableOptimizer
+    ├─► ClickHouseOptimizationOrchestrator
+    │      └─ ClickHouseTableOptimizer
+    │
+    └─► kafka_health_monitor_dag (factory)
+           ├─ validate_kafka_conn / AdminClient
+           └─ KafkaTopicManager (lag / stats / sample)
 ```
 
 ---
@@ -144,6 +148,31 @@ validate → health_before → OPTIMIZE (partition / FINAL / deduplicate) → he
 
 تنظیمات: `ClickHouseOptimizationConfig` (`partition_column`، `partition_format`، `final`، `deduplicate`).
 
+### ۳.۵ Kafka Health Monitor
+
+**Factory:** `kafka_health_monitor_dag_factory.kafka_health_monitor_dag`
+
+**هدف:** مانیتور topicهایی که توسط `mssql_sync` و `sales_inventory` به Kafka نوشته می‌شوند (یک مانیتور به‌ازای هر topic یکتا).
+
+```
+health_checks (موازی):
+  validate_kafka_health ∥ check_consumer_lag ∥ check_topic_stats
+        → sample_recent_messages (اختیاری)
+        → generate_health_report
+```
+
+تنظیمات: `KafkaHealthMonitorConfig` (`kafka_topic`، `consumer_group`، `max_lag_records`، …).
+
+ساختار پوشه هم‌تراز با منبع sync:
+
+| مسیر | پوشش |
+|------|------|
+| `dags/kafka_health_monitor/mssql_sync/dwh/` | topicهای DWH |
+| `dags/kafka_health_monitor/mssql_sync/erp/` | topicهای AX ERP |
+| `dags/kafka_health_monitor/sales_inventory/` | topicهای فروش و موجودی |
+
+جزئیات عملیاتی: [KAFKA_HEALTH_MONITOR_GUIDE.md](KAFKA_HEALTH_MONITOR_GUIDE.md)
+
 ---
 
 ## ۴. پیکربندی‌های کلیدی
@@ -157,6 +186,7 @@ validate → health_before → OPTIMIZE (partition / FINAL / deduplicate) → he
 | `MasterDataSyncConfig` | `MasterDataSyncConfig.py` | `source_query`, `target_schema/table`, `primary_keys`, `chunk_column`, `delete_missing`, `delete_scope_column` |
 | `ConnectionConfig` | `ConnectionConfig.py` | `mssql_conn_id`, `kafka_conn_id`, `clickhouse_conn_id` |
 | `KafkaTopicConfig` | `KafkaTopicConfig.py` | `name`, `num_partitions`, `replication_factor` |
+| `KafkaHealthMonitorConfig` | `KafkaHealthMonitorConfig.py` | `kafka_topic`, `consumer_group`, `max_lag_records`, `include_message_sampling` |
 | `ClickHouseConfig` | `ClickHouseConfig.py` | `database`, `table_name` |
 
 الگوی استفاده در DAGهای واقعی: ساخت dataclassها در فایل DAG و فراخوانی factory در زمان import (ثبت DAG).
@@ -236,6 +266,8 @@ PipelineException
 
 `TransferResult`، `TransferMetrics`، `OptimizationResult` برای گزارش تعداد رکورد، مدت‌زمان و وضعیت انتقال.
 
+مانیتورهای Kafka در task `generate_health_report` وضعیت `healthy` / `warning` / `error`، lag کل و لیست `alerts` را به XCom می‌فرستند.
+
 ---
 
 ## ۸. استقرار Docker
@@ -256,6 +288,7 @@ PipelineException
 | [QUICKSTART.md](QUICKSTART.md) | راه‌اندازی سریع |
 | [QUICK_START_IMPROVEMENTS.md](QUICK_START_IMPROVEMENTS.md) | استفاده از بهبودهای reliability |
 | [REPLICATION_MD_STORE_SYNC_GUIDE.md](REPLICATION_MD_STORE_SYNC_GUIDE.md) | ساخت DAG Replication MD |
+| [KAFKA_HEALTH_MONITOR_GUIDE.md](KAFKA_HEALTH_MONITOR_GUIDE.md) | ساخت DAG مانیتور سلامت Kafka |
 
 ---
 

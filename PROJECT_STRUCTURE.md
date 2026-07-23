@@ -33,7 +33,8 @@ dags/
 │   ├── table_mssql_sync_dag_factory.py
 │   ├── query_mssql_sync_dag_factory.py
 │   ├── query_mssql_replication_md_store_sync_dag_factory.py
-│   └── clickhouse_optimizer_dag_factory.py
+│   ├── clickhouse_optimizer_dag_factory.py
+│   └── kafka_health_monitor_dag_factory.py
 │
 ├── mssql_sync/                    # SQL Server → Kafka (± ClickHouse)
 │   ├── dwh/                       # جداول و کوئری‌های DWH
@@ -51,6 +52,10 @@ dags/
 │   └── erp/
 │
 └── kafka_health_monitor/          # مانیتورینگ سلامت pipeline / Kafka
+    ├── mssql_sync/
+    │   ├── dwh/                   # مانیتور topicهای DWH
+    │   └── erp/                   # مانیتور topicهای AX ERP
+    └── sales_inventory/           # مانیتور topicهای فروش و موجودی
 ```
 
 ### قرارداد نام‌گذاری DAGها
@@ -61,6 +66,7 @@ dags/
 | Query sync ERP | `query_ax_<name>_sync.py` | `query_ax_invent_sum_sync.py` |
 | Replication table | `ax_<table>_sync.py` | `ax_invent_table_sync.py` |
 | ClickHouse optimize | `<name>_clickhouse_optimizer.py` | `com_dim_item_clickhouse_optimizer.py` |
+| Kafka health monitor | `<name>_health_monitor.py` | `dim_date_health_monitor.py` |
 
 دامنه‌های رایج در `replication/tables/`: `retail_*`، `invent_*`، `ecores_*`، `logistics_*`، `hcm_*`، `tax_*`، `om_*`، و جداول پایه مثل `company_*` / `currency` / `cust_*`.
 
@@ -81,6 +87,14 @@ create_table_sync_dag(
     kafka_topic_config=...,
     clickhouse_config=None,
 )
+```
+
+برای health monitor:
+
+```python
+from template.kafka_health_monitor_dag_factory import kafka_health_monitor_dag
+
+kafka_health_monitor_dag(DAG_CONFIG, HEALTH_CONFIG)
 ```
 
 DAGهای پیچیده (مثل `sales_inventory` و `reconcile_and_sync`) به‌صورت سفارشی نوشته شده‌اند.
@@ -111,6 +125,7 @@ pipeline/
 │   ├── KafkaProducerConfig.py
 │   ├── ClickHouseConfig.py
 │   ├── ClickHouseOptimizationConfig.py
+│   ├── KafkaHealthMonitorConfig.py
 │   ├── AuditConfig.py
 │   └── ...
 │
@@ -187,6 +202,7 @@ pipeline/
 | `QUICKSTART.md` | راه‌اندازی سریع |
 | `QUICK_START_IMPROVEMENTS.md` | راهنمای بهبودهای reliability |
 | `REPLICATION_MD_STORE_SYNC_GUIDE.md` | ساخت DAG Replication MD |
+| `KAFKA_HEALTH_MONITOR_GUIDE.md` | ساخت DAG مانیتور سلامت Kafka |
 
 ---
 

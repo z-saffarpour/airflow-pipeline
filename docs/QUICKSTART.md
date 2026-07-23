@@ -160,6 +160,18 @@ airflow dags trigger query_inventory_and_sales_sync
 
 پوشش فعلی حدود ۲۰۰+ جدول در `dags/replication/tables/` است. برای فیلتر فروشگاهی، در query از `{store_number}` استفاده کنید.
 
+### Kafka Health Monitor
+
+راهنمای کامل: [KAFKA_HEALTH_MONITOR_GUIDE.md](KAFKA_HEALTH_MONITOR_GUIDE.md)
+
+برای هر topic یکتای Kafka یک مانیتور در `dags/kafka_health_monitor/` (هم‌دسته با sync) بسازید:
+
+```python
+from template.kafka_health_monitor_dag_factory import kafka_health_monitor_dag
+
+kafka_health_monitor_dag(DAG_CONFIG, HEALTH_CONFIG)
+```
+
 ---
 
 ## ۸. Docker (اختیاری)
@@ -194,6 +206,7 @@ pytest tests/ -v
 | HTTP 500 هنگام `git push` | فایل‌های بزرگ (`images/*.tar`) را commit نکنید |
 | Chunkهای Replication گیر کرده‌اند | اندازه pool و `max_global_parallel_chunks` را هم‌تراز کنید |
 | Duplicate در Kafka | تنظیمات idempotent producer و key ستون را بررسی کنید |
+| Health monitor lag اشتباه | `consumer_group` را با group واقعی sink هم‌تراز کنید |
 
 ---
 
@@ -201,6 +214,8 @@ pytest tests/ -v
 
 - معماری: [ARCHITECTURE_FA.md](ARCHITECTURE_FA.md)
 - ساختار پوشه‌ها: [../PROJECT_STRUCTURE.md](../PROJECT_STRUCTURE.md)
+- Replication MD: [REPLICATION_MD_STORE_SYNC_GUIDE.md](REPLICATION_MD_STORE_SYNC_GUIDE.md)
+- Kafka Health Monitor: [KAFKA_HEALTH_MONITOR_GUIDE.md](KAFKA_HEALTH_MONITOR_GUIDE.md)
 - بهبودهای reliability: [QUICK_START_IMPROVEMENTS.md](QUICK_START_IMPROVEMENTS.md)
 
 ---

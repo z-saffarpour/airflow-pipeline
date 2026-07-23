@@ -39,7 +39,8 @@ sqlserver-kafka-pipeline/
 │   │   ├── table_mssql_sync_dag_factory.py
 │   │   ├── query_mssql_sync_dag_factory.py
 │   │   ├── query_mssql_replication_md_store_sync_dag_factory.py
-│   │   └── clickhouse_optimizer_dag_factory.py
+│   │   ├── clickhouse_optimizer_dag_factory.py
+│   │   └── kafka_health_monitor_dag_factory.py
 │   ├── mssql_sync/               # Sync جداول/کوئری DWH و ERP → Kafka
 │   │   ├── dwh/
 │   │   └── erp/
@@ -49,7 +50,9 @@ sqlserver-kafka-pipeline/
 │   │   ├── orchestrator/         # زنجیره sync چند جدول
 │   │   └── reconcile_and_sync/   # تشخیص gap و trigger خودکار
 │   ├── clickhouse_optimizer/     # بهینه‌سازی جداول ClickHouse
-│   └── kafka_health_monitor/     # مانیتورینگ سلامت pipeline
+│   └── kafka_health_monitor/     # مانیتورینگ سلامت topicهای Kafka (~24)
+│       ├── mssql_sync/dwh|erp/
+│       └── sales_inventory/
 │
 ├── pipeline/                     # هستهٔ مشترک (SOLID)
 │   ├── interfaces/               # ABCها (Reader/Writer/Producer/...)
@@ -81,6 +84,7 @@ sqlserver-kafka-pipeline/
 | `create_query_sync_dag` | اجرای query/CTE سفارشی و ارسال به Kafka |
 | `query_mssql_replication_md_store_sync_dag_factory` | Sync Publisher → فروشگاه با chunk موازی |
 | `clickhouse_optimizer_dag_factory` | بهینه‌سازی جدول ClickHouse |
+| `kafka_health_monitor_dag_factory` | مانیتور lag / topic / سلامت Kafka |
 
 نمونه table sync:
 
@@ -99,6 +103,18 @@ create_table_sync_dag(
 ```
 
 راهنمای کامل Replication MD: [docs/REPLICATION_MD_STORE_SYNC_GUIDE.md](docs/REPLICATION_MD_STORE_SYNC_GUIDE.md)
+
+نمونه health monitor:
+
+```python
+from template.kafka_health_monitor_dag_factory import kafka_health_monitor_dag
+from pipeline.config.DAGConfig import DAGConfig
+from pipeline.config.KafkaHealthMonitorConfig import KafkaHealthMonitorConfig
+
+kafka_health_monitor_dag(DAG_CONFIG, HEALTH_CONFIG)
+```
+
+راهنمای کامل Health Monitor: [docs/KAFKA_HEALTH_MONITOR_GUIDE.md](docs/KAFKA_HEALTH_MONITOR_GUIDE.md)
 
 ## لایه `pipeline/`
 
@@ -192,6 +208,7 @@ airflow pools set replication_md_store_sync_pool 32 "Replication MD store chunk 
 ```bash
 airflow dags trigger table_dwh_rtl_fact_sales_trans_sync
 airflow dags trigger query_inventory_and_sales_sync
+airflow dags trigger table_dwh_rtl_fact_sales_trans_health_monitor
 ```
 
 ## Docker
@@ -232,6 +249,7 @@ pytest tests/ -v
 | [docs/QUICKSTART.md](docs/QUICKSTART.md) | راه‌اندازی سریع |
 | [docs/QUICK_START_IMPROVEMENTS.md](docs/QUICK_START_IMPROVEMENTS.md) | بهبودهای reliability و error-handling |
 | [docs/REPLICATION_MD_STORE_SYNC_GUIDE.md](docs/REPLICATION_MD_STORE_SYNC_GUIDE.md) | ساخت DAG جدید Replication MD |
+| [docs/KAFKA_HEALTH_MONITOR_GUIDE.md](docs/KAFKA_HEALTH_MONITOR_GUIDE.md) | ساخت DAG مانیتور سلامت Kafka |
 | [docker/README.md](docker/README.md) | استقرار Docker و WinAuth |
 | `docker/*/SECURITY_GUIDE.md` | راهنمای امنیتی نسخه harden |
 

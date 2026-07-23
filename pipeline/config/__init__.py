@@ -14,6 +14,7 @@ from pipeline.config.ClickHouseConfig import ClickHouseConfig
 from pipeline.config.DAGConfig import DAGConfig
 from pipeline.config.SyncConfig import SyncConfig
 from pipeline.config.MasterDataSyncConfig import MasterDataSyncConfig
+from pipeline.config.KafkaHealthMonitorConfig import KafkaHealthMonitorConfig
 
 __all__ = [
     "TableConfiguration",
@@ -27,5 +28,5 @@ __all__ = [
     "DAGConfig",
     "SyncConfig",
     "MasterDataSyncConfig",
-    
+    "KafkaHealthMonitorConfig",
 ]
