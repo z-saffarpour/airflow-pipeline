@@ -5,6 +5,33 @@ Immutable configuration holder.
 from dataclasses import dataclass
 from typing import Optional
 
+from pipeline.utils.persian_calendar import (
+    to_persian_date,
+    to_persian_date_key,
+    to_persian_year,
+    to_persian_year_month,
+)
+
+
+# Supported partition_format values:
+#   Gregorian: YYYYMMDD, YYYYMM, YYYY
+#   Persian/Jalali: PERSIAN_YYYYMMDD, PERSIAN_YYYYMM, PERSIAN_YYYY, PERSIAN_YYYY/MM/DD
+#                   (aliases: JALALI_*, SHAMSI_*)
+_PERSIAN_ALIASES = {
+    "PERSIAN_YYYYMMDD": "PERSIAN_YYYYMMDD",
+    "PERSIAN_YYYYMM": "PERSIAN_YYYYMM",
+    "PERSIAN_YYYY": "PERSIAN_YYYY",
+    "PERSIAN_YYYY/MM/DD": "PERSIAN_YYYY/MM/DD",
+    "JALALI_YYYYMMDD": "PERSIAN_YYYYMMDD",
+    "JALALI_YYYYMM": "PERSIAN_YYYYMM",
+    "JALALI_YYYY": "PERSIAN_YYYY",
+    "JALALI_YYYY/MM/DD": "PERSIAN_YYYY/MM/DD",
+    "SHAMSI_YYYYMMDD": "PERSIAN_YYYYMMDD",
+    "SHAMSI_YYYYMM": "PERSIAN_YYYYMM",
+    "SHAMSI_YYYY": "PERSIAN_YYYY",
+    "SHAMSI_YYYY/MM/DD": "PERSIAN_YYYY/MM/DD",
+}
+
 
 @dataclass(frozen=True)
 class ClickHouseOptimizationConfig:
@@ -29,7 +56,7 @@ class ClickHouseOptimizationConfig:
         Convert execution_date to partition value based on format.
         
         Args:
-            execution_date: Date in YYYYMMDD format
+            execution_date: Date in YYYYMMDD format (Gregorian / Airflow ds_nodash)
             
         Returns:
             Partition value or None if no partition column
@@ -37,14 +64,30 @@ class ClickHouseOptimizationConfig:
         if not self.partition_column:
             return None
         
-        # For YYYYMMDD format, return as-is
-        if self.partition_format == 'YYYYMMDD':
+        fmt = (self.partition_format or "").strip().upper()
+        persian_fmt = _PERSIAN_ALIASES.get(fmt)
+
+        # Gregorian formats (Airflow execution date is already Gregorian)
+        if fmt == "YYYYMMDD":
             return execution_date
-        # For YYYYMM format, truncate
-        elif self.partition_format == 'YYYYMM':
+        if fmt == "YYYYMM":
             return execution_date[:6]
-        # For YYYY format
-        elif self.partition_format == 'YYYY':
+        if fmt == "YYYY":
             return execution_date[:4]
-        
-        return execution_date
+
+        # Persian / Jalali formats — convert Gregorian execution_date first
+        if persian_fmt == "PERSIAN_YYYYMMDD":
+            return to_persian_date_key(execution_date)
+        if persian_fmt == "PERSIAN_YYYYMM":
+            return to_persian_year_month(execution_date)
+        if persian_fmt == "PERSIAN_YYYY":
+            return to_persian_year(execution_date)
+        if persian_fmt == "PERSIAN_YYYY/MM/DD":
+            return to_persian_date(execution_date)
+
+        raise ValueError(
+            f"Unsupported partition_format={self.partition_format!r}. "
+            f"Use YYYYMMDD, YYYYMM, YYYY, or "
+            f"PERSIAN_YYYYMMDD, PERSIAN_YYYYMM, PERSIAN_YYYY, PERSIAN_YYYY/MM/DD "
+            f"(aliases: JALALI_*, SHAMSI_*)."
+        )

@@ -79,8 +79,14 @@ class ClickHouseTableOptimizer(DatabaseOptimizer):
             query += f" ON CLUSTER {cluster_name}"
         
         if partition:
-            # Partition values should be parameterized
-            query += f" PARTITION {partition}"
+            # Numeric partitions: PARTITION 140505
+            # String partitions (e.g. 1405/05/01): PARTITION '1405/05/01'
+            partition_str = str(partition)
+            if re.fullmatch(r"-?\d+", partition_str):
+                query += f" PARTITION {partition_str}"
+            else:
+                escaped = partition_str.replace("\\", "\\\\").replace("'", "\\'")
+                query += f" PARTITION '{escaped}'"
             
         if final:
             query += " FINAL"

@@ -5,11 +5,11 @@ This DAG runs OPTIMIZE TABLE on ClickHouse for Fact_SalesTrans table after data 
 transferred from Kafka.
 
 Features:
-- Partition-based optimization (by DateKey)
+- Partition-based optimization (by PersianYearMonthInt / Jalali YYYYMM)
 - FINAL merge support
 - Deduplication support
 - Health check before/after optimization
-- Scheduled daily at 4 AM
+- Scheduled daily at 8 AM
 
 Author: Senior Data Engineer
 Version: 2.0
@@ -43,8 +43,9 @@ OPTIMIZE_CONFIG = ClickHouseOptimizationConfig(
     cluster_name = 'cluster_2S_2R',
     database = 'RTL',
     table_name = 'Local_Fact_SalesTrans_V01',
-    partition_column = None, #'PersianYearMonthInt',
-    partition_format = 'YYYYMM',
+    partition_column = 'PersianYearMonthInt',
+    # Table is partitioned by Jalali year-month (e.g. 140504), not Gregorian YYYYMM
+    partition_format = 'PERSIAN_YYYYMM',
     final = True,
     deduplicate = True
 )
