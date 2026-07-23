@@ -34,6 +34,7 @@ dags/
 │   ├── mssql_to_kafka_clickhouse_sync_dag_factory.py
 │   ├── mssql_masterdata_to_mssql_store_sync_dag_factory.py
 │   ├── mysql_to_mssql_sync_dag_factory.py
+│   ├── mongo_to_mssql_sync_dag_factory.py
 │   ├── clickhouse_optimizer_dag_factory.py
 │   └── kafka_health_monitor_dag_factory.py
 │
@@ -42,6 +43,8 @@ dags/
 │   └── erp/                       # کوئری‌ها و orchestratorهای ERP/AX
 │
 ├── mysql_to_mssql_sync/           # MySQL → MSSQL (upsert / replication-style)
+│
+├── mongo_to_mssql_sync/           # MongoDB → MSSQL (upsert / replication-style)
 │
 ├── sales_inventory/               # فروش و موجودی چندمنبعی → Kafka
 │
@@ -69,6 +72,7 @@ dags/
 | Query sync ERP | `query_ax_<name>_sync.py` | `query_ax_invent_sum_sync.py` |
 | Replication table | `ax_<table>_sync.py` | `ax_invent_table_sync.py` |
 | MySQL → MSSQL | `<name>_to_mssql_sync.py` | `example_table_to_mssql_sync.py` |
+| MongoDB → MSSQL | `<name>_to_mssql_sync.py` | `example_collection_to_mssql_sync.py` |
 | ClickHouse optimize | `<name>_clickhouse_optimizer.py` | `com_dim_item_clickhouse_optimizer.py` |
 | Kafka health monitor | `<name>_health_monitor.py` | `dim_date_health_monitor.py` |
 

@@ -14,6 +14,9 @@ sqlalchemy>=2.0.0
 # ClickHouse Dependencies
 clickhouse-driver>=0.2.6
 
+# MongoDB Dependencies
+pymongo>=4.6.0
+
 # Serialization
 avro-python3>=1.11.3
 

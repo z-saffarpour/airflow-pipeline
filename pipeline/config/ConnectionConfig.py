@@ -11,6 +11,7 @@ class ConnectionConfig:
     """Configuration for database and message broker connections. Immutable."""
     mssql_conn_id: str = None # "mssql_default"
     mysql_conn_id: str = None # "mysql_default"
+    mongo_conn_id: str = None # "mongo_default"
     kafka_conn_id: str = None # "kafka_default"
     clickhouse_conn_id: str = None # "clickhouse_default"
 
@@ -19,6 +20,7 @@ class ConnectionConfig:
         return {
             'mssql_conn_id': self.mssql_conn_id,
             'mysql_conn_id': self.mysql_conn_id,
+            'mongo_conn_id': self.mongo_conn_id,
             'kafka_conn_id': self.kafka_conn_id,
             'clickhouse_conn_id': self.clickhouse_conn_id,
         }

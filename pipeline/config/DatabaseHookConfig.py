@@ -26,6 +26,14 @@ class DatabaseHookConfig:
                 from airflow.providers.mysql.hooks.mysql import MySqlHook # type: ignore
                 self.hook_class = MySqlHook
 
+            elif self.database_type in ("mongo", "mongodb"):
+                try:
+                    from airflow.providers.mongo.hooks.mongo import MongoHook  # type: ignore
+                    self.hook_class = MongoHook
+                except ImportError:
+                    # Optional provider; pipeline uses pymongo via MongoDBConnectionFactory.
+                    self.hook_class = None
+
             elif self.database_type == "clickhouse":
                 from airflow.providers.clickhouse.hooks.clickhouse import ClickHouseHook # type: ignore
                 self.hook_class = ClickHouseHook

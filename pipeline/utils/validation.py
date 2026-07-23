@@ -15,6 +15,7 @@ from airflow.exceptions import AirflowException # type: ignore
 
 from pipeline.database.ConnectionFactory import ConnectionFactory
 from pipeline.database.MySQLConnectionFactory import MySQLConnectionFactory
+from pipeline.database.MongoDBConnectionFactory import MongoDBConnectionFactory
 from pipeline.database.ClickHouseConnectionFactory import ClickHouseConnectionFactory
 from pipeline.kafka.KafkaConnectionFactory import KafkaConnectionFactory
 # ============================================================================
@@ -212,6 +213,42 @@ def validate_mysql_conn(conn_id: str) -> dict:
     except Exception as exc:
         logger.exception("MySQL validation failed: %s", conn_id)
         raise AirflowException(f"MySQL validation failed for {conn_id}: {exc}")
+
+
+def validate_mongo_conn(conn_id: str) -> dict:
+    """
+    Validate a MongoDB connection by executing a ping command.
+
+    Args:
+        conn_id: Airflow Connection ID for the MongoDB instance.
+
+    Returns:
+        dict with keys: status, conn_id, timestamp
+
+    Raises:
+        AirflowException: If the connection fails or ping fails.
+    """
+    logger.info("Validating MongoDB connection: %s", conn_id)
+
+    try:
+        factory = MongoDBConnectionFactory(conn_id=conn_id)
+        result = factory.test_connection()
+
+        if result is False:
+            raise AirflowException(f"MongoDB ping returned failure: {conn_id}")
+
+        validation_result = ValidationResult(
+            status="ok",
+            conn_id=conn_id,
+            timestamp=datetime.now().isoformat(),
+        )
+
+        logger.info("MongoDB validated: %s", conn_id)
+        return validation_result.to_dict()
+
+    except Exception as exc:
+        logger.exception("MongoDB validation failed: %s", conn_id)
+        raise AirflowException(f"MongoDB validation failed for {conn_id}: {exc}")
 
 
 def validate_clickhouse_conn(conn_id: str) -> dict:
