@@ -387,7 +387,7 @@ dag = create_dag(
 |------|----------------|---------------|
 | منبع | MSSQL Publisher | MySQL |
 | مقصد | فروشگاه پویا (از ConnectionInfo) | MSSQL با conn ثابت |
-| Factory | `query_mssql_replication_md_store_sync_dag_factory` | `mysql_to_mssql_sync_dag_factory` |
+| Factory | `mssql_masterdata_to_mssql_store_sync_dag_factory` | `mysql_to_mssql_sync_dag_factory` |
 | Orchestrator | `MSSQLToMSSQLQueryOrchestrator` | `MySQLToMSSQLQueryOrchestrator` |
 | پارامتر trigger | معمولاً `store_number` | نیاز نیست |
 | دیالکت source query | T-SQL | MySQL |

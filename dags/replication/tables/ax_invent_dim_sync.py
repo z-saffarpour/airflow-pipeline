@@ -4,7 +4,7 @@ Airflow DAG: ax.InventDim Query to Store
 This DAG executes a business query on ax.InventDim and sends results to Store.
 Only rows for the requested store (INVENTLOCATIONID = store_number) and shared
 blank-location rows (INVENTLOCATIONID = '') are synced.
-Uses query_mssql_replication_md_store_sync_dag_factory template tasks.
+Uses mssql_masterdata_to_mssql_store_sync_dag_factory template tasks.
 
 Author: Zahra Saffarpour
 Version: 1.0
@@ -15,7 +15,7 @@ from airflow.models import Variable # type: ignore
 from pipeline.config import DAGConfig
 from pipeline.config.MasterDataSyncConfig import MasterDataSyncConfig
 
-from template.query_mssql_replication_md_store_sync_dag_factory import create_dag
+from template.mssql_masterdata_to_mssql_store_sync_dag_factory import create_dag
 
 # ============================================================================
 # CONFIGURATION 

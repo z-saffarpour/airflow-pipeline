@@ -85,7 +85,7 @@ from datetime import datetime, timedelta
 from airflow.models import Variable
 from pipeline.config import DAGConfig
 from pipeline.config.MasterDataSyncConfig import MasterDataSyncConfig
-from template.query_mssql_replication_md_store_sync_dag_factory import create_dag
+from template.mssql_masterdata_to_mssql_store_sync_dag_factory import create_dag
 
 dag_config = DAGConfig(
     dag_id='ax_my_new_table_sync',
@@ -225,7 +225,7 @@ Factory در زمان اجرا تابع `resolve_store_scoped_sync_config` را 
 
 ## ۶. جریان اجرای DAG (خودکار توسط Factory)
 
-Factory در `dags/template/query_mssql_replication_md_store_sync_dag_factory.py` این مراحل را می‌سازد:
+Factory در `dags/template/mssql_masterdata_to_mssql_store_sync_dag_factory.py` این مراحل را می‌سازد:
 
 ### Validation
 - اعتبارسنجی `store_number` (از trigger conf یا params)
@@ -302,14 +302,14 @@ TABLE_SYNC_DAG_MAPPING = """
 ```python
 """
 Airflow DAG: ax.MyNewTable Query to Store
-Uses query_mssql_replication_md_store_sync_dag_factory template.
+Uses mssql_masterdata_to_mssql_store_sync_dag_factory template.
 """
 from datetime import datetime, timedelta
 from airflow.models import Variable
 
 from pipeline.config import DAGConfig
 from pipeline.config.MasterDataSyncConfig import MasterDataSyncConfig
-from template.query_mssql_replication_md_store_sync_dag_factory import create_dag
+from template.mssql_masterdata_to_mssql_store_sync_dag_factory import create_dag
 
 TABLE = "MyNewTable"
 DAG_SUFFIX = "my_new_table"
@@ -389,7 +389,7 @@ dag = create_dag(dag_config=dag_config, sync_config=sync_config)
 
 | فایل | کاربرد |
 |------|--------|
-| `dags/template/query_mssql_replication_md_store_sync_dag_factory.py` | Factory اصلی (+ `resolve_store_scoped_sync_config`) |
+| `dags/template/mssql_masterdata_to_mssql_store_sync_dag_factory.py` | Factory اصلی (+ `resolve_store_scoped_sync_config`) |
 | `pipeline/config/MasterDataSyncConfig.py` | تعریف پارامترهای sync |
 | `pipeline/config/DAGConfig.py` | تعریف پارامترهای DAG |
 | `pipeline/core/MSSQLToMSSQLQueryOrchestrator.py` | منطق خواندن/نوشتن |

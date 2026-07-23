@@ -38,7 +38,7 @@ sqlserver-kafka-pipeline/
 │   ├── template/                 # Factoryهای ساخت DAG
 │   │   ├── table_mssql_sync_dag_factory.py
 │   │   ├── mssql_to_kafka_clickhouse_sync_dag_factory.py
-│   │   ├── query_mssql_replication_md_store_sync_dag_factory.py
+│   │   ├── mssql_masterdata_to_mssql_store_sync_dag_factory.py
 │   │   ├── clickhouse_optimizer_dag_factory.py
 │   │   └── kafka_health_monitor_dag_factory.py
 │   ├── mssql_sync/               # Sync جداول/کوئری DWH و ERP → Kafka
@@ -82,7 +82,7 @@ sqlserver-kafka-pipeline/
 |---------|--------|
 | `create_table_sync_dag` | Incremental table sync بر اساس `execution_date` |
 | `create_query_sync_dag` | اجرای query/CTE سفارشی و ارسال به Kafka |
-| `query_mssql_replication_md_store_sync_dag_factory` | Sync Publisher → فروشگاه با chunk موازی |
+| `mssql_masterdata_to_mssql_store_sync_dag_factory` | Sync Publisher → فروشگاه با chunk موازی |
 | `clickhouse_optimizer_dag_factory` | بهینه‌سازی جدول ClickHouse |
 | `kafka_health_monitor_dag_factory` | مانیتور lag / topic / سلامت Kafka |
 

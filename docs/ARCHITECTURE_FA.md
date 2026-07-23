@@ -106,7 +106,7 @@ DAGهای سفارشی در `dags/sales_inventory/` (نه فقط template ساد
 
 ### ۳.۳ Replication MD → Store (MSSQL → MSSQL)
 
-**Factory:** `query_mssql_replication_md_store_sync_dag_factory.create_dag`
+**Factory:** `mssql_masterdata_to_mssql_store_sync_dag_factory.create_dag`
 
 **اتصالات:**
 

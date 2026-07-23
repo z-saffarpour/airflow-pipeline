@@ -32,7 +32,7 @@ dags/
 ├── template/                      # Factoryهای قابل‌استفاده مجدد
 │   ├── table_mssql_sync_dag_factory.py
 │   ├── mssql_to_kafka_clickhouse_sync_dag_factory.py
-│   ├── query_mssql_replication_md_store_sync_dag_factory.py
+│   ├── mssql_masterdata_to_mssql_store_sync_dag_factory.py
 │   ├── mysql_to_mssql_sync_dag_factory.py
 │   ├── clickhouse_optimizer_dag_factory.py
 │   └── kafka_health_monitor_dag_factory.py

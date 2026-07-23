@@ -257,7 +257,7 @@ airflow pools set replication_md_store_sync_pool 32 "Replication MD store chunk 
 | Hook امن | `pipeline/database/SafeMsSqlHook.py` |
 | Audit | `pipeline/utils/AuditLogger.py` |
 | MD Orchestrator | `pipeline/core/MSSQLToMSSQLQueryOrchestrator.py` |
-| Replication factory | `dags/template/query_mssql_replication_md_store_sync_dag_factory.py` |
+| Replication factory | `dags/template/mssql_masterdata_to_mssql_store_sync_dag_factory.py` |
 | Store-scoped resolve | `resolve_store_scoped_sync_config` در همان factory |
 
 ---
