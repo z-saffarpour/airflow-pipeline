@@ -31,7 +31,7 @@ sqlserver-kafka-pipeline/
 dags/
 ├── template/                      # Factoryهای قابل‌استفاده مجدد
 │   ├── table_mssql_sync_dag_factory.py
-│   ├── query_mssql_sync_dag_factory.py
+│   ├── mssql_to_kafka_clickhouse_sync_dag_factory.py
 │   ├── query_mssql_replication_md_store_sync_dag_factory.py
 │   ├── mysql_to_mssql_sync_dag_factory.py
 │   ├── clickhouse_optimizer_dag_factory.py
@@ -211,6 +211,7 @@ pipeline/
 | `REPLICATION_MD_STORE_SYNC_GUIDE.md` | ساخت DAG Replication MD |
 | `MYSQL_TO_MSSQL_SYNC_GUIDE.md` | ساخت DAG همگام‌سازی MySQL → MSSQL |
 | `KAFKA_HEALTH_MONITOR_GUIDE.md` | ساخت DAG مانیتور سلامت Kafka |
+| `CLICKHOUSE_OPTIMIZER_GUIDE.md` | ساخت DAG بهینه‌سازی ClickHouse |
 
 ---
 

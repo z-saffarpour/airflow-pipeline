@@ -37,7 +37,7 @@ sqlserver-kafka-pipeline/
 ├── dags/
 │   ├── template/                 # Factoryهای ساخت DAG
 │   │   ├── table_mssql_sync_dag_factory.py
-│   │   ├── query_mssql_sync_dag_factory.py
+│   │   ├── mssql_to_kafka_clickhouse_sync_dag_factory.py
 │   │   ├── query_mssql_replication_md_store_sync_dag_factory.py
 │   │   ├── clickhouse_optimizer_dag_factory.py
 │   │   └── kafka_health_monitor_dag_factory.py

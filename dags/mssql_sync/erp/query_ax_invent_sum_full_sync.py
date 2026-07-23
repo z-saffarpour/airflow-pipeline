@@ -10,7 +10,7 @@ Version: 3.0
 from datetime import datetime
 
 from pipeline.config import DAGConfig, ConnectionConfig, KafkaTopicConfig, QueryConfiguration, SyncConfig 
-from template.query_mssql_sync_dag_factory import create_query_sync_dag
+from template.mssql_to_kafka_clickhouse_sync_dag_factory import create_query_sync_dag
 
 # ============================================================================
 # CONFIGURATION 

@@ -74,7 +74,7 @@ DAG / Factory
 **Factoryها:**
 
 - `dags/template/table_mssql_sync_dag_factory.py` → `create_table_sync_dag`
-- `dags/template/query_mssql_sync_dag_factory.py` → `create_query_sync_dag`
+- `dags/template/mssql_to_kafka_clickhouse_sync_dag_factory.py` → `create_query_sync_dag`
 
 **گراف Task:**
 
@@ -163,6 +163,8 @@ validate → health_before → OPTIMIZE (partition / FINAL / deduplicate) → he
 ```
 
 تنظیمات: `ClickHouseOptimizationConfig` (`partition_column`، `partition_format`، `final`، `deduplicate`).
+
+جزئیات عملیاتی: [CLICKHOUSE_OPTIMIZER_GUIDE.md](CLICKHOUSE_OPTIMIZER_GUIDE.md)
 
 ### ۳.۵ Kafka Health Monitor
 
@@ -325,6 +327,7 @@ PipelineException
 | [REPLICATION_MD_STORE_SYNC_GUIDE.md](REPLICATION_MD_STORE_SYNC_GUIDE.md) | ساخت DAG Replication MD |
 | [MYSQL_TO_MSSQL_SYNC_GUIDE.md](MYSQL_TO_MSSQL_SYNC_GUIDE.md) | ساخت DAG همگام‌سازی MySQL → MSSQL |
 | [KAFKA_HEALTH_MONITOR_GUIDE.md](KAFKA_HEALTH_MONITOR_GUIDE.md) | ساخت DAG مانیتور سلامت Kafka |
+| [CLICKHOUSE_OPTIMIZER_GUIDE.md](CLICKHOUSE_OPTIMIZER_GUIDE.md) | ساخت DAG بهینه‌سازی ClickHouse |
 
 ---
 
