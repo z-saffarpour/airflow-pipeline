@@ -103,8 +103,8 @@ TABLE_SYNC_DAG_MAPPING = """
   "ax.PriceDiscTable": {
     "dag_id": "ax_price_disc_table_sync"
   },
-  "ax.RetaillAbelchangeJournalTrans": {
-    "dag_id": "ax_retail_abelchange_journal_trans_sync"
+  "ax.RetailLabelChangeJournalTrans": {
+    "dag_id": "ax_retail_label_change_journal_trans_sync"
   },
   "ax.RetailAssortmentLookupChannelGroup": {
     "dag_id": "ax_retail_assortment_lookup_channel_group_sync"

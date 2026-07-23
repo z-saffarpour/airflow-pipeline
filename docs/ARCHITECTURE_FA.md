@@ -116,10 +116,13 @@ DAGهای سفارشی در `dags/sales_inventory/` (نه فقط template ساد
 
 - `use_dynamic_tasks=True` → `plan_sync_chunks` سپس `sync_data_chunk.expand(...)`
 - در غیر این صورت → `sync_data` یک‌مرحله‌ای
+- در هر دو مسیر، `{store_number}` داخل `source_query` / `source_query_count` در runtime با `resolve_store_scoped_sync_config` جایگزین می‌شود
 
 **Upsert:** `MSSQLServerWriter.upsert_batch` با staging اختیاری، `use_hash_change_detection`، و `unique_keys`.
 
 **`delete_missing`:** کلیدهای منبع در staging جمع می‌شوند؛ سپس ردیف‌هایی که داخل بازهٔ `[min, max]` ستون `delete_scope_column` (یا `chunk_column`) هستند ولی در staging نیستند حذف می‌شوند.
+
+پوشش فعلی: حدود **۲۰۰+** فایل در `dags/replication/tables/` برای جداول AX/Retail master data.
 
 لایه‌های DAG:
 

@@ -42,7 +42,7 @@ dags/
 ├── sales_inventory/               # فروش و موجودی چندمنبعی → Kafka
 │
 ├── replication/                   # تعمیر Replication MD
-│   ├── tables/                    # sync تک‌جدول برای یک فروشگاه
+│   ├── tables/                    # ~200+ DAG sync تک‌جدول برای فروشگاه
 │   ├── orchestrator/              # زنجیره چند جدول برای یک فروشگاه
 │   └── reconcile_and_sync/        # تشخیص gap و trigger خودکار
 │
@@ -59,8 +59,12 @@ dags/
 |------|------------|------|
 | Table sync DWH | `table_<domain>_<name>_sync.py` | `table_rtl_fact_sales_trans_sync.py` |
 | Query sync ERP | `query_ax_<name>_sync.py` | `query_ax_invent_sum_sync.py` |
-| Replication table | `ax_<table>_sync.py` | `ax_retail_discount_code_sync.py` |
+| Replication table | `ax_<table>_sync.py` | `ax_invent_table_sync.py` |
 | ClickHouse optimize | `<name>_clickhouse_optimizer.py` | `com_dim_item_clickhouse_optimizer.py` |
+
+دامنه‌های رایج در `replication/tables/`: `retail_*`، `invent_*`، `ecores_*`، `logistics_*`، `hcm_*`، `tax_*`، `om_*`، و جداول پایه مثل `company_*` / `currency` / `cust_*`.
+
+برای جداول فیلترشده بر اساس فروشگاه، query می‌تواند `{store_number}` داشته باشد (جایگزینی در factory).
 
 ### الگوی ثبت DAG
 

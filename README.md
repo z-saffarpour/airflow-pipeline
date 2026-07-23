@@ -6,7 +6,7 @@
 
 - **SQL Server → Kafka**: sync جدولی و query-based با streaming و batching
 - **Sales & Inventory**: استخراج فروش خرده‌فروشی (~۵۰۰۰ فروشگاه)، EC، سفارش و موجودی به Kafka
-- **Replication MD Repair**: بازیابی دادهٔ ازدست‌رفتهٔ Replication از Publisher به Subscriber
+- **Replication MD Repair**: بازیابی دادهٔ ازدست‌رفتهٔ Replication از Publisher به Subscriber (~۲۰۰+ جدول AX/Retail، پشتیبانی فیلتر `{store_number}`)
 - **ClickHouse Optimizer**: بهینه‌سازی پارتیشن، FINAL merge و deduplication
 - **Health Monitoring**: مانیتورینگ lag، topic و سلامت اتصال‌ها
 - **Windows Authentication**: پشتیبانی Kerberos/ODBC و ایمیج‌های Docker آماده
@@ -44,7 +44,7 @@ sqlserver-kafka-pipeline/
 │   │   ├── dwh/
 │   │   └── erp/
 │   ├── sales_inventory/          # فروش و موجودی چندمنبعی → Kafka
-│   ├── replication/              # تعمیر Replication MD
+│   ├── replication/              # تعمیر Replication MD (~200+ table DAG)
 │   │   ├── tables/               # sync تک‌جدول برای یک فروشگاه
 │   │   ├── orchestrator/         # زنجیره sync چند جدول
 │   │   └── reconcile_and_sync/   # تشخیص gap و trigger خودکار

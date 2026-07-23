@@ -158,6 +158,8 @@ airflow dags trigger query_inventory_and_sales_sync
 
 راهنمای کامل: [REPLICATION_MD_STORE_SYNC_GUIDE.md](REPLICATION_MD_STORE_SYNC_GUIDE.md)
 
+پوشش فعلی حدود ۲۰۰+ جدول در `dags/replication/tables/` است. برای فیلتر فروشگاهی، در query از `{store_number}` استفاده کنید.
+
 ---
 
 ## ۸. Docker (اختیاری)

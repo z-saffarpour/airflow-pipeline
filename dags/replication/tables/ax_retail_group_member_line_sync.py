@@ -25,10 +25,10 @@ dag_config = DAGConfig(
     owner= "Zahra Saffarpour",
 
     # Schedule
-    start_date = datetime(2026, 5, 12),
+    start_date = datetime(2026, 7, 14),
     schedule = None,
     catchup = False, # No backfill for dimension tables
-    max_active_runs = int(Variable.get("max_active_runs_retail_group_member_line", default_var=4)),
+    max_active_runs=int(Variable.get("max_active_runs_retail_group_member_line", default_var=4)),
     retries=int(Variable.get("retries_retail_group_member_line", default_var=2)),
     retry_delay=timedelta(minutes=int(Variable.get("retry_delay_minutes_retail_group_member_line", default_var=5))),
     execution_timeout=timedelta(hours=int(Variable.get("execution_timeout_hours_retail_group_member_line", default_var=8))),
@@ -39,9 +39,9 @@ dag_config = DAGConfig(
 
 sync_config =  MasterDataSyncConfig(
     source_name = 'adhoc_ax_RetailGroupMemberLine',
-    source_query= """ 
+    source_query= """
             SELECT RECID, CATEGORY, PRODUCT, VARIANT
-            FROM ax.RetailGroupMemberLine;
+            FROM ax.RetailGroupMemberLine WITH (READPAST);
           """,
     source_query_count= """
             SELECT COUNT(1) AS CNT
@@ -61,7 +61,7 @@ sync_config =  MasterDataSyncConfig(
     staging_schema = Variable.get("mssql_staging_schema", default_var = "crt"),
     delete_missing=bool(int(Variable.get("delete_missing_retail_group_member_line", default_var=0))),
     delete_scope_column='RECID',
-    batch_size = int(Variable.get("batch_size_retail_group_member_line", default_var = 20000))
+    batch_size = int(Variable.get("batch_size_retail_group_member_line", default_var = 30000))
 )
 
 # ============================================================================

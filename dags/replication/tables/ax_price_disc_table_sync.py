@@ -1,7 +1,7 @@
 """
-Airflow DAG: ax.PRICEDISCTABLE Query to Store
+Airflow DAG: ax.PriceDiscTable Query to Store
 ===============================================
-This DAG executes a business query on ax.PRICEDISCTABLE and sends results to Store.
+This DAG executes a business query on ax.PriceDiscTable and sends results to Store.
 Uses query_mssql_replication_md_store_sync_dag_factory template tasks.
 
 Author: Zahra Saffarpour
@@ -25,7 +25,7 @@ dag_config = DAGConfig(
     owner= "Zahra Saffarpour",
 
     # Schedule
-    start_date = datetime(2026, 5, 12),
+    start_date = datetime(2026, 7, 14),
     schedule = None,
     catchup = False, # No backfill for dimension tables
     max_active_runs=int(Variable.get("max_active_runs_price_disc_table", default_var=4)),
@@ -40,10 +40,11 @@ dag_config = DAGConfig(
 sync_config =  MasterDataSyncConfig(
     source_name = 'adhoc_ax_PriceDiscTable',
     source_query= """
-            SELECT RECID, ACCOUNTCODE, ACCOUNTRELATION, AGREEMENT, AGREEMENTHEADEREXT_RU, ALLOCATEMARKUP, AMOUNT, CALENDARDAYS, CURRENCY, 
-            	   DELIVERYTIME, FROMDATE, GENERICCURRENCY, INVENTDIMID, ITEMCODE, ITEMRELATION, MARKUP, MAXIMUMRETAILPRICE_IN, MODULE, 
-            	   PERCENT1, PERCENT2, PRICEUNIT, QUANTITYAMOUNTFROM, QUANTITYAMOUNTTO, RELATION, SEARCHAGAIN, TODATE, UNITID, 
-            	   MODIFIEDDATETIME, DATAAREAID
+            SELECT RECID, ACCOUNTCODE, ACCOUNTRELATION, AGREEMENT, AGREEMENTHEADEREXT_RU, ALLOCATEMARKUP, AMOUNT,
+                   CALENDARDAYS, CURRENCY, DELIVERYTIME, FROMDATE, GENERICCURRENCY, INVENTDIMID, ITEMCODE,
+                   ITEMRELATION, MARKUP, MAXIMUMRETAILPRICE_IN, [MODULE], PERCENT1, PERCENT2, PRICEUNIT,
+                   QUANTITYAMOUNTFROM, QUANTITYAMOUNTTO, RELATION, SEARCHAGAIN, TODATE, UNITID, MODIFIEDDATETIME,
+                   DATAAREAID
             FROM ax.PRICEDISCTABLE WITH (READPAST);
           """,
     source_query_count= """

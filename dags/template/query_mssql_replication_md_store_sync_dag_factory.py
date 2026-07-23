@@ -13,6 +13,7 @@ Light tasks (validation, discovery, create_chunks, report) use ``default_pool``.
 Only ``sync_replication_md_store_chunk`` uses ``dag_config.pool`` (e.g. replication_md_store_sync_pool).
 """
 import logging
+from dataclasses import replace
 from datetime import timedelta
 from typing import Any, Dict, List
 
@@ -65,6 +66,28 @@ STORE_DURATION_THRESHOLD_SEC  = 1200 # 20 minutes
 # ============================================================================
 # HELPER FUNCTIONS
 # ============================================================================
+
+def resolve_store_scoped_sync_config(
+    sync_config: MasterDataSyncConfig,
+    store_number: str,
+) -> MasterDataSyncConfig:
+    """Substitute ``{store_number}`` placeholders in source queries at runtime."""
+    count_query = sync_config.source_query_count or ""
+    if (
+        "{store_number}" not in sync_config.source_query
+        and "{store_number}" not in count_query
+    ):
+        return sync_config
+
+    safe_store = str(store_number).strip().replace("'", "''")
+    updates: Dict[str, Any] = {
+        "source_query": sync_config.source_query.replace("{store_number}", safe_store),
+    }
+    if sync_config.source_query_count:
+        updates["source_query_count"] = sync_config.source_query_count.replace(
+            "{store_number}", safe_store
+        )
+    return replace(sync_config, **updates)
 
 def get_sql_credentials(conn_id: str) -> tuple:
     """
@@ -497,6 +520,10 @@ def make_sync_replication_md_store_task(dag_config: DAGConfig, sync_config: Mast
                 template_conn_id = STORE_TEMPLATE_CONN_ID
             )
             
+            resolved_sync_config = resolve_store_scoped_sync_config(
+                sync_config, store_number
+            )
+
             # Initialize orchestrator
             orchestrator = MSSQLToMSSQLQueryOrchestrator(source_conn_id = REPLICATION_MD_CONN_ID,
                                                         target_connection_string = conn_uri,
@@ -504,7 +531,7 @@ def make_sync_replication_md_store_task(dag_config: DAGConfig, sync_config: Mast
                                                         batch_size = sync_config.batch_size)
             
             # Execute and stream
-            result = orchestrator.sync_data(sync_config, exec_date)
+            result = orchestrator.sync_data(resolved_sync_config, exec_date)
                 
             #is_slow = result.duration_seconds > STORE_DURATION_THRESHOLD_SEC
             is_slow = False
@@ -566,13 +593,17 @@ def make_create_sync_chunks_task(sync_config: MasterDataSyncConfig):
             },
         )
 
+        resolved_sync_config = resolve_store_scoped_sync_config(
+            sync_config, store_number
+        )
+
         orchestrator = MSSQLToMSSQLQueryOrchestrator(
             source_conn_id=REPLICATION_MD_CONN_ID,
             target_connection_string="",
             fail_on_error=True,
             batch_size=sync_config.batch_size,
         )
-        chunks = orchestrator.plan_sync_chunks(sync_config)
+        chunks = orchestrator.plan_sync_chunks(resolved_sync_config)
         if not chunks:
             chunk_column = sync_config.chunk_column or sync_config.primary_keys[0]
             chunks = [{
@@ -657,13 +688,17 @@ def make_sync_replication_md_store_chunk_task(
                 database=database,
                 template_conn_id=STORE_TEMPLATE_CONN_ID,
             )
+            resolved_sync_config = resolve_store_scoped_sync_config(
+                sync_config, store_number
+            )
+
             orchestrator = MSSQLToMSSQLQueryOrchestrator(
                 source_conn_id=REPLICATION_MD_CONN_ID,
                 target_connection_string=conn_uri,
                 fail_on_error=True,
                 batch_size=sync_config.batch_size,
             )
-            result = orchestrator.sync_data_chunk(sync_config, chunk, exec_date)
+            result = orchestrator.sync_data_chunk(resolved_sync_config, chunk, exec_date)
             is_slow = result.duration_seconds > STORE_DURATION_THRESHOLD_SEC
 
             if not result.success:

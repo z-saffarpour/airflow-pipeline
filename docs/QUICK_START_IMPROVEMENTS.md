@@ -181,7 +181,29 @@ delete_missing = Variable.get("delete_missing_retail_discount_code", default_var
 
 ---
 
-## ۷. Chunk موازی و Pool
+## ۷. فیلتر فروشگاهی با `{store_number}`
+
+در Factoryی Replication MD، اگر `source_query` یا `source_query_count` شامل `{store_number}` باشد، قبل از `plan_sync_chunks` / `sync_data` / `sync_data_chunk` جایگزین می‌شود:
+
+```python
+# داخل factory (خلاصه رفتار)
+resolved = resolve_store_scoped_sync_config(sync_config, store_number)
+orchestrator.sync_data(resolved, exec_date)
+```
+
+نمونه query:
+
+```sql
+FROM ax.INVENTDIM WITH (READPAST)
+WHERE INVENTLOCATIONID = ''
+   OR INVENTLOCATIONID = '{store_number}'
+```
+
+مقدار فروشگاه برای SQL escape می‌شود (`'` → `''`). فایل‌های نمونه: `ax_invent_dim_sync.py`، `ax_pos_register_connected_efts_sync.py`.
+
+---
+
+## ۸. Chunk موازی و Pool
 
 برای جداول بزرگ Replication:
 
@@ -206,7 +228,7 @@ airflow pools set replication_md_store_sync_pool 32 "Replication MD store chunk 
 
 ---
 
-## ۸. سازگاری نسخه‌های Airflow
+## ۹. سازگاری نسخه‌های Airflow
 
 ماژول: `pipeline/compat/airflow_compat.py`
 
@@ -214,13 +236,14 @@ airflow pools set replication_md_store_sync_pool 32 "Replication MD store chunk 
 
 ---
 
-## ۹. چک‌لیست عملیاتی کوتاه
+## ۱۰. چک‌لیست عملیاتی کوتاه
 
 1. Connections و Extra مربوط به WinAuth را یک‌بار validate کنید.
 2. Poolهای chunk را با Variable سقف موازی‌سازی هم‌تراز کنید.
 3. برای جداول حساس، ابتدا `delete_missing=false` را در محیط تست اجرا کنید.
-4. لاگ‌های audit و task log را برای `AirflowFailException` در برابر retryهای مکرر مقایسه کنید.
-5. پس از تغییر exception/transient logic، `pytest tests/test_transient_sql_server_error.py -v` را اجرا کنید.
+4. اگر query فروشگاهی است، trigger را با `store_number` درست بزنید و جایگزینی `{store_number}` را در لاگ/نتیجه چک کنید.
+5. لاگ‌های audit و task log را برای `AirflowFailException` در برابر retryهای مکرر مقایسه کنید.
+6. پس از تغییر exception/transient logic، `pytest tests/test_transient_sql_server_error.py -v` را اجرا کنید.
 
 ---
 
@@ -235,6 +258,7 @@ airflow pools set replication_md_store_sync_pool 32 "Replication MD store chunk 
 | Audit | `pipeline/utils/AuditLogger.py` |
 | MD Orchestrator | `pipeline/core/MSSQLToMSSQLQueryOrchestrator.py` |
 | Replication factory | `dags/template/query_mssql_replication_md_store_sync_dag_factory.py` |
+| Store-scoped resolve | `resolve_store_scoped_sync_config` در همان factory |
 
 ---
 

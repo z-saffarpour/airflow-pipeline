@@ -26,6 +26,8 @@
 
 برای افزودن جدول جدید، معمولاً **فقط یک فایل در `tables/`** کافی است. در صورت نیاز، orchestrator و mapping reconcile را هم به‌روز می‌کنید.
 
+در حال حاضر حدود **۲۰۰+** DAG در `dags/replication/tables/` پوشش جداول master data خرده‌فروشی/AX را فراهم می‌کند (موجودی، قیمت، تخفیف، کانال، لجستیک، مالیات، سازمان و …).
+
 ---
 
 ## ۲. پیش‌نیازها
@@ -73,7 +75,8 @@ airflow pools set replication_md_store_sync_pool 32 "Replication MD store chunk 
 بهترین الگوها:
 
 - **جدول کوچک / بدون chunk:** `ax_price_disc_group_sync.py`
-- **جدول بزرگ / با chunk موازی:** `ax_retail_periodic_discount_line_sync.py`
+- **جدول بزرگ / با chunk موازی:** `ax_invent_table_sync.py` یا `ax_retail_periodic_discount_line_sync.py`
+- **فیلتر فروشگاهی (`{store_number}`):** `ax_invent_dim_sync.py` یا `ax_pos_register_connected_efts_sync.py`
 
 ### گام ۳ — پیکربندی `DAGConfig`
 
@@ -109,7 +112,7 @@ sync_config = MasterDataSyncConfig(
     source_name='adhoc_ax_MyNewTable',
     source_query="""
         SELECT Col1, Col2, RECID, DATAAREAID
-        FROM ax.MyNewTable;
+        FROM ax.MyNewTable WITH (READPAST);
     """,
     source_query_count="""
         SELECT COUNT(1) AS CNT
@@ -119,9 +122,14 @@ sync_config = MasterDataSyncConfig(
     target_schema='ax',
     target_table='MyNewTable',
     staging_schema=Variable.get("mssql_staging_schema", default_var="crt"),
-    batch_size=int(Variable.get("batch_size_my_new_table", default_var=10000)),
+    batch_size=int(Variable.get("batch_size_my_new_table", default_var=30000)),
 )
 ```
+
+> **نکته‌ها:**
+> - روی `FROM` ترجیحاً `WITH (READPAST)` بگذارید تا قفل‌های همزمان کمتر مزاحم شوند.
+> - نام ستون‌های رزرو شده SQL را براکت کنید؛ مثلاً `[MODULE]`، `[NAME]`، `[STATUS]`.
+> - پیش‌فرض رایج `batch_size` در DAGهای جدید حدود `30000` است (از Variable قابل تنظیم).
 
 ### گام ۵ — ساخت DAG
 
@@ -192,7 +200,26 @@ sync_config = MasterDataSyncConfig(
 Validation → Discovery → create_sync_chunks → sync_replication_md_store_chunk (×N) → report
 ```
 
-مثال: `ax_retail_periodic_discount_line_sync.py`
+مثال: `ax_retail_periodic_discount_line_sync.py`، `ax_invent_table_sync.py`
+
+### فیلتر فروشگاهی با `{store_number}`
+
+اگر query باید فقط دادهٔ همان فروشگاه را از Publisher بخواند، در `source_query` / `source_query_count` از placeholder استفاده کنید:
+
+```sql
+WHERE INVENTLOCATIONID = ''
+   OR INVENTLOCATIONID = '{store_number}'
+```
+
+یا:
+
+```sql
+WHERE RETAILTERMINALID LIKE '{store_number}%'
+```
+
+Factory در زمان اجرا تابع `resolve_store_scoped_sync_config` را صدا می‌زند و `{store_number}` را با مقدار واقعی (escape شده برای SQL) جایگزین می‌کند — هم در مسیر `sync_data` و هم در `plan_sync_chunks` / `sync_data_chunk`.
+
+مثال‌ها: `ax_invent_dim_sync.py`، `ax_pos_register_connected_efts_sync.py`
 
 ---
 
@@ -329,8 +356,11 @@ dag = create_dag(dag_config=dag_config, sync_config=sync_config)
 ## ۹. چک‌لیست قبل از Production
 
 - [ ] `source_query` فقط ستون‌های موجود در Subscriber را SELECT می‌کند
+- [ ] ستون‌های رزرو شده با براکت نوشته شده‌اند (`[NAME]` و …)
+- [ ] `WITH (READPAST)` روی کوئری‌های سنگین اعمال شده
 - [ ] `primary_keys` با schema واقعی Subscriber یکی است
-- [ ] `source_query_count` روی همان منبع اجرا می‌شود
+- [ ] `source_query_count` روی همان منبع / همان فیلتر اجرا می‌شود
+- [ ] اگر فیلتر فروشگاهی لازم است، `{store_number}` در query آمده
 - [ ] برای جدول بزرگ، `use_dynamic_tasks=True` و `chunk_column` تنظیم شده
 - [ ] pool `replication_md_store_sync_pool` در Airflow ایجاد شده
 - [ ] DAG با `store_number` واقعی در محیط test اجرا و متریک‌ها بررسی شده
@@ -348,6 +378,10 @@ dag = create_dag(dag_config=dag_config, sync_config=sync_config)
 | Pool slot تمام شد | `max_global_parallel_chunks` > pool slots | pool را بزرگ‌تر کنید یا chunk را کم کنید |
 | Sync کند است | `batch_size` کوچک یا chunk زیاد | `batch_size` و `task_chunk_size` را tune کنید |
 | DAG در reconcile trigger نمی‌شود | mapping نیست یا diff ≤ 1 | `TABLE_SYNC_DAG_MAPPING` را بررسی کنید |
+| فیلتر فروشگاه اعمال نشده | `{store_number}` در query نیست یا اشتباه نوشته شده | placeholder را دقیقاً `{store_number}` بگذارید |
+| نام DAG قدیمی در mapping | مثلاً Abelchange به‌جای LabelChange | mapping و نام فایل را هم‌نام کنید |
+
+> **تغییر نام مهم:** `ax_retail_abelchange_journal_trans_sync` به `ax_retail_label_change_journal_trans_sync` تغییر کرده و در reconcile به جدول `ax.RetailLabelChangeJournalTrans` map می‌شود.
 
 ---
 
@@ -355,11 +389,12 @@ dag = create_dag(dag_config=dag_config, sync_config=sync_config)
 
 | فایل | کاربرد |
 |------|--------|
-| `dags/template/query_mssql_replication_md_store_sync_dag_factory.py` | Factory اصلی |
+| `dags/template/query_mssql_replication_md_store_sync_dag_factory.py` | Factory اصلی (+ `resolve_store_scoped_sync_config`) |
 | `pipeline/config/MasterDataSyncConfig.py` | تعریف پارامترهای sync |
 | `pipeline/config/DAGConfig.py` | تعریف پارامترهای DAG |
 | `pipeline/core/MSSQLToMSSQLQueryOrchestrator.py` | منطق خواندن/نوشتن |
 | `dags/replication/tables/ax_price_disc_group_sync.py` | نمونه ساده |
-| `dags/replication/tables/ax_retail_periodic_discount_line_sync.py` | نمونه با chunk |
+| `dags/replication/tables/ax_invent_table_sync.py` | نمونه chunk موازی |
+| `dags/replication/tables/ax_invent_dim_sync.py` | نمونه فیلتر `{store_number}` |
 | `dags/replication/orchestrator/` | نمونه orchestrator |
 | `dags/replication/reconcile_and_sync/` | reconcile و trigger خودکار |

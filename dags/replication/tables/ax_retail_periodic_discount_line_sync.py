@@ -25,7 +25,7 @@ dag_config = DAGConfig(
     owner= "Zahra Saffarpour",
 
     # Schedule
-    start_date = datetime(2026, 5, 12),
+    start_date = datetime(2026, 7, 14),
     schedule = None,
     catchup = False, # No backfill for dimension tables
     max_active_runs=int(Variable.get("max_active_runs_retail_periodic_discount_line", default_var=4)),
@@ -39,22 +39,16 @@ dag_config = DAGConfig(
 
 sync_config =  MasterDataSyncConfig(
     source_name = 'adhoc_ax_RetailPeriodicDiscountLine',
-    source_query= """ 
-            SELECT RECID, DISCOUNTPERCENTORVALUE, INSTANCERELATIONTYPE, ISDISCOUNTCODEREQUIRED, LINENUM, NAME, OFFERID, 
-                   RETAILGROUPMEMBERLINE, STATUS, UNITOFMEASURE, RELATIONTYPE, DATAAREAID
-            FROM ax.RetailPeriodicDiscountLine;
+    source_query= """
+            SELECT RECID, DISCOUNTPERCENTORVALUE, INSTANCERELATIONTYPE, ISDISCOUNTCODEREQUIRED, LINENUM, [NAME],
+                   OFFERID, RETAILGROUPMEMBERLINE, [STATUS], UNITOFMEASURE, RELATIONTYPE, DATAAREAID
+            FROM ax.RetailPeriodicDiscountLine WITH (READPAST);
           """,
     source_query_count= """
             SELECT COUNT(1) AS CNT
             FROM ax.RetailPeriodicDiscountLine WITH (READPAST);
           """,
     primary_keys=('RECID',),
-    
-    unique_keys=(
-        ('OFFERID', 'LINENUM', 'DATAAREAID'),
-        ('RETAILGROUPMEMBERLINE', 'DATAAREAID'),
-    ),
-    resolve_unique_key_conflicts=True,
 
     use_hash_change_detection=True,
     use_dynamic_tasks=True,

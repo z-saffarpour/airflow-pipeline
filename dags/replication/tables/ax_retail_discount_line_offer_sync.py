@@ -25,7 +25,7 @@ dag_config = DAGConfig(
     owner= "Zahra Saffarpour",
 
     # Schedule
-    start_date = datetime(2026, 5, 12),
+    start_date = datetime(2026, 7, 14),
     schedule = None,
     catchup = False, # No backfill for dimension tables
     max_active_runs=int(Variable.get("max_active_runs_retail_discount_line_offer", default_var=4)),
@@ -39,9 +39,9 @@ dag_config = DAGConfig(
 
 sync_config =  MasterDataSyncConfig(
     source_name = 'adhoc_ax_RetailDiscountLineOffer',
-    source_query= """ 
+    source_query= """
             SELECT RECID, DISCAMOUNT, DISCOUNTMETHOD, DISCPCT, OFFERPRICE, OFFERPRICEINCLTAX, DATAAREAID
-            FROM ax.RetailDiscountLineOffer;
+            FROM ax.RetailDiscountLineOffer WITH (READPAST);
           """,
     source_query_count= """
             SELECT COUNT(1) AS CNT
@@ -61,7 +61,7 @@ sync_config =  MasterDataSyncConfig(
     staging_schema = Variable.get("mssql_staging_schema", default_var = "crt"),
     delete_missing=bool(int(Variable.get("delete_missing_retail_discount_line_offer", default_var=0))),
     delete_scope_column='RECID',
-    batch_size = int(Variable.get("batch_size_retail_discount_line_offer", default_var = 20000))
+    batch_size = int(Variable.get("batch_size_retail_discount_line_offer", default_var = 30000))
 )
 
 # ============================================================================
