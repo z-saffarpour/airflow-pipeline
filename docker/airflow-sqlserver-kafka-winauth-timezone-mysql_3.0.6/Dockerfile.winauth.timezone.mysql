@@ -1,0 +1,34 @@
+# =============================================================================
+# Dockerfile for Airflow with Windows Authentication (Kerberos) Support
+# =============================================================================
+FROM airflow-sqlserver-kafka-winauth:3.0.6
+
+USER root
+
+# Set timezone to Tehran
+ENV TZ=Asia/Tehran
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime \
+    && echo $TZ > /etc/timezone \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Configure pip to use Iranian PyPI mirror
+# RUN mkdir -p /root/.pip && \
+#     echo "[global]" > /root/.pip/pip.conf && \
+#     echo "index-url = https://pypi.mirrors.ir/simple" >> /root/.pip/pip.conf && \
+#     echo "trusted-host = pypi.mirrors.ir" >> /root/.pip/pip.conf
+
+#ENV PIP_INDEX_URL=https://mirror.arvancloud.ir/pypi/simple
+#ENV PIP_TRUSTED_HOST=mirror.arvancloud.ir
+
+USER airflow
+
+# Install Python packages
+RUN pip install --no-cache-dir \
+    mysqlclient \
+    apache-airflow-providers-mysql \
+    apache-airflow-providers-common-sql \
+    apache-airflow-providers-http
+
+ENV AIRFLOW__CORE__DEFAULT_TIMEZONE=Asia/Tehran
+
+ENV TZ=Asia/Tehran

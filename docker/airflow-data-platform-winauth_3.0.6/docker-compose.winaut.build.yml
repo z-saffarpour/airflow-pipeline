@@ -1,0 +1,20 @@
+# =============================================================================
+# Docker Compose for Airflow with Windows Authentication (Kerberos) Support
+# =============================================================================
+# Usage:
+#   1. Edit config/krb5.conf with your domain settings
+#   2. Build: docker-compose -f docker-compose.winaut.build.yml build
+#   3. Run:   docker-compose -f docker-compose.winaut.build.yml up -d
+#
+# Or use with base file:
+#   docker-compose -f docker-compose.yml -f docker-compose.winaut.build.yml up -d
+# =============================================================================
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.winauth.3.0.6
+      no_cache: true
+    container_name: airflow-data-platform-winauth
+    image: airflow-data-platform-winauth:3.0.6
+    # image: airflow-data-platform-winauth:3.2.1-python3.12

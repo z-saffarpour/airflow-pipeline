@@ -1,0 +1,25 @@
+# Include documentation files
+include README.md
+include LICENSE
+include requirements.txt
+include requirements-test.txt
+include setup.py
+include run_tests.py
+
+# Include documentation directory
+recursive-include docs *.md
+
+# Include example files
+include example_queries.sql
+include docker-compose.example.yml
+
+# Exclude compiled Python files
+global-exclude __pycache__
+global-exclude *.py[cod]
+global-exclude *.so
+global-exclude .DS_Store
+global-exclude *.swp
+global-exclude *.swo
+
+# Exclude test files from distribution
+prune tests

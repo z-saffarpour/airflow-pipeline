@@ -1,0 +1,39 @@
+# =============================================================================
+# Dockerfile for Airflow with Windows Authentication (Kerberos) Support
+# =============================================================================
+FROM docker.arvancloud.ir/apache/airflow:3.0.6
+
+USER root
+
+# Install Kerberos client and dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    krb5-user \
+    libkrb5-dev \
+    gcc \
+    g++ \
+    unixodbc \
+    unixodbc-dev \
+    curl \
+    gnupg2 \
+    apt-transport-https \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Microsoft ODBC Driver 18 for SQL Server
+RUN curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg \
+    && curl -fsSL https://packages.microsoft.com/config/debian/11/prod.list | tee /etc/apt/sources.list.d/mssql-release.list \
+    && apt-get update \
+    && ACCEPT_EULA=Y apt-get install -y msodbcsql18 \
+    && rm -rf /var/lib/apt/lists/*
+
+USER airflow
+
+# Install Python packages
+RUN pip install --no-cache-dir \
+    pyodbc \
+    pymssql \
+    apache-airflow-providers-microsoft-mssql \
+    apache-airflow-providers-apache-kafka \
+    confluent-kafka \
+    avro-python3 \
+    fastavro \
+    clickhouse-driver

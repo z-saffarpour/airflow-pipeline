@@ -1,0 +1,22 @@
+# Airflow Dependencies
+apache-airflow>=2.8.0
+apache-airflow-providers-microsoft-mssql>=3.8.0
+
+# Kafka Dependencies
+confluent-kafka>=2.3.0
+kafka-python>=2.0.2
+
+# SQL Server Dependencies
+pymssql>=2.2.11
+pyodbc>=5.1.0
+sqlalchemy>=2.0.0
+
+# ClickHouse Dependencies
+clickhouse-driver>=0.2.6
+
+# Serialization
+avro-python3>=1.11.3
+
+# Utilities
+python-dateutil>=2.8.2
+

@@ -1,0 +1,10 @@
+# =============================================================================
+# Dockerfile for Airflow with Windows Authentication (Kerberos) Support
+# =============================================================================
+FROM airflow-sqlserver-kafka-winauth:3.0.6
+
+USER root
+
+# Set timezone to Tehran
+ENV TZ=Asia/Tehran
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone

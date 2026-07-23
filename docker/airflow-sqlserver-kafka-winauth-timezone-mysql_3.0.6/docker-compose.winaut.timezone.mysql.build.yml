@@ -1,0 +1,19 @@
+# =============================================================================
+# Docker Compose for Airflow with Windows Authentication (Kerberos) Support
+# =============================================================================
+# Usage:
+#   1. Edit config/krb5.conf with your domain settings
+#   2. Build: docker-compose -f docker-compose.winaut.timezone.mysql.build.yml build
+#   3. Run:   docker-compose -f docker-compose.winaut.timezone.mysql.build.yml up -d
+#
+# Or use with base file:
+#   docker-compose -f docker-compose.yml -f docker-compose.winaut.timezone.mysql.build.yml up -d
+# =============================================================================
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.winauth.timezone.mysql
+      no_cache: true
+    container_name: airflow-sqlserver-kafka-winauth-timezone-mysql
+    image: airflow-sqlserver-kafka-winauth-timezone-mysql:3.0.6
