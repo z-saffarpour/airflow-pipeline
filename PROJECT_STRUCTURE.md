@@ -1,0 +1,246 @@
+# ساختار پروژه (Project Structure)
+
+توضیح درخت پوشه‌ها و نقش هر بخش در ریپازیتوری فعلی.
+
+---
+
+## درخت سطح بالا
+
+```
+sqlserver-kafka-pipeline/
+├── dags/                 # تعریف DAGهای Airflow
+├── pipeline/             # هستهٔ مشترک (پکیج Python)
+├── docker/               # Dockerfile و docker-compose با WinAuth
+├── docs/                 # مستندات
+├── tests/                # تست‌های واحد
+├── images/               # آرشیو Docker (در Git نیست)
+├── scripts/              # اسکریپت‌های کمکی (در صورت وجود)
+├── requirements.txt
+├── setup.py
+├── LICENSE
+├── .gitignore
+├── README.md
+└── PROJECT_STRUCTURE.md  # این فایل
+```
+
+---
+
+## `dags/` — تعریف‌های Airflow
+
+```
+dags/
+├── template/                      # Factoryهای قابل‌استفاده مجدد
+│   ├── table_mssql_sync_dag_factory.py
+│   ├── query_mssql_sync_dag_factory.py
+│   ├── query_mssql_replication_md_store_sync_dag_factory.py
+│   └── clickhouse_optimizer_dag_factory.py
+│
+├── mssql_sync/                    # SQL Server → Kafka (± ClickHouse)
+│   ├── dwh/                       # جداول و کوئری‌های DWH
+│   └── erp/                       # کوئری‌ها و orchestratorهای ERP/AX
+│
+├── sales_inventory/               # فروش و موجودی چندمنبعی → Kafka
+│
+├── replication/                   # تعمیر Replication MD
+│   ├── tables/                    # sync تک‌جدول برای یک فروشگاه
+│   ├── orchestrator/              # زنجیره چند جدول برای یک فروشگاه
+│   └── reconcile_and_sync/        # تشخیص gap و trigger خودکار
+│
+├── clickhouse_optimizer/          # بهینه‌سازی جداول ClickHouse
+│   ├── dwh/
+│   └── erp/
+│
+└── kafka_health_monitor/          # مانیتورینگ سلامت pipeline / Kafka
+```
+
+### قرارداد نام‌گذاری DAGها
+
+| حوزه | الگوی فایل | مثال |
+|------|------------|------|
+| Table sync DWH | `table_<domain>_<name>_sync.py` | `table_rtl_fact_sales_trans_sync.py` |
+| Query sync ERP | `query_ax_<name>_sync.py` | `query_ax_invent_sum_sync.py` |
+| Replication table | `ax_<table>_sync.py` | `ax_retail_discount_code_sync.py` |
+| ClickHouse optimize | `<name>_clickhouse_optimizer.py` | `com_dim_item_clickhouse_optimizer.py` |
+
+### الگوی ثبت DAG
+
+فایل‌های مبتنی بر factory معمولاً فقط config می‌سازند و در زمان import، factory را صدا می‌زنند:
+
+```python
+from template.table_mssql_sync_dag_factory import create_table_sync_dag
+
+create_table_sync_dag(
+    dag_config=...,
+    connection_config=...,
+    sync_config=...,
+    table_config=...,
+    kafka_topic_config=...,
+    clickhouse_config=None,
+)
+```
+
+DAGهای پیچیده (مثل `sales_inventory` و `reconcile_and_sync`) به‌صورت سفارشی نوشته شده‌اند.
+
+---
+
+## `pipeline/` — هستهٔ مشترک
+
+```
+pipeline/
+├── __init__.py                 # صادرات عمومی پکیج
+├── interfaces/                 # ABCها
+│   ├── DataReader.py
+│   ├── DataWriter.py
+│   ├── MessageProducer.py
+│   ├── TopicManager.py
+│   ├── MessageSerializerInterface.py
+│   └── DatabaseOptimizer.py
+│
+├── config/                     # dataclassهای پیکربندی
+│   ├── DAGConfig.py
+│   ├── SyncConfig.py
+│   ├── TableConfiguration.py
+│   ├── QueryConfiguration.py
+│   ├── MasterDataSyncConfig.py
+│   ├── ConnectionConfig.py
+│   ├── KafkaTopicConfig.py
+│   ├── KafkaProducerConfig.py
+│   ├── ClickHouseConfig.py
+│   ├── ClickHouseOptimizationConfig.py
+│   ├── AuditConfig.py
+│   └── ...
+│
+├── database/
+│   ├── SafeMsSqlHook.py        # pymssql / pyodbc + Kerberos
+│   ├── ConnectionFactory.py
+│   ├── SQLQueryBuilder.py
+│   ├── MSSQLDataReader.py
+│   ├── MSSQLServerWriter.py
+│   ├── ClickHouseConnectionFactory.py
+│   ├── ClickHouseWriter.py
+│   └── ClickHouseTableOptimizer.py
+│
+├── kafka/
+│   ├── IdempotentKafkaProducer.py
+│   ├── KafkaTopicManager.py
+│   └── MessageSerializer.py
+│
+├── core/
+│   ├── MSSQLDataTransferOrchestrator.py      # SQL → Kafka/CH
+│   ├── MSSQLToMSSQLQueryOrchestrator.py      # Publisher → Store
+│   ├── ClickHouseOptimizationOrchestrator.py
+│   ├── DagSyncTrigger.py
+│   ├── ExecutionDateExtractor.py
+│   ├── TransferResult.py / TransferMetrics.py
+│   ├── OptimizationResult.py
+│   └── exceptions.py
+│
+├── utils/
+│   ├── validation.py
+│   ├── retry_helper.py
+│   ├── AuditLogger.py
+│   ├── kafka_utils.py
+│   └── connection_utils.py
+│
+└── compat/
+    └── airflow_compat.py       # سازگاری Airflow 2.x / 3.x
+```
+
+| پوشه | مسئولیت |
+|------|---------|
+| `interfaces/` | قراردادها برای Dependency Inversion |
+| `config/` | جداسازی تنظیمات از منطق کسب‌وکار |
+| `database/` | دسترسی به SQL Server و ClickHouse |
+| `kafka/` | تولید پیام و مدیریت topic |
+| `core/` | هماهنگی انتقال و نتایج |
+| `utils/` | ابزارهای مشترک |
+| `compat/` | abstraction نسخه Airflow |
+
+---
+
+## `docker/`
+
+هر زیرپوشه یک استقرار مستقل است (Dockerfile + compose + config):
+
+| پوشه | توضیح |
+|------|-------|
+| `airflow-data-platform-winauth_3.0.6/` | Airflow 3.0.6 + WinAuth |
+| `airflow-data-platform-winauth_3.2.1/` | Airflow 3.2.1 + WinAuth |
+| `airflow-data-platform-winauth_3.2.1_harden/` | نسخه hardened (پیشنهادی production) |
+| `airflow-sqlserver-kafka-winauth_3.0.6/` | Airflow + SQL Server + Kafka |
+| `airflow-sqlserver-kafka-winauth-timezone_3.0.6/` | + timezone |
+| `airflow-sqlserver-kafka-winauth-timezone-mysql_3.0.6/` | + MySQL + timezone |
+
+راهنما: [docker/README.md](docker/README.md)
+
+---
+
+## `docs/`
+
+| فایل | موضوع |
+|------|--------|
+| `ARCHITECTURE_FA.md` | معماری سیستم |
+| `QUICKSTART.md` | راه‌اندازی سریع |
+| `QUICK_START_IMPROVEMENTS.md` | راهنمای بهبودهای reliability |
+| `REPLICATION_MD_STORE_SYNC_GUIDE.md` | ساخت DAG Replication MD |
+
+---
+
+## `tests/`
+
+```
+tests/
+├── conftest.py
+├── test_transient_sql_server_error.py
+└── __init__.py
+```
+
+اجرا:
+
+```bash
+pytest tests/ -v
+```
+
+---
+
+## `images/`
+
+آرشیو Docker image (`.tar`). در `.gitignore` است و به GitHub push نمی‌شود. برای استقرار، ایمیج را از registry بسازید یا فایل tar را جداگانه منتقل کنید.
+
+---
+
+## استقرار در Airflow
+
+حداقل فایل‌های لازم روی worker/scheduler:
+
+```
+$AIRFLOW_HOME/dags/
+├── template/
+├── mssql_sync/
+├── sales_inventory/
+├── replication/
+├── clickhouse_optimizer/
+├── kafka_health_monitor/
+└── pipeline/          # کل پکیج pipeline
+```
+
+یا نصب editable:
+
+```bash
+pip install -e .
+```
+
+---
+
+## وابستگی‌های اصلی (`requirements.txt`)
+
+- `apache-airflow>=2.8.0`
+- `apache-airflow-providers-microsoft-mssql`
+- `confluent-kafka` / `kafka-python`
+- `pymssql` / `pyodbc`
+- `clickhouse-driver`
+- `sqlalchemy`
+
+---
+
+**آخرین بروزرسانی:** ژوئیه ۲۰۲۶

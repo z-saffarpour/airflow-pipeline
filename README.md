@@ -227,6 +227,10 @@ pytest tests/ -v
 
 | سند | موضوع |
 |-----|--------|
+| [docs/ARCHITECTURE_FA.md](docs/ARCHITECTURE_FA.md) | معماری سیستم |
+| [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) | ساختار پوشه‌ها و ماژول‌ها |
+| [docs/QUICKSTART.md](docs/QUICKSTART.md) | راه‌اندازی سریع |
+| [docs/QUICK_START_IMPROVEMENTS.md](docs/QUICK_START_IMPROVEMENTS.md) | بهبودهای reliability و error-handling |
 | [docs/REPLICATION_MD_STORE_SYNC_GUIDE.md](docs/REPLICATION_MD_STORE_SYNC_GUIDE.md) | ساخت DAG جدید Replication MD |
 | [docker/README.md](docker/README.md) | استقرار Docker و WinAuth |
 | `docker/*/SECURITY_GUIDE.md` | راهنمای امنیتی نسخه harden |
