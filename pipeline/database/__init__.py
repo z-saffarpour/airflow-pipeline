@@ -10,6 +10,7 @@ from pipeline.database.SQLQueryBuilder import SQLQueryBuilder
 from pipeline.database.MSSQLDataReader import MSSQLDataReader
 from pipeline.database.MySQLConnectionFactory import MySQLConnectionFactory
 from pipeline.database.MySQLDataReader import MySQLDataReader
+from pipeline.database.MySQLServerWriter import MySQLServerWriter
 from pipeline.database.MongoDBConnectionFactory import MongoDBConnectionFactory
 from pipeline.database.MongoDBDataReader import MongoDBDataReader
 from pipeline.database.ClickHouseConnectionFactory import ClickHouseConnectionFactory
@@ -23,6 +24,7 @@ __all__ = [
     "MSSQLDataReader",
     "MySQLConnectionFactory",
     "MySQLDataReader",
+    "MySQLServerWriter",
     "MongoDBConnectionFactory",
     "MongoDBDataReader",
     "ClickHouseConnectionFactory",

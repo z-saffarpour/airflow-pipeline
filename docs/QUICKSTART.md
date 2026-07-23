@@ -147,6 +147,12 @@ airflow dags trigger query_inventory_and_sales_sync
 
 نمونه: `dags/mysql_to_mssql_sync/example_table_to_mssql_sync.py` با `create_dag` از `mysql_to_mssql_sync_dag_factory`.
 
+### MSSQL → MySQL Sync
+
+راهنمای کامل: [MSSQL_TO_MYSQL_SYNC_GUIDE.md](MSSQL_TO_MYSQL_SYNC_GUIDE.md)
+
+نمونه: `dags/mssql_to_mysql_sync/example_table_to_mysql_sync.py` با `create_dag` از `mssql_to_mysql_sync_dag_factory`.
+
 ### Kafka Health Monitor
 
 راهنمای کامل: [KAFKA_HEALTH_MONITOR_GUIDE.md](KAFKA_HEALTH_MONITOR_GUIDE.md)
@@ -220,6 +226,7 @@ pytest tests/ -v
 - SQL Server → Kafka: [MSSQL_TO_KAFKA_CLICKHOUSE_SYNC_GUIDE.md](MSSQL_TO_KAFKA_CLICKHOUSE_SYNC_GUIDE.md)
 - Replication MD: [MASTERDATA_STORE_SYNC_GUIDE.md](MASTERDATA_STORE_SYNC_GUIDE.md)
 - MySQL → MSSQL: [MYSQL_TO_MSSQL_SYNC_GUIDE.md](MYSQL_TO_MSSQL_SYNC_GUIDE.md)
+- MSSQL → MySQL: [MSSQL_TO_MYSQL_SYNC_GUIDE.md](MSSQL_TO_MYSQL_SYNC_GUIDE.md)
 - Kafka Health Monitor: [KAFKA_HEALTH_MONITOR_GUIDE.md](KAFKA_HEALTH_MONITOR_GUIDE.md)
 - ClickHouse Optimizer: [CLICKHOUSE_OPTIMIZER_GUIDE.md](CLICKHOUSE_OPTIMIZER_GUIDE.md)
 - بهبودهای reliability: [QUICK_START_IMPROVEMENTS.md](QUICK_START_IMPROVEMENTS.md)
