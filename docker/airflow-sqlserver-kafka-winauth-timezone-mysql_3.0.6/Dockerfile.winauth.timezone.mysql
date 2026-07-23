@@ -27,7 +27,10 @@ RUN pip install --no-cache-dir \
     mysqlclient \
     apache-airflow-providers-mysql \
     apache-airflow-providers-common-sql \
-    apache-airflow-providers-http
+    apache-airflow-providers-http \
+    apache-airflow-providers-postgres \
+    psycopg2-binary \
+    pymongo
 
 ENV AIRFLOW__CORE__DEFAULT_TIMEZONE=Asia/Tehran
 

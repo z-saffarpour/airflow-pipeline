@@ -16,6 +16,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     gnupg2 \
     apt-transport-https \
+    librdkafka-dev \
+    default-libmysqlclient-dev \
+    pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Microsoft ODBC Driver 18 for SQL Server
@@ -27,7 +30,7 @@ RUN curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor
 
 USER airflow
 
-# Install Python packages
+# Install Python packages (aligned with project requirements.txt / pipeline connectors)
 RUN pip install --no-cache-dir \
     pyodbc \
     pymssql \
@@ -36,4 +39,10 @@ RUN pip install --no-cache-dir \
     confluent-kafka \
     avro-python3 \
     fastavro \
-    clickhouse-driver
+    clickhouse-driver \
+    pymongo \
+    mysqlclient \
+    apache-airflow-providers-mysql \
+    apache-airflow-providers-common-sql \
+    apache-airflow-providers-postgres \
+    psycopg2-binary

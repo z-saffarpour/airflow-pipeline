@@ -53,11 +53,13 @@ RUN --mount=type=cache,target=/home/airflow/.cache/pip \
     fastavro \
     apache-airflow-providers-apache-kafka \
     clickhouse-driver \
+    pymongo \
     # apache-airflow-providers-clickhouse \
     mysqlclient \
     apache-airflow-providers-mysql \
     apache-airflow-providers-common-sql \
     apache-airflow-providers-postgres \
+    psycopg2-binary \
     apache-airflow-providers-hashicorp \
     apache-airflow-providers-http \
     --constraint "${CONSTRAINT_URL}"

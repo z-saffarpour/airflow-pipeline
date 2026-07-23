@@ -17,7 +17,7 @@
 - Apache Airflow 3.0.6
 - Kerberos client و پشتیبانی Windows Auth
 - Microsoft ODBC Driver 18 برای SQL Server
-- بسته‌های Python: `pyodbc`, `pymssql`, `apache-airflow-providers-microsoft-mssql`, `apache-airflow-providers-apache-kafka`, `confluent-kafka`, `avro-python3`, `fastavro`, `clickhouse-driver`, `mysqlclient`, `apache-airflow-providers-mysql`, `apache-airflow-providers-postgres`, `apache-airflow-providers-hashicorp`, `apache-airflow-providers-http`
+- بسته‌های Python: `pyodbc`, `pymssql`, `apache-airflow-providers-microsoft-mssql`, `apache-airflow-providers-apache-kafka`, `confluent-kafka`, `avro-python3`, `fastavro`, `clickhouse-driver`, `pymongo`, `mysqlclient`, `apache-airflow-providers-mysql`, `apache-airflow-providers-postgres`, `psycopg2-binary`, `apache-airflow-providers-hashicorp`, `apache-airflow-providers-http`
 
 ## نحوه استفاده
 

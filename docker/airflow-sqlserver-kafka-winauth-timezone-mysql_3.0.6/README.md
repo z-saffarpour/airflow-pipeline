@@ -16,6 +16,9 @@
 - `apache-airflow-providers-mysql`
 - `apache-airflow-providers-common-sql`
 - `apache-airflow-providers-http`
+- `apache-airflow-providers-postgres`
+- `psycopg2-binary`
+- `pymongo`
 
 ## نحوه استفاده
 
