@@ -215,7 +215,7 @@ Default Airflow user created during init:
 - [ ] Set strong POSTGRES_PASSWORD
 - [ ] Set strong REDIS_PASSWORD
 - [ ] Set file permissions on .env (600)
-- [ ] Add .env to .gitignore
+- [ ] Ensure `.env` is not committed to version control
 - [ ] Verify Kerberos KDC connectivity
 
 ### Before Production Deployment:

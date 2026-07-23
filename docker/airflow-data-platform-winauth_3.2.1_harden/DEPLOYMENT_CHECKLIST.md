@@ -14,7 +14,7 @@
   - [ ] `AIRFLOW__WEBSERVER__SECRET_KEY` is set
   - [ ] `POSTGRES_PASSWORD` is strong (16+ chars)
   - [ ] `REDIS_PASSWORD` is strong (16+ chars)
-- [ ] `.env` is in `.gitignore`
+- [ ] Ensure `.env` is not committed to version control
 - [ ] No secrets committed to Git
 - [ ] `.env` permissions are restrictive (owner read-only)
 
