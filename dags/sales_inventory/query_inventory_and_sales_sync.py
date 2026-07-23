@@ -64,7 +64,6 @@ from pipeline.database.ConnectionFactory import ConnectionFactory
 from pipeline.kafka.KafkaTopicManager import KafkaTopicManager
 from pipeline.utils.AuditLogger import AuditLogger
 from pipeline.utils.validation import validate_mssql_conn, validate_kafka_conn
-from pipeline.kafka.KafkaConnectionFactory import KafkaConnectionFactory
 
 # ============================================================================
 # LOGGING
@@ -249,10 +248,9 @@ def process_sales_retail_single(
         )
         
         # Initialize orchestrator
-        kafka_brokers = KafkaConnectionFactory(KAFKA_CONN_ID).get_bootstrap_servers()
         orchestrator = MSSQLDataTransferOrchestrator(
             mssql_conn_id=conn_uri,
-            kafka_bootstrap_servers=kafka_brokers,
+            kafka_conn_id=KAFKA_CONN_ID,
             clickhouse_conn_id=None,
             is_send_kafka=True,
             is_send_clickhouse=False,
@@ -336,8 +334,7 @@ def create_setup_kafka_topic_task(config: KafkaTopicConfig):
             }
         )
 
-        kafka_brokers = KafkaConnectionFactory(KAFKA_CONN_ID).get_bootstrap_servers()
-        manager = KafkaTopicManager(kafka_brokers)
+        manager = KafkaTopicManager(KAFKA_CONN_ID)
         manager.ensure_topic_exists(
             topic_name=config.name,
             num_partitions=config.num_partitions,
@@ -686,7 +683,6 @@ def process_sales_online_task(version:str, **context) -> Dict[str, Any]:
         {'exec_date': exec_date}
     )
     
-    kafka_brokers = KafkaConnectionFactory(KAFKA_CONN_ID).get_bootstrap_servers()
     try:
         query_config = QueryConfiguration(
             source_name="sales_qty_ec",
@@ -702,7 +698,7 @@ def process_sales_online_task(version:str, **context) -> Dict[str, Any]:
 
     orchestrator = MSSQLDataTransferOrchestrator(
         mssql_conn_id=ERP_RETEILPOS_CONN_ID,
-        kafka_bootstrap_servers=kafka_brokers,
+        kafka_conn_id=KAFKA_CONN_ID,
         clickhouse_conn_id=None,
         is_send_kafka=True,
         is_send_clickhouse=False,
@@ -805,7 +801,6 @@ def process_sales_order_per_date_task(exec_date: str, version: str, **context) -
         {'exec_date': exec_date}
     )
 
-    kafka_brokers = KafkaConnectionFactory(KAFKA_CONN_ID).get_bootstrap_servers()
 
     try:
         query_config = QueryConfiguration(
@@ -820,7 +815,7 @@ def process_sales_order_per_date_task(exec_date: str, version: str, **context) -
 
     orchestrator = MSSQLDataTransferOrchestrator(
         mssql_conn_id=ERP_PRIMARY_AX_CONN_ID,
-        kafka_bootstrap_servers=kafka_brokers,
+        kafka_conn_id=KAFKA_CONN_ID,
         clickhouse_conn_id=None,
         is_send_kafka=True,
         is_send_clickhouse=False,
@@ -925,7 +920,6 @@ def process_purch_qty_task(version:str, **context) -> Dict[str, Any]:
                  myPurchLine.ITEMID;
     """
     
-    kafka_brokers = KafkaConnectionFactory(KAFKA_CONN_ID).get_bootstrap_servers()
 
     try:
         query_config = QueryConfiguration(
@@ -943,7 +937,7 @@ def process_purch_qty_task(version:str, **context) -> Dict[str, Any]:
 
     orchestrator = MSSQLDataTransferOrchestrator(
         mssql_conn_id=ERP_PRIMARY_AX_CONN_ID,
-        kafka_bootstrap_servers=kafka_brokers,
+        kafka_conn_id=KAFKA_CONN_ID,
         clickhouse_conn_id=None,
         is_send_kafka=True,
         is_send_clickhouse=False,
@@ -1054,7 +1048,6 @@ def process_onhand_task(version:str, **context) -> Dict[str, Any]:
             AND InventLocationID LIKE 'OKS%';
     """
     
-    kafka_brokers = KafkaConnectionFactory(KAFKA_CONN_ID).get_bootstrap_servers()
     try:
         query_config = QueryConfiguration(
             source_name="inventory_onhand_lite",
@@ -1071,7 +1064,7 @@ def process_onhand_task(version:str, **context) -> Dict[str, Any]:
 
     orchestrator = MSSQLDataTransferOrchestrator(
         mssql_conn_id=ERP_PRIMARY_AX_CONN_ID,
-        kafka_bootstrap_servers=kafka_brokers,
+        kafka_conn_id=KAFKA_CONN_ID,
         clickhouse_conn_id=None,
         is_send_kafka=True,
         is_send_clickhouse=False,

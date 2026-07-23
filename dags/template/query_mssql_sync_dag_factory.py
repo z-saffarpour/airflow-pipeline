@@ -45,7 +45,6 @@ from pipeline.config.QueryConfiguration import QueryConfiguration
 from pipeline.core.MSSQLDataTransferOrchestrator import MSSQLDataTransferOrchestrator
 from pipeline.core.ExecutionDateExtractor import ExecutionDateExtractor
 from pipeline.kafka.KafkaTopicManager import KafkaTopicManager
-from pipeline.kafka.KafkaConnectionFactory import KafkaConnectionFactory
 from pipeline.utils.validation import validate_kafka_conn, validate_mssql_conn, validate_clickhouse_conn
 
 # ============================================================================
@@ -118,10 +117,7 @@ def make_ensure_topic_task(conn_config: ConnectionConfig, sync_config: SyncConfi
             logger.info("Kafka topic creation skipped (no kafka_conn_id provided)")
             return {"status": "skipped"}
         
-        kafka_brokers = KafkaConnectionFactory(
-            conn_config.kafka_conn_id
-        ).get_bootstrap_servers()
-        topic_manager = KafkaTopicManager(kafka_brokers)
+        topic_manager = KafkaTopicManager(conn_config.kafka_conn_id)
         topic_manager.ensure_topic_exists(
             topic_name=kafka_topic_config.name,
             num_partitions=kafka_topic_config.num_partitions,
@@ -152,16 +148,6 @@ def make_transfer_task(dag_config: DAGConfig, sync_config: SyncConfig, conn_conf
             context, sync_config.date_offset
         )
 
-        if not conn_config.kafka_conn_id or not sync_config.is_send_kafka:
-            kafka_brokers = None
-        else:
-            kafka_brokers = KafkaConnectionFactory(
-                conn_config.kafka_conn_id
-            ).get_bootstrap_servers()
-            
-        # query_params_tuple = tuple(query_config.query_params) if query_config.query_params else None
-        # query_config.query_params = query_params_tuple
-
         resolved_config = query_config.with_resolved_params(execution_date_key, execution_ds)
 
         logger.info(f"Starting query transfer for date: {execution_ds}")
@@ -170,7 +156,7 @@ def make_transfer_task(dag_config: DAGConfig, sync_config: SyncConfig, conn_conf
 
         orchestrator = MSSQLDataTransferOrchestrator(
             mssql_conn_id=conn_config.mssql_conn_id,
-            kafka_bootstrap_servers=kafka_brokers,
+            kafka_conn_id=conn_config.kafka_conn_id,
             clickhouse_conn_id = conn_config.clickhouse_conn_id,
             is_send_kafka=sync_config.is_send_kafka,
             is_send_clickhouse=sync_config.is_send_clickhouse,

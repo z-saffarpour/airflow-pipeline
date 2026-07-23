@@ -5,82 +5,99 @@ import logging
 from datetime import datetime
 from typing import Dict, Optional, Any, List
 
-from confluent_kafka import Producer, KafkaException as ConfluentKafkaException # type: ignore
+from confluent_kafka import Producer, KafkaException as ConfluentKafkaException  # type: ignore
 
 from pipeline.interfaces.MessageProducer import MessageProducer
 from pipeline.config.KafkaProducerConfig import KAFKA_CONFIG
 from pipeline.core.exceptions import KafkaProducerError, KafkaConnectionError
+from pipeline.kafka.KafkaConnectionFactory import KafkaConnectionFactory
 from pipeline.kafka.MessageSerializer import MessageSerializer
+
 
 class IdempotentKafkaProducer(MessageProducer):
     """
     Kafka Producer with exactly-once semantics (idempotent producer).
-    
-    Implements MessageProducer interface and ensures exactly-once delivery
-    guarantees through idempotent configuration.
+
+    Builds client config from KafkaConnectionFactory so SASL/SSL and
+    bootstrap servers come from the Airflow Connection.
     """
-    
+
     def __init__(
         self,
-        bootstrap_servers: str,
+        conn_id: str,
         client_id: str,
         enable_idempotence: bool = True,
-        acks: str = 'all',
-        compression_type: str = 'snappy',
+        acks: str = "all",
+        compression_type: str = "snappy",
         max_in_flight_requests_per_connection: int = 5,
         retry_backoff_ms: int = KAFKA_CONFIG.RETRY_BACKOFF_MS,
         message_timeout_ms: int = KAFKA_CONFIG.MESSAGE_TIMEOUT_MS,
-        **kwargs
+        **kwargs,
     ):
-        """  
+        """
         Initialize Kafka Producer with idempotent configuration.
-        
+
+        Args:
+            conn_id: Airflow Connection ID for the Kafka cluster
+            client_id: Kafka client identifier for this producer
+
         Raises:
             KafkaConnectionError: If producer initialization fails
         """
+        if not conn_id:
+            raise ValueError("conn_id cannot be empty.")
+
         self._closed = False
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.bootstrap_servers = bootstrap_servers
+        self.conn_id = conn_id
         self.client_id = client_id
-        
-        self.config = {
-            'bootstrap.servers': bootstrap_servers,
-            'client.id': client_id,
-            'enable.idempotence': enable_idempotence,
-            'acks': acks,
-            'compression.type': compression_type,
-            'max.in.flight.requests.per.connection': max_in_flight_requests_per_connection,
-            'retry.backoff.ms': retry_backoff_ms,
-            'message.timeout.ms': message_timeout_ms,
-            'queue.buffering.max.messages': KAFKA_CONFIG.MAX_QUEUE_MESSAGES,
-            'queue.buffering.max.kbytes': KAFKA_CONFIG.MAX_QUEUE_KB,
-            'batch.size': KAFKA_CONFIG.BATCH_SIZE,
-            'linger.ms': KAFKA_CONFIG.LINGER_MS,
-            **kwargs
-        }
-        
+
+        factory = KafkaConnectionFactory(conn_id)
+        self.bootstrap_servers = factory.get_bootstrap_servers()
+
+        self.config = factory.get_client_config(
+            client_id=client_id,
+            **{
+                "enable.idempotence": enable_idempotence,
+                "acks": acks,
+                "compression.type": compression_type,
+                "max.in.flight.requests.per.connection": max_in_flight_requests_per_connection,
+                "retry.backoff.ms": retry_backoff_ms,
+                "message.timeout.ms": message_timeout_ms,
+                "queue.buffering.max.messages": KAFKA_CONFIG.MAX_QUEUE_MESSAGES,
+                "queue.buffering.max.kbytes": KAFKA_CONFIG.MAX_QUEUE_KB,
+                "batch.size": KAFKA_CONFIG.BATCH_SIZE,
+                "linger.ms": KAFKA_CONFIG.LINGER_MS,
+                **kwargs,
+            },
+        )
+
         try:
             self.producer = Producer(self.config)
             self.logger.info(
                 "Kafka producer initialized",
                 extra={
-                    "bootstrap_servers": bootstrap_servers,
+                    "conn_id": conn_id,
+                    "bootstrap_servers": self.bootstrap_servers,
                     "client_id": client_id,
-                    "enable_idempotence": enable_idempotence
-                }
+                    "enable_idempotence": enable_idempotence,
+                },
             )
         except Exception as e:
             self.logger.error(
                 "Failed to initialize Kafka producer",
                 extra={
-                    "bootstrap_servers": bootstrap_servers,
+                    "conn_id": conn_id,
+                    "bootstrap_servers": self.bootstrap_servers,
                     "client_id": client_id,
-                    "error": str(e)
+                    "error": str(e),
                 },
-                exc_info=True
+                exc_info=True,
             )
-            raise KafkaConnectionError(f"Failed to initialize Kafka producer: {str(e)}") from e
-        
+            raise KafkaConnectionError(
+                f"Failed to initialize Kafka producer: {str(e)}"
+            ) from e
+
         self.delivered_records: List[Dict[str, Any]] = []
         self.failed_records: List[Dict[str, Any]] = []
         self._message_count = 0  # Track messages for periodic polling

@@ -47,7 +47,6 @@ from pipeline.core.ExecutionDateExtractor import ExecutionDateExtractor
 from pipeline.kafka.KafkaTopicManager import KafkaTopicManager
 from pipeline.utils.AuditLogger import AuditLogger
 from pipeline.utils.validation import validate_mssql_conn, validate_kafka_conn
-from pipeline.kafka.KafkaConnectionFactory import KafkaConnectionFactory
 
 # ============================================================================
 # LOGGING
@@ -151,8 +150,7 @@ def setup_kafka_topic_task(**context):
     
     audit.log(EventType.KAFKA_TOPIC_CONFIGURED, task_id, EventStatus.STARTED, {})
     
-    kafka_brokers = KafkaConnectionFactory(KAFKA_CONN_ID).get_bootstrap_servers()
-    manager = KafkaTopicManager(kafka_brokers)
+    manager = KafkaTopicManager(KAFKA_CONN_ID)
     manager.ensure_topic_exists(
         topic_name=KAFKA_TOPIC,
         num_partitions=KAFKA_PARTITION,        # Parallel consumption capability
@@ -259,7 +257,6 @@ def process_onhand_task(version:str,**context) -> Dict[str, Any]:
             AND InventLocationID LIKE 'OKS%';
     """
     
-    kafka_brokers = KafkaConnectionFactory(KAFKA_CONN_ID).get_bootstrap_servers()
     try:
         query_config = QueryConfiguration(
             source_name="sales_onhand",
@@ -274,7 +271,7 @@ def process_onhand_task(version:str,**context) -> Dict[str, Any]:
 
     orchestrator = MSSQLDataTransferOrchestrator(
         mssql_conn_id=MSSQL_CONN_ID,
-        kafka_bootstrap_servers=kafka_brokers,
+        kafka_conn_id=KAFKA_CONN_ID,
         clickhouse_conn_id=None,
         is_send_kafka=True,
         is_send_clickhouse=False,

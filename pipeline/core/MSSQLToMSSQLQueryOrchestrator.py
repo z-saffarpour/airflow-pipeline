@@ -23,8 +23,9 @@ class MSSQLToMSSQLQueryOrchestrator:
 
         Args:
             mssql_conn_id: Airflow connection ID for SQL Server
-            kafka_bootstrap_servers: Kafka bootstrap servers
-            is_connection_string: If True, mssql_conn_id is treated as a connection string
+            target_connection_string: Target SQL Server connection string
+            fail_on_error: Whether to fail the task on transfer errors
+            batch_size: Batch size for read/write operations
         """
         self.source_conn_id = source_conn_id
         self.target_connection_string = target_connection_string

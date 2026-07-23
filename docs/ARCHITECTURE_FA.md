@@ -235,6 +235,11 @@ health_checks (موازی):
 - `get_admin_client()` فقط برای موارد خاص (low-level)
 - `kafka_utils.get_kafka_brokers` و `build_kafka_admin_client` روی همین factory سوار شده‌اند
 
+### KafkaTopicManager / Producer / Orchestrator
+
+- `KafkaTopicManager(conn_id)` و `IdempotentKafkaProducer(conn_id=...)` از `KafkaConnectionFactory` استفاده می‌کنند
+- `MSSQLDataTransferOrchestrator` پارامتر `kafka_conn_id` می‌گیرد (نه bootstrap string)
+
 ### SQLQueryBuilder
 
 ساخت کوئری امن با اعتبارسنجی identifier، count، min/max و **keyset pagination** (به‌جای OFFSET سنگین).

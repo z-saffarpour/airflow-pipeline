@@ -137,10 +137,7 @@ def make_check_consumer_lag_task(kafka_conn_id: str, health_config: KafkaHealthM
             return {"status": "skipped", "reason": "missing parameters"}
 
         try:
-            bootstrap_servers = KafkaConnectionFactory(
-                kafka_conn_id
-            ).get_bootstrap_servers()
-            topic_manager = KafkaTopicManager(bootstrap_servers)
+            topic_manager = KafkaTopicManager(kafka_conn_id)
             lag_info = topic_manager.check_consumer_lag(topic, consumer_group)
 
             if "error" in lag_info:
@@ -211,10 +208,7 @@ def make_check_topic_stats_task(kafka_conn_id: str, health_config: KafkaHealthMo
             return {"status": "skipped", "reason": "missing topic"}
 
         try:
-            bootstrap_servers = KafkaConnectionFactory(
-                kafka_conn_id
-            ).get_bootstrap_servers()
-            topic_manager = KafkaTopicManager(bootstrap_servers)
+            topic_manager = KafkaTopicManager(kafka_conn_id)
             stats = topic_manager.get_topic_stats(topic)
 
             if "error" in stats:
@@ -260,10 +254,7 @@ def make_sample_recent_messages_task(kafka_conn_id: str, health_config: KafkaHea
             return {"status": "skipped", "reason": "missing topic"}
 
         try:
-            bootstrap_servers = KafkaConnectionFactory(
-                kafka_conn_id
-            ).get_bootstrap_servers()
-            topic_manager = KafkaTopicManager(bootstrap_servers)
+            topic_manager = KafkaTopicManager(kafka_conn_id)
             messages = topic_manager.sample_messages(
                 topic_name=topic,
                 partition=0,

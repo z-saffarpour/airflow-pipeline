@@ -144,7 +144,7 @@ pipeline/
 ├── kafka/
 │   ├── KafkaConnectionFactory.py   # Airflow conn → AdminClient / bootstrap
 │   ├── IdempotentKafkaProducer.py
-│   ├── KafkaTopicManager.py
+│   ├── KafkaTopicManager.py        # topic ops via KafkaConnectionFactory(conn_id)
 │   └── MessageSerializer.py
 │
 ├── core/

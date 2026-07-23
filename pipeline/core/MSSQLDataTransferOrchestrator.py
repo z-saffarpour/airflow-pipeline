@@ -28,8 +28,8 @@ class MSSQLDataTransferOrchestrator:
     def __init__(
         self, 
         mssql_conn_id: str, 
-        kafka_bootstrap_servers: str, 
-        clickhouse_conn_id: str, 
+        kafka_conn_id: Optional[str], 
+        clickhouse_conn_id: Optional[str], 
         is_send_kafka: bool ,
         is_send_clickhouse: bool,
         fail_on_error: bool,
@@ -41,11 +41,12 @@ class MSSQLDataTransferOrchestrator:
 
         Args:
             mssql_conn_id: Airflow connection ID for SQL Server
-            kafka_bootstrap_servers: Kafka bootstrap servers
+            kafka_conn_id: Airflow connection ID for Kafka (required when is_send_kafka)
+            clickhouse_conn_id: Airflow connection ID for ClickHouse (required when is_send_clickhouse)
             is_connection_string: If True, mssql_conn_id is treated as a connection string
         """
         self.mssql_conn_id = mssql_conn_id
-        self.kafka_bootstrap_servers = kafka_bootstrap_servers
+        self.kafka_conn_id = kafka_conn_id
         self.clickhouse_conn_id = clickhouse_conn_id
         self.is_send_kafka= is_send_kafka
         self.is_send_clickhouse= is_send_clickhouse
@@ -106,9 +107,11 @@ class MSSQLDataTransferOrchestrator:
         try:
             # Initialize producer with client_id based on table name
             if self.is_send_kafka:
+                if not self.kafka_conn_id:
+                    raise ValueError("kafka_conn_id is required when is_send_kafka is True")
                 client_id = f"airflow-{config.table_name.replace('.', '-')}"
                 producer = IdempotentKafkaProducer(
-                    bootstrap_servers=self.kafka_bootstrap_servers,
+                    conn_id=self.kafka_conn_id,
                     client_id=client_id,
                 )
                 
@@ -169,7 +172,7 @@ class MSSQLDataTransferOrchestrator:
                 # Send batch
                 if self.is_send_kafka and producer:
                     try:
-                        self.logger.info(f"kafka broker : {self.kafka_bootstrap_servers}")
+                        self.logger.info(f"kafka conn_id : {self.kafka_conn_id}")
                         producer.send_batch_to_kafka(
                             batch=batch,
                             topic=kafka_topic,
@@ -309,9 +312,11 @@ class MSSQLDataTransferOrchestrator:
         try:
             # Initialize producer
             if self.is_send_kafka:
+                if not self.kafka_conn_id:
+                    raise ValueError("kafka_conn_id is required when is_send_kafka is True")
                 client_id = f"airflow-query-{config.source_name.replace('.', '-').replace('_', '-')}"
                 producer = IdempotentKafkaProducer(
-                    bootstrap_servers=self.kafka_bootstrap_servers,
+                    conn_id=self.kafka_conn_id,
                     client_id=client_id,
                 )
                 
