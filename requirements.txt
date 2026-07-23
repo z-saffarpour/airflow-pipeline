@@ -1,6 +1,8 @@
 # Airflow Dependencies
 apache-airflow>=2.8.0
 apache-airflow-providers-microsoft-mssql>=3.8.0
+apache-airflow-providers-mysql>=5.5.0
+apache-airflow-providers-postgres>=5.10.0
 
 # Kafka Dependencies
 confluent-kafka>=2.3.0
@@ -10,6 +12,10 @@ kafka-python>=2.0.2
 pymssql>=2.2.11
 pyodbc>=5.1.0
 sqlalchemy>=2.0.0
+
+# MySQL / PostgreSQL drivers (used by Airflow MySqlHook / PostgresHook)
+mysqlclient>=2.2.0
+psycopg2-binary>=2.9.9
 
 # ClickHouse Dependencies
 clickhouse-driver>=0.2.6
