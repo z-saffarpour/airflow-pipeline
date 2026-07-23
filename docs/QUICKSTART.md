@@ -167,6 +167,12 @@ airflow dags trigger query_inventory_and_sales_sync
 
 نمونه: `dags/mssql_to_clickhouse_sync/example_table_to_clickhouse_sync.py` با `create_dag` از `mssql_to_clickhouse_sync_dag_factory`.
 
+### MSSQL → Kafka Sync (Gen-2)
+
+راهنمای کامل: [MSSQL_TO_KAFKA_SYNC_GUIDE.md](MSSQL_TO_KAFKA_SYNC_GUIDE.md)
+
+نمونه: `dags/mssql_to_kafka_sync/example_table_to_kafka_sync.py` با `create_dag` از `mssql_to_kafka_sync_dag_factory`.
+
 ### MSSQL → MongoDB Sync
 
 راهنمای کامل: [MSSQL_TO_MONGO_SYNC_GUIDE.md](MSSQL_TO_MONGO_SYNC_GUIDE.md)
@@ -261,6 +267,7 @@ pytest tests/ -v
 - MSSQL → MySQL: [MSSQL_TO_MYSQL_SYNC_GUIDE.md](MSSQL_TO_MYSQL_SYNC_GUIDE.md)
 - MSSQL → MSSQL: [MSSQL_TO_MSSQL_SYNC_GUIDE.md](MSSQL_TO_MSSQL_SYNC_GUIDE.md)
 - MSSQL → ClickHouse: [MSSQL_TO_CLICKHOUSE_SYNC_GUIDE.md](MSSQL_TO_CLICKHOUSE_SYNC_GUIDE.md)
+- MSSQL → Kafka (Gen-2): [MSSQL_TO_KAFKA_SYNC_GUIDE.md](MSSQL_TO_KAFKA_SYNC_GUIDE.md)
 - MSSQL → MongoDB: [MSSQL_TO_MONGO_SYNC_GUIDE.md](MSSQL_TO_MONGO_SYNC_GUIDE.md)
 - Kafka → MSSQL: [KAFKA_TO_MSSQL_SYNC_GUIDE.md](KAFKA_TO_MSSQL_SYNC_GUIDE.md)
 - ClickHouse → MSSQL: [CLICKHOUSE_TO_MSSQL_SYNC_GUIDE.md](CLICKHOUSE_TO_MSSQL_SYNC_GUIDE.md)

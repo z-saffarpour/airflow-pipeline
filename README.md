@@ -25,6 +25,7 @@
 | جریان | منبع | مقصد | مسیر DAG |
 |-------|------|------|----------|
 | Table / Query Sync | SQL Server (DWH/ERP) | Kafka (اختیاری ClickHouse) | `dags/mssql_to_kafka_clickhouse_sync/` |
+| MSSQL → Kafka Sync | SQL Server | Kafka | `dags/mssql_to_kafka_sync/` |
 | MSSQL → ClickHouse Sync | SQL Server | ClickHouse | `dags/mssql_to_clickhouse_sync/` |
 | Sales & Inventory | فروشگاه‌ها + ERP AX | Kafka | `dags/sales_inventory/` |
 | Replication MD Sync | Publisher (`mssql_replication_md`) | دیتابیس فروشگاه | `dags/masterdata_store_sync/` |
@@ -39,12 +40,14 @@ sqlserver-kafka-pipeline/
 │   ├── template/                 # Factoryهای ساخت DAG
 │   │   ├── table_mssql_sync_dag_factory.py
 │   │   ├── mssql_to_kafka_clickhouse_sync_dag_factory.py
+│   │   ├── mssql_to_kafka_sync_dag_factory.py
 │   │   ├── mssql_masterdata_to_mssql_store_sync_dag_factory.py
 │   │   ├── clickhouse_optimizer_dag_factory.py
 │   │   └── kafka_health_monitor_dag_factory.py
 │   ├── mssql_to_kafka_clickhouse_sync/  # Sync جداول/کوئری DWH و ERP → Kafka
 │   │   ├── dwh/
 │   │   └── erp/
+│   ├── mssql_to_kafka_sync/          # Sync اختصاصی MSSQL → Kafka (Gen-2)
 │   ├── sales_inventory/          # فروش و موجودی چندمنبعی → Kafka
 │   ├── replication/              # تعمیر Replication MD (~200+ table DAG)
 │   │   ├── tables/               # sync تک‌جدول برای یک فروشگاه
@@ -83,6 +86,7 @@ sqlserver-kafka-pipeline/
 |---------|--------|
 | `create_table_sync_dag` | Incremental table sync بر اساس `execution_date` |
 | `create_query_sync_dag` | اجرای query/CTE سفارشی و ارسال به Kafka |
+| `mssql_to_kafka_sync_dag_factory` | Sync اختصاصی MSSQL → Kafka (chunk + audit) |
 | `mssql_to_clickhouse_sync_dag_factory` | Sync مستقیم MSSQL → ClickHouse |
 | `mssql_masterdata_to_mssql_store_sync_dag_factory` | Sync Publisher → فروشگاه با chunk موازی |
 | `clickhouse_optimizer_dag_factory` | بهینه‌سازی جدول ClickHouse |
@@ -105,6 +109,8 @@ create_table_sync_dag(
 ```
 
 راهنمای کامل SQL Server → Kafka: [docs/MSSQL_TO_KAFKA_CLICKHOUSE_SYNC_GUIDE.md](docs/MSSQL_TO_KAFKA_CLICKHOUSE_SYNC_GUIDE.md)
+
+راهنمای کامل MSSQL → Kafka (Gen-2): [docs/MSSQL_TO_KAFKA_SYNC_GUIDE.md](docs/MSSQL_TO_KAFKA_SYNC_GUIDE.md)
 
 راهنمای کامل MSSQL → ClickHouse: [docs/MSSQL_TO_CLICKHOUSE_SYNC_GUIDE.md](docs/MSSQL_TO_CLICKHOUSE_SYNC_GUIDE.md)
 
@@ -129,6 +135,7 @@ kafka_health_monitor_dag(DAG_CONFIG, conn_config, HEALTH_CONFIG)
 | ماژول | نقش |
 |-------|-----|
 | `MSSQLDataTransferOrchestrator` | هماهنگی انتقال SQL Server → Kafka / ClickHouse |
+| `MSSQLToKafkaQueryOrchestrator` | همگام‌سازی مستقیم MSSQL → Kafka (produce + chunk) |
 | `MSSQLToClickHouseQueryOrchestrator` | همگام‌سازی مستقیم MSSQL → ClickHouse (bulk INSERT + chunk) |
 | `MSSQLToMSSQLQueryOrchestrator` | انتقال MSSQL → MSSQL (store پویا یا conn ثابت) با staging و chunk |
 | `ClickHouseOptimizationOrchestrator` | بهینه‌سازی جداول ClickHouse |
