@@ -153,6 +153,15 @@ temp/
 tmp/
 helpme.bash
 
+# Local DAGs (not tracked)
+dags/masterdata_store_sync/
+dags/mssql_to_kafka_clickhouse_sync/
+dags/sales_inventory/
+dags/clickhouse_optimizer/dwh/
+dags/clickhouse_optimizer/erp/
+dags/kafka_health_monitor/mssql_sync/
+dags/kafka_health_monitor/sales_inventory/
+
 # Docker image archives (too large for GitHub)
 images/
 *.tar
