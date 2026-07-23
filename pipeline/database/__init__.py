@@ -12,6 +12,7 @@ from pipeline.database.MySQLConnectionFactory import MySQLConnectionFactory
 from pipeline.database.MySQLDataReader import MySQLDataReader
 from pipeline.database.MySQLServerWriter import MySQLServerWriter
 from pipeline.database.PostgreSQLConnectionFactory import PostgreSQLConnectionFactory
+from pipeline.database.PostgreSQLDataReader import PostgreSQLDataReader
 from pipeline.database.PostgreSQLServerWriter import PostgreSQLServerWriter
 from pipeline.database.MongoDBConnectionFactory import MongoDBConnectionFactory
 from pipeline.database.MongoDBDataReader import MongoDBDataReader
@@ -30,6 +31,7 @@ __all__ = [
     "MySQLDataReader",
     "MySQLServerWriter",
     "PostgreSQLConnectionFactory",
+    "PostgreSQLDataReader",
     "PostgreSQLServerWriter",
     "MongoDBConnectionFactory",
     "MongoDBDataReader",

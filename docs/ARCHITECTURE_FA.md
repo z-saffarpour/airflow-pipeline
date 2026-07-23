@@ -160,6 +160,7 @@ DAGهای سفارشی در `dags/sales_inventory/` (نه فقط template ساد
 | MySQL → MSSQL | `mysql_to_mssql_sync_dag_factory` | `MySQLToMSSQLQueryOrchestrator` | [MYSQL_TO_MSSQL_SYNC_GUIDE.md](MYSQL_TO_MSSQL_SYNC_GUIDE.md) |
 | MSSQL → MySQL | `mssql_to_mysql_sync_dag_factory` | `MSSQLToMySQLQueryOrchestrator` | [MSSQL_TO_MYSQL_SYNC_GUIDE.md](MSSQL_TO_MYSQL_SYNC_GUIDE.md) |
 | MSSQL → PostgreSQL | `mssql_to_postgresql_sync_dag_factory` | `MSSQLToPostgreSQLQueryOrchestrator` | [MSSQL_TO_POSTGRESQL_SYNC_GUIDE.md](MSSQL_TO_POSTGRESQL_SYNC_GUIDE.md) |
+| PostgreSQL → MSSQL | `postgresql_to_mssql_sync_dag_factory` | `PostgreSQLToMSSQLQueryOrchestrator` | [POSTGRESQL_TO_MSSQL_SYNC_GUIDE.md](POSTGRESQL_TO_MSSQL_SYNC_GUIDE.md) |
 | MSSQL → MSSQL | `mssql_to_mssql_sync_dag_factory` | `MSSQLToMSSQLQueryOrchestrator` | [MSSQL_TO_MSSQL_SYNC_GUIDE.md](MSSQL_TO_MSSQL_SYNC_GUIDE.md) |
 | MSSQL → MongoDB | `mssql_to_mongo_sync_dag_factory` | `MSSQLToMongoDBQueryOrchestrator` | [MSSQL_TO_MONGO_SYNC_GUIDE.md](MSSQL_TO_MONGO_SYNC_GUIDE.md) |
 | MongoDB → MSSQL | `mongo_to_mssql_sync_dag_factory` | `MongoDBToMSSQLQueryOrchestrator` | [MONGO_TO_MSSQL_SYNC_GUIDE.md](MONGO_TO_MSSQL_SYNC_GUIDE.md) |
@@ -358,6 +359,7 @@ PipelineException
 | [MYSQL_TO_MSSQL_SYNC_GUIDE.md](MYSQL_TO_MSSQL_SYNC_GUIDE.md) | MySQL → MSSQL |
 | [MSSQL_TO_MYSQL_SYNC_GUIDE.md](MSSQL_TO_MYSQL_SYNC_GUIDE.md) | MSSQL → MySQL |
 | [MSSQL_TO_POSTGRESQL_SYNC_GUIDE.md](MSSQL_TO_POSTGRESQL_SYNC_GUIDE.md) | MSSQL → PostgreSQL |
+| [POSTGRESQL_TO_MSSQL_SYNC_GUIDE.md](POSTGRESQL_TO_MSSQL_SYNC_GUIDE.md) | PostgreSQL → MSSQL |
 | [MSSQL_TO_MSSQL_SYNC_GUIDE.md](MSSQL_TO_MSSQL_SYNC_GUIDE.md) | MSSQL → MSSQL (conn ثابت) |
 | [MSSQL_TO_MONGO_SYNC_GUIDE.md](MSSQL_TO_MONGO_SYNC_GUIDE.md) | MSSQL → MongoDB |
 | [MONGO_TO_MSSQL_SYNC_GUIDE.md](MONGO_TO_MSSQL_SYNC_GUIDE.md) | MongoDB → MSSQL |

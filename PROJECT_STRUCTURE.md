@@ -37,6 +37,7 @@ dags/
 │   ├── mysql_to_mssql_sync_dag_factory.py
 │   ├── mssql_to_mysql_sync_dag_factory.py
 │   ├── mssql_to_postgresql_sync_dag_factory.py
+│   ├── postgresql_to_mssql_sync_dag_factory.py
 │   ├── mssql_to_mssql_sync_dag_factory.py
 │   ├── mssql_to_clickhouse_sync_dag_factory.py
 │   ├── mssql_to_mongo_sync_dag_factory.py
@@ -57,6 +58,8 @@ dags/
 ├── mssql_to_mysql_sync/           # MSSQL → MySQL (upsert)
 │
 ├── mssql_to_postgresql_sync/      # MSSQL → PostgreSQL (upsert)
+│
+├── postgresql_to_mssql_sync/      # PostgreSQL → MSSQL (upsert)
 │
 ├── mssql_to_mssql_sync/           # MSSQL → MSSQL (upsert / fixed connections)
 │
@@ -183,6 +186,7 @@ pipeline/
 │   ├── MySQLDataReader.py
 │   ├── MySQLServerWriter.py
 │   ├── PostgreSQLConnectionFactory.py
+│   ├── PostgreSQLDataReader.py
 │   ├── PostgreSQLServerWriter.py
 │   ├── MongoDBConnectionFactory.py
 │   ├── MongoDBDataReader.py
@@ -205,6 +209,7 @@ pipeline/
 │   ├── MySQLToMSSQLQueryOrchestrator.py      # MySQL → MSSQL
 │   ├── MSSQLToMySQLQueryOrchestrator.py      # MSSQL → MySQL
 │   ├── MSSQLToPostgreSQLQueryOrchestrator.py # MSSQL → PostgreSQL
+│   ├── PostgreSQLToMSSQLQueryOrchestrator.py # PostgreSQL → MSSQL
 │   ├── MSSQLToClickHouseQueryOrchestrator.py # MSSQL → ClickHouse
 │   ├── MSSQLToKafkaQueryOrchestrator.py      # MSSQL → Kafka
 │   ├── MSSQLToMongoDBQueryOrchestrator.py    # MSSQL → MongoDB
@@ -316,6 +321,7 @@ $AIRFLOW_HOME/dags/
 ├── mysql_to_mssql_sync/
 ├── mssql_to_mysql_sync/
 ├── mssql_to_postgresql_sync/
+├── postgresql_to_mssql_sync/
 ├── mssql_to_mssql_sync/
 ├── mssql_to_clickhouse_sync/
 ├── mssql_to_mongo_sync/
