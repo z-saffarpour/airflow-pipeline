@@ -180,6 +180,20 @@ conn_config = ConnectionConfig(kafka_conn_id="kafka_default")
 kafka_health_monitor_dag(DAG_CONFIG, conn_config, HEALTH_CONFIG)
 ```
 
+### ClickHouse Optimizer
+
+راهنمای کامل: [CLICKHOUSE_OPTIMIZER_GUIDE.md](CLICKHOUSE_OPTIMIZER_GUIDE.md)
+
+برای هر جدول ClickHouse یک DAG نازک در `dags/clickhouse_optimizer/` (یا `sales_inventory/`) بسازید:
+
+```python
+from pipeline.config.ConnectionConfig import ConnectionConfig
+from template.clickhouse_optimizer_dag_factory import clickhouse_optimizer_dag
+
+conn_config = ConnectionConfig(clickhouse_conn_id="clickhouse_default")
+clickhouse_optimizer_dag(DAG_CONFIG, conn_config, OPTIMIZE_CONFIG)
+```
+
 ---
 
 ## ۸. Docker (اختیاری)
@@ -225,6 +239,7 @@ pytest tests/ -v
 - Replication MD: [REPLICATION_MD_STORE_SYNC_GUIDE.md](REPLICATION_MD_STORE_SYNC_GUIDE.md)
 - MySQL → MSSQL: [MYSQL_TO_MSSQL_SYNC_GUIDE.md](MYSQL_TO_MSSQL_SYNC_GUIDE.md)
 - Kafka Health Monitor: [KAFKA_HEALTH_MONITOR_GUIDE.md](KAFKA_HEALTH_MONITOR_GUIDE.md)
+- ClickHouse Optimizer: [CLICKHOUSE_OPTIMIZER_GUIDE.md](CLICKHOUSE_OPTIMIZER_GUIDE.md)
 - بهبودهای reliability: [QUICK_START_IMPROVEMENTS.md](QUICK_START_IMPROVEMENTS.md)
 
 ---
