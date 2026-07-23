@@ -25,6 +25,7 @@
 | جریان | منبع | مقصد | مسیر DAG |
 |-------|------|------|----------|
 | Table / Query Sync | SQL Server (DWH/ERP) | Kafka (اختیاری ClickHouse) | `dags/mssql_to_kafka_clickhouse_sync/` |
+| MSSQL → ClickHouse Sync | SQL Server | ClickHouse | `dags/mssql_to_clickhouse_sync/` |
 | Sales & Inventory | فروشگاه‌ها + ERP AX | Kafka | `dags/sales_inventory/` |
 | Replication MD Sync | Publisher (`mssql_replication_md`) | دیتابیس فروشگاه | `dags/masterdata_store_sync/` |
 | ClickHouse Optimize | ClickHouse | ClickHouse | `dags/clickhouse_optimizer/` |
@@ -82,6 +83,7 @@ sqlserver-kafka-pipeline/
 |---------|--------|
 | `create_table_sync_dag` | Incremental table sync بر اساس `execution_date` |
 | `create_query_sync_dag` | اجرای query/CTE سفارشی و ارسال به Kafka |
+| `mssql_to_clickhouse_sync_dag_factory` | Sync مستقیم MSSQL → ClickHouse |
 | `mssql_masterdata_to_mssql_store_sync_dag_factory` | Sync Publisher → فروشگاه با chunk موازی |
 | `clickhouse_optimizer_dag_factory` | بهینه‌سازی جدول ClickHouse |
 | `kafka_health_monitor_dag_factory` | مانیتور lag / topic / سلامت Kafka |
@@ -104,6 +106,8 @@ create_table_sync_dag(
 
 راهنمای کامل SQL Server → Kafka: [docs/MSSQL_TO_KAFKA_CLICKHOUSE_SYNC_GUIDE.md](docs/MSSQL_TO_KAFKA_CLICKHOUSE_SYNC_GUIDE.md)
 
+راهنمای کامل MSSQL → ClickHouse: [docs/MSSQL_TO_CLICKHOUSE_SYNC_GUIDE.md](docs/MSSQL_TO_CLICKHOUSE_SYNC_GUIDE.md)
+
 راهنمای کامل Replication MD: [docs/MASTERDATA_STORE_SYNC_GUIDE.md](docs/MASTERDATA_STORE_SYNC_GUIDE.md)
 
 نمونه health monitor:
@@ -125,6 +129,7 @@ kafka_health_monitor_dag(DAG_CONFIG, conn_config, HEALTH_CONFIG)
 | ماژول | نقش |
 |-------|-----|
 | `MSSQLDataTransferOrchestrator` | هماهنگی انتقال SQL Server → Kafka / ClickHouse |
+| `MSSQLToClickHouseQueryOrchestrator` | همگام‌سازی مستقیم MSSQL → ClickHouse (bulk INSERT + chunk) |
 | `MSSQLToMSSQLQueryOrchestrator` | انتقال MSSQL → MSSQL (store پویا یا conn ثابت) با staging و chunk |
 | `ClickHouseOptimizationOrchestrator` | بهینه‌سازی جداول ClickHouse |
 | `MSSQLDataReader` / `MSSQLServerWriter` | خواندن streaming و نوشتن batch در SQL Server |

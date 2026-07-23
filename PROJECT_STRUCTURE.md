@@ -36,6 +36,7 @@ dags/
 │   ├── mysql_to_mssql_sync_dag_factory.py
 │   ├── mssql_to_mysql_sync_dag_factory.py
 │   ├── mssql_to_mssql_sync_dag_factory.py
+│   ├── mssql_to_clickhouse_sync_dag_factory.py
 │   ├── mssql_to_mongo_sync_dag_factory.py
 │   ├── mongo_to_mssql_sync_dag_factory.py
 │   ├── kafka_to_mssql_sync_dag_factory.py
@@ -52,6 +53,8 @@ dags/
 ├── mssql_to_mysql_sync/           # MSSQL → MySQL (upsert / replication-style)
 │
 ├── mssql_to_mssql_sync/           # MSSQL → MSSQL (upsert / fixed connections)
+│
+├── mssql_to_clickhouse_sync/      # MSSQL → ClickHouse (bulk INSERT)
 │
 ├── mssql_to_mongo_sync/           # MSSQL → MongoDB (upsert / replication-style)
 │
@@ -88,6 +91,7 @@ dags/
 | Replication table | `ax_<table>_sync.py` | `ax_invent_table_sync.py` |
 | MySQL → MSSQL | `<name>_to_mssql_sync.py` | `example_table_to_mssql_sync.py` |
 | MSSQL → MySQL | `<name>_to_mysql_sync.py` | `example_table_to_mysql_sync.py` |
+| MSSQL → ClickHouse | `<name>_to_clickhouse_sync.py` | `example_table_to_clickhouse_sync.py` |
 | MSSQL → MongoDB | `<name>_to_mongo_sync.py` | `example_table_to_mongo_sync.py` |
 | MongoDB → MSSQL | `<name>_to_mssql_sync.py` | `example_collection_to_mssql_sync.py` |
 | Kafka → MSSQL | `<name>_to_mssql_sync.py` | `example_topic_to_mssql_sync.py` |
@@ -189,6 +193,7 @@ pipeline/
 │   ├── MSSQLToMSSQLQueryOrchestrator.py      # MSSQL → MSSQL (store URI یا conn ثابت)
 │   ├── MySQLToMSSQLQueryOrchestrator.py      # MySQL → MSSQL
 │   ├── MSSQLToMySQLQueryOrchestrator.py      # MSSQL → MySQL
+│   ├── MSSQLToClickHouseQueryOrchestrator.py # MSSQL → ClickHouse
 │   ├── MSSQLToMongoDBQueryOrchestrator.py    # MSSQL → MongoDB
 │   ├── MongoDBToMSSQLQueryOrchestrator.py    # Mongo → MSSQL
 │   ├── KafkaToMSSQLQueryOrchestrator.py      # Kafka → MSSQL
@@ -252,6 +257,7 @@ pipeline/
 | `MYSQL_TO_MSSQL_SYNC_GUIDE.md` | ساخت DAG همگام‌سازی MySQL → MSSQL |
 | `MSSQL_TO_MYSQL_SYNC_GUIDE.md` | ساخت DAG همگام‌سازی MSSQL → MySQL |
 | `MSSQL_TO_MSSQL_SYNC_GUIDE.md` | ساخت DAG همگام‌سازی MSSQL → MSSQL (conn ثابت) |
+| `MSSQL_TO_CLICKHOUSE_SYNC_GUIDE.md` | ساخت DAG همگام‌سازی MSSQL → ClickHouse |
 | `MSSQL_TO_MONGO_SYNC_GUIDE.md` | ساخت DAG همگام‌سازی MSSQL → MongoDB |
 | `MONGO_TO_MSSQL_SYNC_GUIDE.md` | ساخت DAG همگام‌سازی MongoDB → MSSQL |
 | `KAFKA_TO_MSSQL_SYNC_GUIDE.md` | ساخت DAG همگام‌سازی Kafka → MSSQL |
@@ -295,6 +301,7 @@ $AIRFLOW_HOME/dags/
 ├── mysql_to_mssql_sync/
 ├── mssql_to_mysql_sync/
 ├── mssql_to_mssql_sync/
+├── mssql_to_clickhouse_sync/
 ├── mssql_to_mongo_sync/
 ├── mongo_to_mssql_sync/
 ├── kafka_to_mssql_sync/

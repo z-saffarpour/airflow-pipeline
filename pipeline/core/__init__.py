@@ -8,6 +8,7 @@ from pipeline.core.MSSQLDataTransferOrchestrator import MSSQLDataTransferOrchest
 from pipeline.core.MSSQLToMSSQLQueryOrchestrator import MSSQLToMSSQLQueryOrchestrator
 from pipeline.core.MySQLToMSSQLQueryOrchestrator import MySQLToMSSQLQueryOrchestrator
 from pipeline.core.MSSQLToMySQLQueryOrchestrator import MSSQLToMySQLQueryOrchestrator
+from pipeline.core.MSSQLToClickHouseQueryOrchestrator import MSSQLToClickHouseQueryOrchestrator
 from pipeline.core.MSSQLToMongoDBQueryOrchestrator import MSSQLToMongoDBQueryOrchestrator
 from pipeline.core.MongoDBToMSSQLQueryOrchestrator import MongoDBToMSSQLQueryOrchestrator
 from pipeline.core.KafkaToMSSQLQueryOrchestrator import KafkaToMSSQLQueryOrchestrator
@@ -47,6 +48,7 @@ __all__ = [
     "MSSQLToMSSQLQueryOrchestrator",
     "MySQLToMSSQLQueryOrchestrator",
     "MSSQLToMySQLQueryOrchestrator",
+    "MSSQLToClickHouseQueryOrchestrator",
     "MSSQLToMongoDBQueryOrchestrator",
     "MongoDBToMSSQLQueryOrchestrator",
     "KafkaToMSSQLQueryOrchestrator",
