@@ -10,8 +10,10 @@ Structure:
 
 Factory:
 - template.kafka_health_monitor_dag_factory.kafka_health_monitor_dag
+  signature: (dag_config, conn_config, health_config)
 
 Config:
+- pipeline.config.ConnectionConfig (kafka_conn_id)
 - pipeline.config.KafkaHealthMonitorConfig
 
 Author: Senior Data Engineer

@@ -109,9 +109,11 @@ create_table_sync_dag(
 ```python
 from template.kafka_health_monitor_dag_factory import kafka_health_monitor_dag
 from pipeline.config.DAGConfig import DAGConfig
+from pipeline.config.ConnectionConfig import ConnectionConfig
 from pipeline.config.KafkaHealthMonitorConfig import KafkaHealthMonitorConfig
 
-kafka_health_monitor_dag(DAG_CONFIG, HEALTH_CONFIG)
+conn_config = ConnectionConfig(kafka_conn_id="kafka_default")
+kafka_health_monitor_dag(DAG_CONFIG, conn_config, HEALTH_CONFIG)
 ```
 
 راهنمای کامل Health Monitor: [docs/KAFKA_HEALTH_MONITOR_GUIDE.md](docs/KAFKA_HEALTH_MONITOR_GUIDE.md)

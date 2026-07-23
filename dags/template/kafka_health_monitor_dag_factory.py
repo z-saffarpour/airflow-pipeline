@@ -12,10 +12,12 @@ Features:
 
 Usage:
     from pipeline.config.DAGConfig import DAGConfig
+    from pipeline.config.ConnectionConfig import ConnectionConfig
     from pipeline.config.KafkaHealthMonitorConfig import KafkaHealthMonitorConfig
     from template.kafka_health_monitor_dag_factory import kafka_health_monitor_dag
 
-    kafka_health_monitor_dag(DAG_CONFIG, HEALTH_CONFIG)
+    conn_config = ConnectionConfig(kafka_conn_id='kafka_default')
+    kafka_health_monitor_dag(DAG_CONFIG, conn_config, HEALTH_CONFIG)
 
 Author: Senior Data Engineer
 Version: 2.0
@@ -31,6 +33,7 @@ from airflow.utils.log.logging_mixin import LoggingMixin  # type: ignore
 from airflow.utils.task_group import TaskGroup  # type: ignore
 
 from pipeline.config.DAGConfig import DAGConfig
+from pipeline.config.ConnectionConfig import ConnectionConfig
 from pipeline.config.KafkaHealthMonitorConfig import KafkaHealthMonitorConfig
 from pipeline.kafka.KafkaTopicManager import KafkaTopicManager
 from pipeline.utils.kafka_utils import build_kafka_admin_client, get_kafka_brokers
@@ -78,7 +81,7 @@ def _sum_lag(partitions: List[Dict[str, Any]]) -> int:
 # TASK FACTORIES
 # ============================================================================
 
-def make_validate_kafka_health_task(health_config: KafkaHealthMonitorConfig):
+def make_validate_kafka_health_task(kafka_conn_id: str):
     """Factory: validate Kafka cluster health."""
 
     @task(
@@ -88,10 +91,9 @@ def make_validate_kafka_health_task(health_config: KafkaHealthMonitorConfig):
         execution_timeout=timedelta(minutes=5),
     )
     def validate_kafka_health() -> Dict[str, Any]:
-        conn_id = health_config.kafka_conn_id
-        validate_kafka_conn(conn_id)
+        validate_kafka_conn(kafka_conn_id)
 
-        admin_client = build_kafka_admin_client(conn_id)
+        admin_client = build_kafka_admin_client(kafka_conn_id)
         cluster_metadata = admin_client.list_topics(timeout=30)
 
         broker_count = len(cluster_metadata.brokers)
@@ -100,7 +102,7 @@ def make_validate_kafka_health_task(health_config: KafkaHealthMonitorConfig):
         if broker_count == 0:
             raise AirflowException("No Kafka brokers available")
 
-        bootstrap_servers = get_kafka_brokers(conn_id)
+        bootstrap_servers = get_kafka_brokers(kafka_conn_id)
         logger.info(
             "Kafka cluster healthy: %s brokers, %s topics",
             broker_count,
@@ -112,14 +114,14 @@ def make_validate_kafka_health_task(health_config: KafkaHealthMonitorConfig):
             "broker_count": broker_count,
             "topic_count": topic_count,
             "bootstrap_servers": bootstrap_servers,
-            "conn_id": conn_id,
+            "conn_id": kafka_conn_id,
             "timestamp": datetime.now().isoformat(),
         }
 
     return validate_kafka_health
 
 
-def make_check_consumer_lag_task(health_config: KafkaHealthMonitorConfig):
+def make_check_consumer_lag_task(kafka_conn_id: str, health_config: KafkaHealthMonitorConfig):
     """Factory: check consumer lag for configured topic / group."""
 
     @task(
@@ -139,7 +141,7 @@ def make_check_consumer_lag_task(health_config: KafkaHealthMonitorConfig):
             return {"status": "skipped", "reason": "missing parameters"}
 
         try:
-            bootstrap_servers = get_kafka_brokers(health_config.kafka_conn_id)
+            bootstrap_servers = get_kafka_brokers(kafka_conn_id)
             topic_manager = KafkaTopicManager(bootstrap_servers)
             lag_info = topic_manager.check_consumer_lag(topic, consumer_group)
 
@@ -195,7 +197,7 @@ def make_check_consumer_lag_task(health_config: KafkaHealthMonitorConfig):
     return check_consumer_lag
 
 
-def make_check_topic_stats_task(health_config: KafkaHealthMonitorConfig):
+def make_check_topic_stats_task(kafka_conn_id: str, health_config: KafkaHealthMonitorConfig):
     """Factory: fetch topic statistics."""
 
     @task(
@@ -211,7 +213,7 @@ def make_check_topic_stats_task(health_config: KafkaHealthMonitorConfig):
             return {"status": "skipped", "reason": "missing topic"}
 
         try:
-            bootstrap_servers = get_kafka_brokers(health_config.kafka_conn_id)
+            bootstrap_servers = get_kafka_brokers(kafka_conn_id)
             topic_manager = KafkaTopicManager(bootstrap_servers)
             stats = topic_manager.get_topic_stats(topic)
 
@@ -243,7 +245,7 @@ def make_check_topic_stats_task(health_config: KafkaHealthMonitorConfig):
     return check_topic_stats
 
 
-def make_sample_recent_messages_task(health_config: KafkaHealthMonitorConfig):
+def make_sample_recent_messages_task(kafka_conn_id: str, health_config: KafkaHealthMonitorConfig):
     """Factory: sample recent messages from topic."""
 
     @task(
@@ -258,7 +260,7 @@ def make_sample_recent_messages_task(health_config: KafkaHealthMonitorConfig):
             return {"status": "skipped", "reason": "missing topic"}
 
         try:
-            bootstrap_servers = get_kafka_brokers(health_config.kafka_conn_id)
+            bootstrap_servers = get_kafka_brokers(kafka_conn_id)
             topic_manager = KafkaTopicManager(bootstrap_servers)
             messages = topic_manager.sample_messages(
                 topic_name=topic,
@@ -387,6 +389,7 @@ def make_generate_health_report_task(health_config: KafkaHealthMonitorConfig):
 
 def kafka_health_monitor_dag(
     dag_config: DAGConfig,
+    conn_config: ConnectionConfig,
     health_config: KafkaHealthMonitorConfig,
 ):
     """
@@ -399,6 +402,12 @@ def kafka_health_monitor_dag(
     4. Optionally sample recent messages
     5. Generate health report
     """
+    kafka_conn_id = conn_config.kafka_conn_id
+    if not kafka_conn_id:
+        raise ValueError(
+            "ConnectionConfig.kafka_conn_id is required for kafka_health_monitor_dag"
+        )
+
     default_args = {
         "owner": dag_config.owner,
         "depends_on_past": dag_config.depends_on_past,
@@ -426,9 +435,9 @@ def kafka_health_monitor_dag(
     ) as dag:
 
         with TaskGroup(group_id="health_checks") as health_checks:
-            kafka_health = make_validate_kafka_health_task(health_config)()
-            lag_info = make_check_consumer_lag_task(health_config)()
-            topic_stats = make_check_topic_stats_task(health_config)()
+            kafka_health = make_validate_kafka_health_task(kafka_conn_id)()
+            lag_info = make_check_consumer_lag_task(kafka_conn_id, health_config)()
+            topic_stats = make_check_topic_stats_task(kafka_conn_id, health_config)()
 
             [kafka_health, lag_info, topic_stats]
 
@@ -439,7 +448,7 @@ def kafka_health_monitor_dag(
         )
 
         if health_config.include_message_sampling:
-            samples = make_sample_recent_messages_task(health_config)()
+            samples = make_sample_recent_messages_task(kafka_conn_id, health_config)()
             health_checks >> samples >> report
         else:
             health_checks >> report

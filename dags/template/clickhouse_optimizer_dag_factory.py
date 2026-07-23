@@ -29,6 +29,7 @@ from airflow.exceptions import AirflowException  # type: ignore
 from airflow.utils.log.logging_mixin import LoggingMixin  # type: ignore
 
 from pipeline.config.DAGConfig import DAGConfig
+from pipeline.config.ConnectionConfig import ConnectionConfig
 from pipeline.config.ClickHouseOptimizationConfig import ClickHouseOptimizationConfig
 from pipeline.core.ClickHouseOptimizationOrchestrator import ClickHouseOptimizationOrchestrator
 from pipeline.core.ExecutionDateExtractor import ExecutionDateExtractor
@@ -195,7 +196,11 @@ def make_check_table_health_after_task(clickhouse_conn_id: str, config: ClickHou
 # ============================================================================
 # DAG FACTORY
 # ============================================================================
-def clickhouse_optimizer_dag(dag_config: DAGConfig,clickhouse_conn_id: str, optimize_config: ClickHouseOptimizationConfig):
+def clickhouse_optimizer_dag(
+    dag_config: DAGConfig,
+    conn_config: ConnectionConfig,
+    optimize_config: ClickHouseOptimizationConfig,
+):
     """
     TEMPLATE DAG for ClickHouse table optimization.
     
@@ -209,14 +214,18 @@ def clickhouse_optimizer_dag(dag_config: DAGConfig,clickhouse_conn_id: str, opti
     4. Check Table Health (after)
     
     Example Usage:
-        from clickhouse.clickhouse_optimizer import (
-            validate_clickhouse_connection,
-            check_table_health_before,
-            run_optimization,
-            check_table_health_after,
-            default_args,
-        )
+        from pipeline.config import DAGConfig, ConnectionConfig, ClickHouseOptimizationConfig
+        from template.clickhouse_optimizer_dag_factory import clickhouse_optimizer_dag
+
+        conn_config = ConnectionConfig(clickhouse_conn_id='clickhouse_default')
+        clickhouse_optimizer_dag(DAG_CONFIG, conn_config, OPTIMIZE_CONFIG)
     """
+    clickhouse_conn_id = conn_config.clickhouse_conn_id
+    if not clickhouse_conn_id:
+        raise ValueError(
+            "ConnectionConfig.clickhouse_conn_id is required for clickhouse_optimizer_dag"
+        )
+
     default_args = {
         'owner': dag_config.owner,
         'depends_on_past': dag_config.depends_on_past,

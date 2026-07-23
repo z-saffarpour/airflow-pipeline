@@ -9,7 +9,6 @@ from dataclasses import dataclass
 class KafkaHealthMonitorConfig:
     """Configuration for Kafka pipeline health monitoring. Immutable."""
 
-    kafka_conn_id: str = "kafka_default"
     kafka_topic: str = ""
     consumer_group: str = ""
     sample_count: int = 5

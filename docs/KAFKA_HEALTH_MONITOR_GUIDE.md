@@ -28,7 +28,7 @@
 | لایه | مسیر | نقش |
 |------|------|-----|
 | **Factory** | `dags/template/kafka_health_monitor_dag_factory.py` | ساخت DAG و taskها از روی config |
-| **Config** | `pipeline/config/KafkaHealthMonitorConfig.py` | topic، consumer group، thresholdها |
+| **Config** | `pipeline/config/KafkaHealthMonitorConfig.py` + `ConnectionConfig` | topic، consumer group، thresholdها؛ اتصال Kafka از `ConnectionConfig` |
 | **DAGهای نازک** | `dags/kafka_health_monitor/` | فقط config + فراخوانی factory |
 
 دسته‌بندی مانیتورها **هم‌تراز** با DAGهای تولیدکننده به Kafka است:
@@ -128,6 +128,7 @@ clickhouse-consumer.{topic_name}
 from datetime import datetime
 
 from pipeline.config.DAGConfig import DAGConfig
+from pipeline.config.ConnectionConfig import ConnectionConfig
 from pipeline.config.KafkaHealthMonitorConfig import KafkaHealthMonitorConfig
 from template.kafka_health_monitor_dag_factory import kafka_health_monitor_dag
 
@@ -151,11 +152,12 @@ DAG_CONFIG = DAGConfig(
 | Dimension استاتیک / نادر | `None` (دستی، بعد از sync) |
 | Dimension روزانه / Fact / ERP / Inventory | `0 */4 * * *` (هر ۴ ساعت) |
 
-### گام ۴ — پیکربندی `KafkaHealthMonitorConfig`
+### گام ۴ — پیکربندی `ConnectionConfig` و `KafkaHealthMonitorConfig`
 
 ```python
+conn_config = ConnectionConfig(kafka_conn_id="kafka_default")
+
 HEALTH_CONFIG = KafkaHealthMonitorConfig(
-    kafka_conn_id="kafka_default",
     kafka_topic="dwh.table.curated.com.dim_item",
     consumer_group="clickhouse-consumer.dwh.table.curated.com.dim_item",
     sample_count=5,
@@ -168,7 +170,7 @@ HEALTH_CONFIG = KafkaHealthMonitorConfig(
 
 | فیلد | توضیح |
 |------|--------|
-| `kafka_conn_id` | Connection Airflow برای Kafka |
+| `conn_config.kafka_conn_id` | Connection Airflow برای Kafka (از `ConnectionConfig`) |
 | `kafka_topic` | نام topic (باید با `KafkaTopicConfig.name` در sync یکی باشد) |
 | `consumer_group` | گروه مصرف‌کننده برای چک lag؛ خالی = skip lag |
 | `sample_count` | تعداد پیام نمونه از partition 0 |
@@ -189,7 +191,7 @@ HEALTH_CONFIG = KafkaHealthMonitorConfig(
 ### گام ۵ — ساخت DAG
 
 ```python
-kafka_health_monitor_dag(DAG_CONFIG, HEALTH_CONFIG)
+kafka_health_monitor_dag(DAG_CONFIG, conn_config, HEALTH_CONFIG)
 ```
 
 ### گام ۶ — ایجاد در Airflow
@@ -292,6 +294,7 @@ Version: 2.0
 from datetime import datetime
 
 from pipeline.config.DAGConfig import DAGConfig
+from pipeline.config.ConnectionConfig import ConnectionConfig
 from pipeline.config.KafkaHealthMonitorConfig import KafkaHealthMonitorConfig
 from template.kafka_health_monitor_dag_factory import kafka_health_monitor_dag
 
@@ -307,8 +310,9 @@ DAG_CONFIG = DAGConfig(
     tags=["monitoring", "health-check", "kafka", "mssql", "DWH", "dimension", "COM"],
 )
 
+conn_config = ConnectionConfig(kafka_conn_id="kafka_default")
+
 HEALTH_CONFIG = KafkaHealthMonitorConfig(
-    kafka_conn_id="kafka_default",
     kafka_topic="dwh.table.curated.com.dim_item",
     consumer_group="clickhouse-consumer.dwh.table.curated.com.dim_item",
     sample_count=5,
@@ -318,7 +322,7 @@ HEALTH_CONFIG = KafkaHealthMonitorConfig(
     include_message_sampling=True,
 )
 
-kafka_health_monitor_dag(DAG_CONFIG, HEALTH_CONFIG)
+kafka_health_monitor_dag(DAG_CONFIG, conn_config, HEALTH_CONFIG)
 ```
 
 ---

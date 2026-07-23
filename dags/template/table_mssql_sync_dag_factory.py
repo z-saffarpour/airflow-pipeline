@@ -301,6 +301,21 @@ def create_table_sync_dag(dag_config: DAGConfig, sync_config: SyncConfig, conn_c
             table="DimCustomer",
         ))
     """
+    if not conn_config.mssql_conn_id:
+        raise ValueError(
+            "ConnectionConfig.mssql_conn_id is required for create_table_sync_dag"
+        )
+    if sync_config.is_send_kafka and not conn_config.kafka_conn_id:
+        raise ValueError(
+            "ConnectionConfig.kafka_conn_id is required for create_table_sync_dag "
+            "when SyncConfig.is_send_kafka is True"
+        )
+    if sync_config.is_send_clickhouse and not conn_config.clickhouse_conn_id:
+        raise ValueError(
+            "ConnectionConfig.clickhouse_conn_id is required for create_table_sync_dag "
+            "when SyncConfig.is_send_clickhouse is True"
+        )
+
     default_args = {
         "owner": dag_config.owner,
         "depends_on_past": dag_config.depends_on_past,

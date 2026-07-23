@@ -13,6 +13,7 @@ Version: 2.0
 from datetime import datetime
 
 from pipeline.config.DAGConfig import DAGConfig
+from pipeline.config.ConnectionConfig import ConnectionConfig
 from pipeline.config.KafkaHealthMonitorConfig import KafkaHealthMonitorConfig
 from template.kafka_health_monitor_dag_factory import kafka_health_monitor_dag
 
@@ -30,7 +31,6 @@ DAG_CONFIG = DAGConfig(
 )
 
 HEALTH_CONFIG = KafkaHealthMonitorConfig(
-    kafka_conn_id="kafka_default",
     kafka_topic="dwh.table.curated.scm.fact_inventtrend",
     consumer_group="clickhouse-consumer.dwh.table.curated.scm.fact_inventtrend",
     sample_count=5,
@@ -40,5 +40,7 @@ HEALTH_CONFIG = KafkaHealthMonitorConfig(
     include_message_sampling=True,
 )
 
+conn_config = ConnectionConfig(kafka_conn_id='kafka_default')
+
 # Create DAG from config
-kafka_health_monitor_dag(DAG_CONFIG, HEALTH_CONFIG)
+kafka_health_monitor_dag(DAG_CONFIG, conn_config, HEALTH_CONFIG)

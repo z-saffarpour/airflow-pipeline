@@ -92,9 +92,11 @@ create_table_sync_dag(
 برای health monitor:
 
 ```python
+from pipeline.config.ConnectionConfig import ConnectionConfig
 from template.kafka_health_monitor_dag_factory import kafka_health_monitor_dag
 
-kafka_health_monitor_dag(DAG_CONFIG, HEALTH_CONFIG)
+conn_config = ConnectionConfig(kafka_conn_id="kafka_default")
+kafka_health_monitor_dag(DAG_CONFIG, conn_config, HEALTH_CONFIG)
 ```
 
 DAGهای پیچیده (مثل `sales_inventory` و `reconcile_and_sync`) به‌صورت سفارشی نوشته شده‌اند.

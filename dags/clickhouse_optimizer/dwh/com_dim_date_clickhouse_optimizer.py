@@ -18,6 +18,7 @@ Version: 2.0
 from datetime import datetime
 
 from pipeline.config.DAGConfig import DAGConfig
+from pipeline.config.ConnectionConfig import ConnectionConfig
 from pipeline.config.ClickHouseOptimizationConfig import ClickHouseOptimizationConfig
 
 from template.clickhouse_optimizer_dag_factory import clickhouse_optimizer_dag
@@ -48,8 +49,7 @@ OPTIMIZE_CONFIG = ClickHouseOptimizationConfig(
     deduplicate = True
 )
 
-# Connections
-CLICKHOUSE_CONN= 'clickhouse_default'
+conn_config = ConnectionConfig(clickhouse_conn_id='clickhouse_default')
 
 # Create DAG from config
-clickhouse_optimizer_dag(DAG_CONFIG, CLICKHOUSE_CONN, OPTIMIZE_CONFIG)
+clickhouse_optimizer_dag(DAG_CONFIG, conn_config, OPTIMIZE_CONFIG)

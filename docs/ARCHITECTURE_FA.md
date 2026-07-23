@@ -142,6 +142,8 @@ DAGهای سفارشی در `dags/sales_inventory/` (نه فقط template ساد
 
 **Factory:** `clickhouse_optimizer_dag_factory.clickhouse_optimizer_dag`
 
+امضا: `clickhouse_optimizer_dag(dag_config, conn_config, optimize_config)` — `conn_config.clickhouse_conn_id` الزامی است.
+
 ```
 validate → health_before → OPTIMIZE (partition / FINAL / deduplicate) → health_after
 ```
@@ -152,6 +154,8 @@ validate → health_before → OPTIMIZE (partition / FINAL / deduplicate) → he
 
 **Factory:** `kafka_health_monitor_dag_factory.kafka_health_monitor_dag`
 
+امضا: `kafka_health_monitor_dag(dag_config, conn_config, health_config)` — `conn_config.kafka_conn_id` الزامی است.
+
 **هدف:** مانیتور topicهایی که توسط `mssql_sync` و `sales_inventory` به Kafka نوشته می‌شوند (یک مانیتور به‌ازای هر topic یکتا).
 
 ```
@@ -161,7 +165,7 @@ health_checks (موازی):
         → generate_health_report
 ```
 
-تنظیمات: `KafkaHealthMonitorConfig` (`kafka_topic`، `consumer_group`، `max_lag_records`، …).
+تنظیمات: `KafkaHealthMonitorConfig` (`kafka_topic`، `consumer_group`، `max_lag_records`، …) + `ConnectionConfig` برای Kafka.
 
 ساختار پوشه هم‌تراز با منبع sync:
 

@@ -167,9 +167,11 @@ airflow dags trigger query_inventory_and_sales_sync
 برای هر topic یکتای Kafka یک مانیتور در `dags/kafka_health_monitor/` (هم‌دسته با sync) بسازید:
 
 ```python
+from pipeline.config.ConnectionConfig import ConnectionConfig
 from template.kafka_health_monitor_dag_factory import kafka_health_monitor_dag
 
-kafka_health_monitor_dag(DAG_CONFIG, HEALTH_CONFIG)
+conn_config = ConnectionConfig(kafka_conn_id="kafka_default")
+kafka_health_monitor_dag(DAG_CONFIG, conn_config, HEALTH_CONFIG)
 ```
 
 ---
