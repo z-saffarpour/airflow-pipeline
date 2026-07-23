@@ -142,6 +142,7 @@ pipeline/
 │   └── ClickHouseTableOptimizer.py
 │
 ├── kafka/
+│   ├── KafkaConnectionFactory.py   # Airflow conn → AdminClient / bootstrap
 │   ├── IdempotentKafkaProducer.py
 │   ├── KafkaTopicManager.py
 │   └── MessageSerializer.py

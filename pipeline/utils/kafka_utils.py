@@ -3,15 +3,18 @@
 """
 Kafka Utilities
 ===============
-Kafka-specific helpers for broker resolution, AdminClient creation, and topic operations.
-    
+Thin helpers over KafkaConnectionFactory for broker resolution and AdminClient.
+
+Prefer KafkaConnectionFactory directly in new code.
+
 Author: Senior Data Engineer
-Version: 3.0
+Version: 3.1
 """
 
 import logging
-from confluent_kafka.admin import AdminClient # type: ignore
-from pipeline.utils.connection_utils import get_connection, load_connection_extra
+from confluent_kafka.admin import AdminClient  # type: ignore
+
+from pipeline.kafka.KafkaConnectionFactory import KafkaConnectionFactory
 
 # ============================================================================
 # LOGGING
@@ -41,14 +44,14 @@ def get_kafka_brokers(conn_id: str = "kafka_default") -> str:
     Raises:
         AirflowException: If the connection cannot be resolved.
     """
-    conn = get_connection(conn_id)
-    extra = load_connection_extra(conn)
-    return extra.get("bootstrap_servers") or f"{conn.host}:{conn.port or 9092}"
+    return KafkaConnectionFactory(conn_id).get_bootstrap_servers()
 
 
 def build_kafka_admin_client(conn_id: str) -> AdminClient:
     """
     Build a confluent-kafka AdminClient from an Airflow Connection.
+
+    Delegates to KafkaConnectionFactory.create_admin_client.
 
     Supported extra fields on the Airflow Connection:
     - bootstrap_servers  : override host:port with a full broker list
@@ -65,22 +68,6 @@ def build_kafka_admin_client(conn_id: str) -> AdminClient:
         A configured confluent_kafka.admin.AdminClient instance.
 
     Raises:
-        AirflowException: If the connection cannot be resolved or client creation fails.
+        KafkaConnectionError: If the connection cannot be resolved or client creation fails.
     """
-    conn = get_connection(conn_id)
-    extra = load_connection_extra(conn)
-
-    kafka_conf = {
-        "bootstrap.servers": extra.get("bootstrap_servers") or f"{conn.host}:{conn.port or 9092}",
-        "client.id": extra.get("client_id", "airflow"),
-    }
-
-    if extra.get("security_protocol"):
-        kafka_conf["security.protocol"] = extra["security_protocol"]
-
-    if extra.get("sasl_mechanism"):
-        kafka_conf["sasl.mechanism"] = extra["sasl_mechanism"]
-        kafka_conf["sasl.username"] = extra["sasl_username"]
-        kafka_conf["sasl.password"] = extra["sasl_password"]
-
-    return AdminClient(kafka_conf)
+    return KafkaConnectionFactory(conn_id).create_admin_client()

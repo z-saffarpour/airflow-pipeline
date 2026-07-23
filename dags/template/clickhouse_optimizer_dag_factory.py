@@ -172,17 +172,17 @@ def make_check_table_health_after_task(clickhouse_conn_id: str, config: ClickHou
             parts_after = result.get('parts_count',0)
             parts_reduced = parts_before - parts_after
             
-            logger.info(f"Health after optimization: {result["health_status"]}")
+            logger.info(f"Health after optimization: {result['health_status']}")
             logger.info(f"Parts reduced: {parts_before} -> {parts_after} ({parts_reduced} merged)")
             
             return {
-                'table_name': result["table_name"],
-                'health_status': result["health_status"],
+                'table_name': result['table_name'],
+                'health_status': result['health_status'],
                 'parts_before': parts_before,
                 'parts_after': parts_after,
                 'parts_reduced': parts_reduced,
-                'total_rows': result["total_rows"],
-                'bytes_on_disk': result["bytes_on_disk"],
+                'total_rows': result['total_rows'],
+                'bytes_on_disk': result['bytes_on_disk'],
                 'optimization_duration': optimization_result.get('duration_seconds', 0),
                 'timestamp': datetime.now().isoformat()
             }

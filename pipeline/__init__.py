@@ -80,6 +80,7 @@ from pipeline.kafka import (
     IdempotentKafkaProducer,
     KafkaTopicManager,
     MessageSerializer,
+    KafkaConnectionFactory,
 )
 
 # ============================================================================
@@ -126,6 +127,7 @@ __all__ = [
     "IdempotentKafkaProducer",
     "KafkaTopicManager",
     "MessageSerializer",
+    "KafkaConnectionFactory",
     
     # Core
     "MSSQLDataTransferOrchestrator",

@@ -35,9 +35,8 @@ from airflow.utils.task_group import TaskGroup  # type: ignore
 from pipeline.config.DAGConfig import DAGConfig
 from pipeline.config.ConnectionConfig import ConnectionConfig
 from pipeline.config.KafkaHealthMonitorConfig import KafkaHealthMonitorConfig
+from pipeline.kafka.KafkaConnectionFactory import KafkaConnectionFactory
 from pipeline.kafka.KafkaTopicManager import KafkaTopicManager
-from pipeline.utils.kafka_utils import build_kafka_admin_client, get_kafka_brokers
-from pipeline.utils.validation import validate_kafka_conn
 
 # ============================================================================
 # LOGGING
@@ -91,18 +90,15 @@ def make_validate_kafka_health_task(kafka_conn_id: str):
         execution_timeout=timedelta(minutes=5),
     )
     def validate_kafka_health() -> Dict[str, Any]:
-        validate_kafka_conn(kafka_conn_id)
+        factory = KafkaConnectionFactory(kafka_conn_id)
+        cluster = factory.get_cluster_info(timeout=30)
 
-        admin_client = build_kafka_admin_client(kafka_conn_id)
-        cluster_metadata = admin_client.list_topics(timeout=30)
-
-        broker_count = len(cluster_metadata.brokers)
-        topic_count = len(cluster_metadata.topics)
+        broker_count = cluster["broker_count"]
+        topic_count = cluster["topic_count"]
 
         if broker_count == 0:
             raise AirflowException("No Kafka brokers available")
 
-        bootstrap_servers = get_kafka_brokers(kafka_conn_id)
         logger.info(
             "Kafka cluster healthy: %s brokers, %s topics",
             broker_count,
@@ -113,7 +109,7 @@ def make_validate_kafka_health_task(kafka_conn_id: str):
             "status": "healthy",
             "broker_count": broker_count,
             "topic_count": topic_count,
-            "bootstrap_servers": bootstrap_servers,
+            "bootstrap_servers": cluster["bootstrap_servers"],
             "conn_id": kafka_conn_id,
             "timestamp": datetime.now().isoformat(),
         }
@@ -141,7 +137,9 @@ def make_check_consumer_lag_task(kafka_conn_id: str, health_config: KafkaHealthM
             return {"status": "skipped", "reason": "missing parameters"}
 
         try:
-            bootstrap_servers = get_kafka_brokers(kafka_conn_id)
+            bootstrap_servers = KafkaConnectionFactory(
+                kafka_conn_id
+            ).get_bootstrap_servers()
             topic_manager = KafkaTopicManager(bootstrap_servers)
             lag_info = topic_manager.check_consumer_lag(topic, consumer_group)
 
@@ -213,7 +211,9 @@ def make_check_topic_stats_task(kafka_conn_id: str, health_config: KafkaHealthMo
             return {"status": "skipped", "reason": "missing topic"}
 
         try:
-            bootstrap_servers = get_kafka_brokers(kafka_conn_id)
+            bootstrap_servers = KafkaConnectionFactory(
+                kafka_conn_id
+            ).get_bootstrap_servers()
             topic_manager = KafkaTopicManager(bootstrap_servers)
             stats = topic_manager.get_topic_stats(topic)
 
@@ -260,7 +260,9 @@ def make_sample_recent_messages_task(kafka_conn_id: str, health_config: KafkaHea
             return {"status": "skipped", "reason": "missing topic"}
 
         try:
-            bootstrap_servers = get_kafka_brokers(kafka_conn_id)
+            bootstrap_servers = KafkaConnectionFactory(
+                kafka_conn_id
+            ).get_bootstrap_servers()
             topic_manager = KafkaTopicManager(bootstrap_servers)
             messages = topic_manager.sample_messages(
                 topic_name=topic,

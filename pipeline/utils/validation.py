@@ -15,7 +15,7 @@ from airflow.exceptions import AirflowException # type: ignore
 
 from pipeline.database.ConnectionFactory import ConnectionFactory
 from pipeline.database.ClickHouseConnectionFactory import ClickHouseConnectionFactory
-from pipeline.utils.kafka_utils import build_kafka_admin_client
+from pipeline.kafka.KafkaConnectionFactory import KafkaConnectionFactory
 # ============================================================================
 # LOGGING
 # ============================================================================
@@ -64,20 +64,21 @@ def validate_kafka_conn(conn_id: str) -> dict:
     logger.info("Validating Kafka connection: %s", conn_id)
     
     try:
-        admin = build_kafka_admin_client(conn_id)
-        metadata = admin.list_topics(timeout=10)
-        
-        if not metadata.brokers:
+        factory = KafkaConnectionFactory(conn_id=conn_id)
+        cluster = factory.get_cluster_info(timeout=10)
+
+        if cluster["broker_count"] == 0:
             raise AirflowException(f"No brokers found for {conn_id}")
-        
+
+        brokers_count = cluster["broker_count"]
         result = ValidationResult(
             status="ok",
             conn_id=conn_id,
             timestamp=datetime.now().isoformat(),
-            details={"brokers_count": len(metadata.brokers)}
+            details={"brokers_count": brokers_count}
         )
         
-        logger.info("Kafka validated: %s (%d brokers)", conn_id, len(metadata.brokers))
+        logger.info("Kafka validated: %s (%d brokers)", conn_id, brokers_count)
         return result.to_dict()
     
     except Exception as exc:

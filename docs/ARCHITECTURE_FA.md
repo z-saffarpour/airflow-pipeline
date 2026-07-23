@@ -223,6 +223,18 @@ health_checks (موازی):
 - با `conn_id` Airflow → `SafeMsSqlHook`
 - با connection string (`mssql+pymssql://` یا `mssql+pyodbc://`) برای اتصال پویا به فروشگاه‌ها
 
+### ClickHouseConnectionFactory
+
+- با `conn_id` Airflow → `clickhouse_driver.Client`
+- `get_connection()` context manager و `test_connection()`
+
+### KafkaConnectionFactory
+
+- با `conn_id` Airflow → bootstrap servers + config (SASL/SSL از `extra`)
+- `get_bootstrap_servers()`، `get_client_config()`، `list_topics()` / `get_cluster_info()`، `test_connection()`
+- `get_admin_client()` فقط برای موارد خاص (low-level)
+- `kafka_utils.get_kafka_brokers` و `build_kafka_admin_client` روی همین factory سوار شده‌اند
+
 ### SQLQueryBuilder
 
 ساخت کوئری امن با اعتبارسنجی identifier، count، min/max و **keyset pagination** (به‌جای OFFSET سنگین).

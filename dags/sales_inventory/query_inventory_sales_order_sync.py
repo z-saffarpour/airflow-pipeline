@@ -47,7 +47,7 @@ from pipeline.config.QueryConfiguration import QueryConfiguration
 from pipeline.kafka.KafkaTopicManager import KafkaTopicManager
 from pipeline.utils.AuditLogger import AuditLogger
 from pipeline.utils.validation import validate_mssql_conn, validate_kafka_conn
-from pipeline.utils.kafka_utils import get_kafka_brokers
+from pipeline.kafka.KafkaConnectionFactory import KafkaConnectionFactory
 
 # ============================================================================
 # LOGGING
@@ -160,7 +160,7 @@ def setup_kafka_topic_task(**context):
     
     audit.log(EventType.KAFKA_TOPIC_CONFIGURED, task_id, EventStatus.STARTED, {})
     
-    kafka_brokers = get_kafka_brokers(KAFKA_CONN_ID)
+    kafka_brokers = KafkaConnectionFactory(KAFKA_CONN_ID).get_bootstrap_servers()
     manager = KafkaTopicManager(kafka_brokers)
     manager.ensure_topic_exists(
         topic_name=KAFKA_TOPIC,
@@ -264,7 +264,7 @@ def process_sales_order_per_date_task(exec_date: str, version: str, **context) -
         {'exec_date': exec_date}
     )
 
-    kafka_brokers = get_kafka_brokers(KAFKA_CONN_ID)
+    kafka_brokers = KafkaConnectionFactory(KAFKA_CONN_ID).get_bootstrap_servers()
 
     try:
         query_config = QueryConfiguration(

@@ -47,8 +47,8 @@ from pipeline.core.ExecutionDateExtractor import ExecutionDateExtractor
 from pipeline.database.SQLQueryBuilder import SQLQueryBuilder
 from pipeline.database.SafeMsSqlHook import SafeMsSqlHook
 from pipeline.kafka.KafkaTopicManager import KafkaTopicManager
+from pipeline.kafka.KafkaConnectionFactory import KafkaConnectionFactory
 from pipeline.utils.validation import validate_kafka_conn, validate_mssql_conn, validate_clickhouse_conn
-from pipeline.utils.kafka_utils import get_kafka_brokers
 
 # ============================================================================
 # LOGGING
@@ -120,7 +120,9 @@ def make_ensure_topic_task(conn_config: ConnectionConfig, sync_config: SyncConfi
             logger.info("Kafka topic creation skipped (no kafka_conn_id provided)")
             return {"status": "skipped"}
         
-        kafka_brokers = get_kafka_brokers(conn_config.kafka_conn_id)
+        kafka_brokers = KafkaConnectionFactory(
+            conn_config.kafka_conn_id
+        ).get_bootstrap_servers()
         topic_manager = KafkaTopicManager(kafka_brokers)
         topic_manager.ensure_topic_exists(
             topic_name=kafka_topic_config.name,
@@ -158,7 +160,9 @@ def make_transfer_task(dag_config: DAGConfig, sync_config: SyncConfig, conn_conf
         if not conn_config.kafka_conn_id or not sync_config.is_send_kafka:
             kafka_brokers = None
         else:
-            kafka_brokers = get_kafka_brokers(conn_config.kafka_conn_id)
+            kafka_brokers = KafkaConnectionFactory(
+                conn_config.kafka_conn_id
+            ).get_bootstrap_servers()
 
         logger.info(f"Starting data transfer for date: {execution_date}")
         

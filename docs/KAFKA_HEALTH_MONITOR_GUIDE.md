@@ -363,7 +363,8 @@ kafka_health_monitor_dag(DAG_CONFIG, conn_config, HEALTH_CONFIG)
 | `dags/template/kafka_health_monitor_dag_factory.py` | Factory اصلی |
 | `pipeline/config/KafkaHealthMonitorConfig.py` | پارامترهای مانیتور |
 | `pipeline/config/DAGConfig.py` | پارامترهای DAG |
-| `pipeline/utils/kafka_utils.py` | resolve broker و AdminClient |
+| `pipeline/kafka/KafkaConnectionFactory.py` | resolve broker، list_topics، cluster info |
+| `pipeline/utils/kafka_utils.py` | thin wrapper سازگاری با کد قدیمی |
 | `pipeline/utils/validation.py` | `validate_kafka_conn` |
 | `pipeline/kafka/KafkaTopicManager.py` | lag / stats / sample |
 | `dags/kafka_health_monitor/mssql_sync/dwh/table_com_dim_date_health_monitor.py` | نمونه dimension |
