@@ -286,7 +286,17 @@ health_checks (موازی):
 
 ### SQLQueryBuilder
 
-ساخت کوئری امن با اعتبارسنجی identifier، count، min/max و **keyset pagination** (به‌جای OFFSET سنگین).
+ساخت کوئری امن (count، min/max و **keyset pagination**). اعتبارسنجی identifier از `IdentifierValidator` استفاده می‌کند.
+
+### ValidationResult
+
+در `pipeline/utils/validation.py`: نتیجهٔ ساخت‌یافتهٔ validate اتصال (برای XCom).
+
+### IdentifierValidator
+
+در `pipeline/utils/IdentifierValidator.py`:
+
+- متدهای مشترک `validate_identifier` / `validate_and_raise` / `validate_columns` برای readerها، writerها و orchestratorها
 
 ---
 

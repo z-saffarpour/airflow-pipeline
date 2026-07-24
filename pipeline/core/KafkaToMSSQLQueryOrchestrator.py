@@ -9,8 +9,8 @@ from pipeline.config.KafkaSyncConfig import KafkaSyncConfig
 from pipeline.core.TransferMetrics import TransferMetrics
 from pipeline.core.TransferResult import TransferResult
 from pipeline.database.MSSQLServerWriter import MSSQLServerWriter
-from pipeline.database.SQLQueryBuilder import SQLQueryBuilder
 from pipeline.kafka.KafkaDataConsumer import KafkaDataConsumer
+from pipeline.utils.IdentifierValidator import IdentifierValidator
 
 
 class KafkaToMSSQLQueryOrchestrator:
@@ -50,7 +50,7 @@ class KafkaToMSSQLQueryOrchestrator:
     def _resolve_staging_schema(sync_config: KafkaSyncConfig) -> Optional[str]:
         schema = sync_config.staging_schema
         if schema:
-            SQLQueryBuilder._validate_and_raise(schema, "staging schema")
+            IdentifierValidator.validate_and_raise(schema, "staging schema")
         return schema
 
     @staticmethod

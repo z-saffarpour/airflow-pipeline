@@ -16,8 +16,8 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from pipeline.core.exceptions import MongoDBQueryError
 from pipeline.database.MongoDBConnectionFactory import MongoDBConnectionFactory
-from pipeline.database.SQLQueryBuilder import SQLQueryBuilder
 from pipeline.interfaces.DataWriter import DataWriter
+from pipeline.utils.IdentifierValidator import IdentifierValidator
 
 
 class MongoDBServerWriter(DataWriter):
@@ -43,7 +43,7 @@ class MongoDBServerWriter(DataWriter):
 
     @staticmethod
     def _validate_name(name: str, label: str = "identifier") -> str:
-        SQLQueryBuilder._validate_and_raise(name, label)
+        IdentifierValidator.validate_and_raise(name, label)
         return name
 
     def _keys_staging_collection_name(self, table: str, suffix: str) -> str:

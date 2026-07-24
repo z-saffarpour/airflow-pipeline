@@ -385,7 +385,7 @@ clickhouse_config = ClickHouseConfig(
 - ایجاد topic در صورت نبود (`ensure_kafka_topic`) — idempotent
 
 ### Processing
-- Table: ساخت query با `SQLQueryBuilder` + keyset pagination / فیلتر تاریخ
+- Table: ساخت query با `SQLQueryBuilder` + keyset pagination / فیلتر تاریخ؛ اعتبارسنجی شناسه با `IdentifierValidator`
 - Query: resolve توکن‌های `{{ ds }}` / `{{ ds_nodash }}` سپس اجرای query
 - ارسال streaming به Kafka با `IdempotentKafkaProducer`؛ اختیاری نوشتن ClickHouse
 

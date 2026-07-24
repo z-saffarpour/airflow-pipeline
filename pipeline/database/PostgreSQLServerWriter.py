@@ -6,9 +6,9 @@ import logging
 from typing import Any, Dict, List, Optional, Tuple
 
 from pipeline.database.PostgreSQLConnectionFactory import PostgreSQLConnectionFactory
-from pipeline.database.SQLQueryBuilder import SQLQueryBuilder
 from pipeline.interfaces.DataWriter import DataWriter
 from pipeline.utils.retry_helper import RetryContext
+from pipeline.utils.IdentifierValidator import IdentifierValidator
 
 _UPSERT_DEADLOCK_MAX_ATTEMPTS = 5
 _UPSERT_DEADLOCK_BASE_DELAY = 2.0
@@ -44,7 +44,7 @@ class PostgreSQLServerWriter(DataWriter):
 
     @staticmethod
     def _quote_ident(identifier: str) -> str:
-        SQLQueryBuilder._validate_and_raise(identifier, "identifier")
+        IdentifierValidator.validate_and_raise(identifier, "identifier")
         return f'"{identifier}"'
 
     @classmethod
@@ -91,7 +91,7 @@ class PostgreSQLServerWriter(DataWriter):
         if cache_key in self._cached_unique_keys:
             return self._cached_unique_keys[cache_key]
 
-        SQLQueryBuilder._validate_and_raise(f"{schema}.{table}", "table name")
+        IdentifierValidator.validate_and_raise(f"{schema}.{table}", "table name")
 
         query = """
         SELECT
@@ -175,7 +175,7 @@ class PostgreSQLServerWriter(DataWriter):
                 continue
 
             for column in filtered_columns:
-                SQLQueryBuilder._validate_and_raise(column, "column name")
+                IdentifierValidator.validate_and_raise(column, "column name")
 
             unique_key_match = self._build_null_safe_equality(
                 filtered_columns, "target", "source"
@@ -286,7 +286,7 @@ class PostgreSQLServerWriter(DataWriter):
         if not data:
             return 0
 
-        SQLQueryBuilder._validate_and_raise(f"{schema}.{table}", "table name")
+        IdentifierValidator.validate_and_raise(f"{schema}.{table}", "table name")
         effective_staging_schema = staging_schema or schema
         table_full = self._quote_table(schema, table)
         staging_table = self._staging_table_name(
@@ -329,9 +329,9 @@ class PostgreSQLServerWriter(DataWriter):
         if not data:
             return 0
 
-        SQLQueryBuilder._validate_and_raise(f"{schema}.{table}", "table name")
+        IdentifierValidator.validate_and_raise(f"{schema}.{table}", "table name")
         for kc in key_columns:
-            SQLQueryBuilder._validate_and_raise(kc, "column name")
+            IdentifierValidator.validate_and_raise(kc, "column name")
 
         effective_staging_schema = staging_schema or schema
         table_full = self._quote_table(schema, table)
@@ -382,8 +382,8 @@ class PostgreSQLServerWriter(DataWriter):
         if not key_values:
             return 0
 
-        SQLQueryBuilder._validate_and_raise(f"{schema}.{table}", "table name")
-        SQLQueryBuilder._validate_and_raise(key_column, "column name")
+        IdentifierValidator.validate_and_raise(f"{schema}.{table}", "table name")
+        IdentifierValidator.validate_and_raise(key_column, "column name")
 
         effective_staging_schema = staging_schema or schema
         table_full = self._quote_table(schema, table)
@@ -436,10 +436,10 @@ class PostgreSQLServerWriter(DataWriter):
         suffix: str,
         staging_schema: Optional[str] = None,
     ) -> str:
-        SQLQueryBuilder._validate_and_raise(f"{schema}.{table}", "table name")
+        IdentifierValidator.validate_and_raise(f"{schema}.{table}", "table name")
         for column in key_columns:
-            SQLQueryBuilder._validate_and_raise(column, "column name")
-        SQLQueryBuilder._validate_and_raise(suffix, "staging suffix")
+            IdentifierValidator.validate_and_raise(column, "column name")
+        IdentifierValidator.validate_and_raise(suffix, "staging suffix")
 
         effective_staging_schema = staging_schema or schema
         table_full = self._quote_table(schema, table)
@@ -482,7 +482,7 @@ class PostgreSQLServerWriter(DataWriter):
             return 0
 
         for column in key_columns:
-            SQLQueryBuilder._validate_and_raise(column, "column name")
+            IdentifierValidator.validate_and_raise(column, "column name")
 
         column_list = ", ".join(self._quote_ident(col) for col in key_columns)
         placeholders = ", ".join(["%s" for _ in key_columns])
@@ -518,10 +518,10 @@ class PostgreSQLServerWriter(DataWriter):
         min_key: Any,
         max_key: Any,
     ) -> int:
-        SQLQueryBuilder._validate_and_raise(f"{schema}.{table}", "table name")
+        IdentifierValidator.validate_and_raise(f"{schema}.{table}", "table name")
         for column in key_columns:
-            SQLQueryBuilder._validate_and_raise(column, "column name")
-        SQLQueryBuilder._validate_and_raise(scope_column, "column name")
+            IdentifierValidator.validate_and_raise(column, "column name")
+        IdentifierValidator.validate_and_raise(scope_column, "column name")
 
         if min_key is None or max_key is None:
             self.logger.warning(
@@ -602,10 +602,10 @@ class PostgreSQLServerWriter(DataWriter):
             self.logger.warning("[PostgreSQLServerWriter.upsert_batch] No data to upsert")
             return {"inserted": 0, "updated": 0, "deleted": 0}
 
-        SQLQueryBuilder._validate_and_raise(f"{schema}.{table}", "table name")
+        IdentifierValidator.validate_and_raise(f"{schema}.{table}", "table name")
         for kc in key_columns:
-            SQLQueryBuilder._validate_and_raise(kc, "column name")
-        SQLQueryBuilder._validate_and_raise(staging_suffix, "staging suffix")
+            IdentifierValidator.validate_and_raise(kc, "column name")
+        IdentifierValidator.validate_and_raise(staging_suffix, "staging suffix")
 
         effective_staging_schema = staging_schema or schema
         table_full = self._quote_table(schema, table)

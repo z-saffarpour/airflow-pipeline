@@ -1,4 +1,4 @@
-﻿"""
+"""
 SQL Server Writer with comprehensive CRUD operations and staging support.
 Designed for Airflow ETL pipelines with batch processing.
 """
@@ -7,9 +7,9 @@ from typing import Dict, List, Optional, Any, Tuple
 
 from pipeline.database.MSSQLConnectionFactory import MSSQLConnectionFactory
 from pipeline.interfaces.DataWriter import DataWriter
-from pipeline.database.SQLQueryBuilder import SQLQueryBuilder
 from pipeline.core.exceptions import is_sql_server_deadlock
 from pipeline.utils.retry_helper import RetryContext
+from pipeline.utils.IdentifierValidator import IdentifierValidator
 
 _UPSERT_DEADLOCK_MAX_ATTEMPTS = 5
 _UPSERT_DEADLOCK_BASE_DELAY = 2.0
@@ -65,7 +65,7 @@ class MSSQLServerWriter(DataWriter):
         if cache_key in self._cached_unique_keys:
             return self._cached_unique_keys[cache_key]
 
-        SQLQueryBuilder._validate_and_raise(f"{schema}.{table}", "table name")
+        IdentifierValidator.validate_and_raise(f"{schema}.{table}", "table name")
 
         query = """
         SELECT
@@ -177,7 +177,7 @@ class MSSQLServerWriter(DataWriter):
                 continue
 
             for column in filtered_columns:
-                SQLQueryBuilder._validate_and_raise(column, "column name")
+                IdentifierValidator.validate_and_raise(column, "column name")
 
             unique_key_match = self._build_null_safe_equality(
                 filtered_columns,
@@ -400,10 +400,10 @@ class MSSQLServerWriter(DataWriter):
         if not data:
             self.logger.warning("No data to insert")
             return 0
-        SQLQueryBuilder._validate_and_raise(f"{schema}.{table}", "table name")
+        IdentifierValidator.validate_and_raise(f"{schema}.{table}", "table name")
 
         effective_staging_schema = staging_schema or schema
-        SQLQueryBuilder._validate_and_raise(
+        IdentifierValidator.validate_and_raise(
             f"{effective_staging_schema}.{table}",
             "staging table name",
         )
@@ -464,12 +464,12 @@ class MSSQLServerWriter(DataWriter):
         if not data:
             self.logger.warning("No data to update")
             return 0
-        SQLQueryBuilder._validate_and_raise(f"{schema}.{table}", "table name")
+        IdentifierValidator.validate_and_raise(f"{schema}.{table}", "table name")
         for kc in key_columns:
-            SQLQueryBuilder._validate_and_raise(kc, "column name")
+            IdentifierValidator.validate_and_raise(kc, "column name")
 
         effective_staging_schema = staging_schema or schema
-        SQLQueryBuilder._validate_and_raise(
+        IdentifierValidator.validate_and_raise(
             f"{effective_staging_schema}.{table}",
             "staging table name",
         )
@@ -540,11 +540,11 @@ class MSSQLServerWriter(DataWriter):
         if not key_values:
             self.logger.warning("No keys to delete")
             return 0
-        SQLQueryBuilder._validate_and_raise(f"{schema}.{table}", "table name")
-        SQLQueryBuilder._validate_and_raise(key_column, "column name")
+        IdentifierValidator.validate_and_raise(f"{schema}.{table}", "table name")
+        IdentifierValidator.validate_and_raise(key_column, "column name")
 
         effective_staging_schema = staging_schema or schema
-        SQLQueryBuilder._validate_and_raise(
+        IdentifierValidator.validate_and_raise(
             f"{effective_staging_schema}.{table}",
             "staging table name",
         )
@@ -618,13 +618,13 @@ class MSSQLServerWriter(DataWriter):
         staging_schema: Optional[str] = None,
     ) -> str:
         """Create a persistent staging table holding only primary-key columns."""
-        SQLQueryBuilder._validate_and_raise(f"{schema}.{table}", "table name")
+        IdentifierValidator.validate_and_raise(f"{schema}.{table}", "table name")
         for column in key_columns:
-            SQLQueryBuilder._validate_and_raise(column, "column name")
-        SQLQueryBuilder._validate_and_raise(suffix, "staging suffix")
+            IdentifierValidator.validate_and_raise(column, "column name")
+        IdentifierValidator.validate_and_raise(suffix, "staging suffix")
 
         effective_staging_schema = staging_schema or schema
-        SQLQueryBuilder._validate_and_raise(
+        IdentifierValidator.validate_and_raise(
             f"{effective_staging_schema}.{table}",
             "staging table name",
         )
@@ -676,7 +676,7 @@ class MSSQLServerWriter(DataWriter):
             return 0
 
         for column in key_columns:
-            SQLQueryBuilder._validate_and_raise(column, "column name")
+            IdentifierValidator.validate_and_raise(column, "column name")
 
         column_list = ", ".join(f"[{col}]" for col in key_columns)
         placeholders = ", ".join(["?" for _ in key_columns])
@@ -729,10 +729,10 @@ class MSSQLServerWriter(DataWriter):
         """
         Delete target rows in [min_key, max_key] whose primary key is absent from keys staging.
         """
-        SQLQueryBuilder._validate_and_raise(f"{schema}.{table}", "table name")
+        IdentifierValidator.validate_and_raise(f"{schema}.{table}", "table name")
         for column in key_columns:
-            SQLQueryBuilder._validate_and_raise(column, "column name")
-        SQLQueryBuilder._validate_and_raise(scope_column, "column name")
+            IdentifierValidator.validate_and_raise(column, "column name")
+        IdentifierValidator.validate_and_raise(scope_column, "column name")
 
         if min_key is None or max_key is None:
             self.logger.warning(
@@ -844,16 +844,16 @@ class MSSQLServerWriter(DataWriter):
             return {"inserted": 0, "updated": 0, "deleted": 0}
 
         # Validate identifiers
-        SQLQueryBuilder._validate_and_raise(f"{schema}.{table}", "table name")
+        IdentifierValidator.validate_and_raise(f"{schema}.{table}", "table name")
         for kc in key_columns:
-            SQLQueryBuilder._validate_and_raise(kc, "column name")
+            IdentifierValidator.validate_and_raise(kc, "column name")
 
         effective_staging_schema = staging_schema or schema
-        SQLQueryBuilder._validate_and_raise(
+        IdentifierValidator.validate_and_raise(
             f"{effective_staging_schema}.{table}",
             "staging table name",
         )
-        SQLQueryBuilder._validate_and_raise(staging_suffix, "staging suffix")
+        IdentifierValidator.validate_and_raise(staging_suffix, "staging suffix")
 
         table_full = f"[{schema}].[{table}]"
         staging_table = self._staging_table_name(

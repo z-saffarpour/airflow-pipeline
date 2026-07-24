@@ -227,7 +227,8 @@ pipeline/
 │   └── exceptions.py
 │
 ├── utils/
-│   ├── validation.py
+│   ├── validation.py           # ValidationResult + validate_*_conn
+│   ├── IdentifierValidator.py  # IdentifierValidator (SQL identifier validation)
 │   ├── retry_helper.py
 │   ├── AuditLogger.py
 │   ├── kafka_utils.py

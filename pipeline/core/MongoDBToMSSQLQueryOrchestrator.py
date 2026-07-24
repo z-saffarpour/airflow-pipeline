@@ -11,7 +11,7 @@ from pipeline.core.TransferMetrics import TransferMetrics
 from pipeline.core.TransferResult import TransferResult
 from pipeline.database.MongoDBDataReader import MongoDBDataReader
 from pipeline.database.MSSQLServerWriter import MSSQLServerWriter
-from pipeline.database.SQLQueryBuilder import SQLQueryBuilder
+from pipeline.utils.IdentifierValidator import IdentifierValidator
 
 
 class MongoDBToMSSQLQueryOrchestrator:
@@ -70,7 +70,7 @@ class MongoDBToMSSQLQueryOrchestrator:
     def _resolve_staging_schema(sync_config: MongoSyncConfig) -> Optional[str]:
         schema = sync_config.staging_schema
         if schema:
-            SQLQueryBuilder._validate_and_raise(schema, "staging schema")
+            IdentifierValidator.validate_and_raise(schema, "staging schema")
         return schema
 
     @staticmethod

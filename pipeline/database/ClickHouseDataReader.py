@@ -9,6 +9,7 @@ from airflow.exceptions import AirflowException  # type: ignore
 from pipeline.core.exceptions import DataReadError
 from pipeline.database.ClickHouseConnectionFactory import ClickHouseConnectionFactory
 from pipeline.database.SQLQueryBuilder import SQLQueryBuilder
+from pipeline.utils.IdentifierValidator import IdentifierValidator
 from pipeline.interfaces.DataReader import DataReader
 
 ParamsType = Optional[Union[dict, tuple]]
@@ -68,13 +69,13 @@ class ClickHouseDataReader(DataReader):
             if custom_query:
                 query = custom_query
             elif table_name:
-                SQLQueryBuilder._validate_and_raise(table_name, "table name")
+                IdentifierValidator.validate_and_raise(table_name, "table name")
                 quoted_table = ".".join(
                     f"`{part}`" for part in table_name.split(".")
                 )
                 conditions: List[str] = []
                 if date_column and date_key is not None:
-                    SQLQueryBuilder._validate_and_raise(date_column, "date column")
+                    IdentifierValidator.validate_and_raise(date_column, "date column")
                     conditions.append(f"`{date_column}` = %(date_key)s")
                     if date_column_type == "int":
                         query_params["date_key"] = int(date_key)
@@ -116,12 +117,12 @@ class ClickHouseDataReader(DataReader):
         """
         Stream table data using keyset pagination (ClickHouse dialect).
         """
-        SQLQueryBuilder._validate_and_raise(table_name, "table name")
-        SQLQueryBuilder._validate_and_raise(order_by_column, "order by column")
+        IdentifierValidator.validate_and_raise(table_name, "table name")
+        IdentifierValidator.validate_and_raise(order_by_column, "order by column")
         if date_column:
-            SQLQueryBuilder._validate_and_raise(date_column, "date column")
+            IdentifierValidator.validate_and_raise(date_column, "date column")
         if columns:
-            SQLQueryBuilder._validate_columns(columns)
+            IdentifierValidator.validate_columns(columns)
 
         total_count = self.get_total_count(
             table_name=table_name,

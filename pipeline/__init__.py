@@ -1,4 +1,4 @@
-﻿"""
+"""
 Pipeline Package - SQL Server to Kafka Data Pipeline
 ====================================================
 This package contains all pipeline components following SOLID principles.
@@ -109,6 +109,8 @@ from pipeline.utils import (
     retry_with_backoff,
     exponential_backoff_with_jitter,
     RetryContext,
+    ValidationResult,
+    IdentifierValidator,
 )
 
 
@@ -177,4 +179,6 @@ __all__ = [
     "retry_with_backoff",
     "exponential_backoff_with_jitter",
     "RetryContext",
+    "ValidationResult",
+    "IdentifierValidator",
 ]

@@ -8,7 +8,7 @@ from pipeline.core.TransferMetrics import TransferMetrics
 from pipeline.core.TransferResult import TransferResult
 from pipeline.database.MSSQLDataReader import MSSQLDataReader
 from pipeline.database.MSSQLServerWriter import MSSQLServerWriter
-from pipeline.database.SQLQueryBuilder import SQLQueryBuilder
+from pipeline.utils.IdentifierValidator import IdentifierValidator
 
 class MSSQLToMSSQLQueryOrchestrator:
     def __init__(
@@ -69,7 +69,7 @@ class MSSQLToMSSQLQueryOrchestrator:
     def _resolve_staging_schema(sync_config: MasterDataSyncConfig) -> Optional[str]:
         schema = sync_config.staging_schema
         if schema:
-            SQLQueryBuilder._validate_and_raise(schema, "staging schema")
+            IdentifierValidator.validate_and_raise(schema, "staging schema")
         return schema
 
     @staticmethod
@@ -83,7 +83,7 @@ class MSSQLToMSSQLQueryOrchestrator:
         chunk_column: str,
         chunk_count: int,
     ) -> str:
-        SQLQueryBuilder._validate_and_raise(chunk_column, "column name")
+        IdentifierValidator.validate_and_raise(chunk_column, "column name")
 
         inner_query = cls._normalize_source_query(source_query)
         return f"""
@@ -111,7 +111,7 @@ class MSSQLToMSSQLQueryOrchestrator:
         source_query: str,
         chunk_column: str,
     ) -> str:
-        SQLQueryBuilder._validate_and_raise(chunk_column, "column name")
+        IdentifierValidator.validate_and_raise(chunk_column, "column name")
 
         inner_query = cls._normalize_source_query(source_query)
         return f"""
@@ -131,8 +131,8 @@ class MSSQLToMSSQLQueryOrchestrator:
         delete_scope_column: str,
     ) -> str:
         """MIN/MAX of delete_scope_column within a chunk_column key range."""
-        SQLQueryBuilder._validate_and_raise(chunk_column, "column name")
-        SQLQueryBuilder._validate_and_raise(delete_scope_column, "column name")
+        IdentifierValidator.validate_and_raise(chunk_column, "column name")
+        IdentifierValidator.validate_and_raise(delete_scope_column, "column name")
 
         inner_query = cls._normalize_source_query(source_query)
         return f"""
@@ -238,7 +238,7 @@ class MSSQLToMSSQLQueryOrchestrator:
         source_query: str,
         chunk_column: str,
     ) -> str:
-        SQLQueryBuilder._validate_and_raise(chunk_column, "column name")
+        IdentifierValidator.validate_and_raise(chunk_column, "column name")
 
         inner_query = cls._normalize_source_query(source_query)
         return f"""

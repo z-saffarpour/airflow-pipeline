@@ -3,15 +3,18 @@ Connection Validation
 =====================
 Standardized validation functions for Kafka and SQL Server connections.
 Returns structured validation results suitable for XCom.
-    
+
+SQL identifier validation lives in ``IdentifierValidator``
+(``pipeline.utils.IdentifierValidator``).
+
 Author: Senior Data Engineer
-Version: 3.0
+Version: 3.2
 """
 
 import logging
 from datetime import datetime
 from dataclasses import dataclass, asdict
-from airflow.exceptions import AirflowException # type: ignore
+from airflow.exceptions import AirflowException  # type: ignore
 
 from pipeline.database.MSSQLConnectionFactory import MSSQLConnectionFactory
 from pipeline.database.MySQLConnectionFactory import MySQLConnectionFactory
@@ -19,23 +22,27 @@ from pipeline.database.PostgreSQLConnectionFactory import PostgreSQLConnectionFa
 from pipeline.database.MongoDBConnectionFactory import MongoDBConnectionFactory
 from pipeline.database.ClickHouseConnectionFactory import ClickHouseConnectionFactory
 from pipeline.kafka.KafkaConnectionFactory import KafkaConnectionFactory
+
 # ============================================================================
 # LOGGING
 # ============================================================================
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class ValidationResult:
     """Structured validation result for XCom serialization."""
+
     status: str
     conn_id: str
     timestamp: str
     details: dict = None
-    
+
     def to_dict(self) -> dict:
         return asdict(self)
-    
+
+
 # ============================================================================
 # VALIDATION FUNCTIONS
 # ============================================================================

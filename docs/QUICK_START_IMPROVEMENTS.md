@@ -94,22 +94,29 @@ with RetryContext(max_attempts=3, base_delay=1.0) as retry:
 
 ---
 
-## ۳. Validation اتصالات
+## ۳. Validation اتصالات و شناسه‌ها
 
-ماژول: `pipeline/utils/validation.py`
+ماژول‌ها: `pipeline/utils/validation.py` (اتصال) و `pipeline/utils/IdentifierValidator.py` (شناسه)
 
 ```python
 from pipeline.utils.validation import (
     validate_mssql_conn,
     validate_kafka_conn,
     validate_clickhouse_conn,
+    ValidationResult,
 )
+from pipeline.utils.IdentifierValidator import IdentifierValidator
 
 result = validate_kafka_conn("kafka_default")
 # {"status": "ok", "conn_id": "kafka_default", "timestamp": "...", "details": {...}}
+
+# اعتبارسنجی مشترک شناسهٔ SQL (جدول / ستون / schema)
+IdentifierValidator.validate_and_raise("dbo.MyTable", "table name")
+IdentifierValidator.validate_columns(["id", "name"])
 ```
 
-نتیجه برای XCom مناسب است و در ابتدای اکثر DAGهای template فراخوانی می‌شود.
+نتیجهٔ validate اتصال (`ValidationResult`) برای XCom مناسب است و در ابتدای اکثر DAGهای template فراخوانی می‌شود.
+اعتبارسنجی شناسه روی `IdentifierValidator` است (جدا از DTO نتیجهٔ اتصال).
 
 ---
 
@@ -253,7 +260,7 @@ airflow pools set replication_md_store_sync_pool 32 "Master data store chunk syn
 |-------|------|
 | Exceptions | `pipeline/core/exceptions.py` |
 | Retry | `pipeline/utils/retry_helper.py` |
-| Validation | `pipeline/utils/validation.py` |
+| Validation | `pipeline/utils/validation.py` (`ValidationResult`, validate_*_conn); `pipeline/utils/IdentifierValidator.py` (`IdentifierValidator`) |
 | Hook امن | `pipeline/database/SafeMsSqlHook.py` |
 | MSSQL Connection Factory | `pipeline/database/MSSQLConnectionFactory.py` |
 | Audit | `pipeline/utils/AuditLogger.py` |

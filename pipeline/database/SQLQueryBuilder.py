@@ -2,68 +2,17 @@
 SQL Query Builder with parameterized queries to prevent SQL injection.
 Provides safe and reusable query construction patterns.
 """
-import re
 from typing import Optional, Tuple, List
 
-from pipeline.core.exceptions import InvalidIdentifierError
+from pipeline.utils.IdentifierValidator import IdentifierValidator
 
 
 class SQLQueryBuilder:
     """
     Builder class for constructing safe SQL queries with parameterization.
     Prevents SQL injection by using parameter binding instead of string formatting.
+    Identifier validation is delegated to ``IdentifierValidator``.
     """
-    
-    # Pattern for valid SQL identifiers (allows schema.table format and brackets)
-    _IDENTIFIER_PATTERN = re.compile(r'^[\w]+(?:\.[\w]+)?$|^\[[\w\s]+\](?:\.\[[\w\s]+\])?$')
-    
-    @staticmethod
-    def validate_identifier(name: str) -> bool:
-        """
-        Validate SQL identifier to prevent injection.
-        
-        Args:
-            name: SQL identifier (table name, column name, etc.)
-            
-        Returns:
-            True if valid, False otherwise
-        """
-        if not name or not isinstance(name, str):
-            return False
-        return bool(SQLQueryBuilder._IDENTIFIER_PATTERN.match(name))
-    
-    @staticmethod
-    def _validate_and_raise(identifier: str, identifier_type: str = "identifier") -> None:
-        """
-        Validate identifier and raise exception if invalid.
-        
-        Args:
-            identifier: SQL identifier to validate
-            identifier_type: Type description for error message
-            
-        Raises:
-            InvalidIdentifierError: If identifier is invalid
-        """
-        if not SQLQueryBuilder.validate_identifier(identifier):
-            raise InvalidIdentifierError(
-                f"Invalid SQL {identifier_type}: '{identifier}'. "
-                f"Only alphanumeric characters, underscores, dots, and brackets are allowed."
-            )
-    
-    @staticmethod
-    def _validate_columns(columns: Optional[List[str]]) -> None:
-        """
-        Validate a list of column names.
-        
-        Args:
-            columns: List of column names to validate
-            
-        Raises:
-            InvalidIdentifierError: If any column name is invalid
-        """
-        if columns:
-            for col in columns:
-                SQLQueryBuilder._validate_and_raise(col, "column name")
 
     @staticmethod
     def build_keyset_pagination_query(
@@ -91,44 +40,37 @@ class SQLQueryBuilder:
 
         Returns:
             Tuple of (query_string, parameters_tuple)
-            
+
         Raises:
             InvalidIdentifierError: If any identifier is invalid
         """
-        # Validate identifiers to prevent SQL injection
-        SQLQueryBuilder._validate_and_raise(table_name, "table name")
-        SQLQueryBuilder._validate_and_raise(order_by_column, "order by column")
+        IdentifierValidator.validate_and_raise(table_name, "table name")
+        IdentifierValidator.validate_and_raise(order_by_column, "order by column")
         if date_column:
-            SQLQueryBuilder._validate_and_raise(date_column, "date column")
-        SQLQueryBuilder._validate_columns(columns)
-        
-        # Build column list
+            IdentifierValidator.validate_and_raise(date_column, "date column")
+        IdentifierValidator.validate_columns(columns)
+
         column_list = '*' if not columns else ', '.join(columns)
-        
-        # Build WHERE conditions
+
         conditions = []
         parameters = []
-        
-        # Add date filter if date_column is provided
+
         if date_column and date_key:
             conditions.append(f"{date_column} = %s")
-            # Convert date_key based on date_column_type
             if date_column_type == 'int':
                 parameters.append(int(date_key))
-            else:  # 'date' or string type
+            else:
                 parameters.append(date_key)
-        
-        # Add keyset pagination filter
+
         if last_key is not None:
             conditions.append(f"{order_by_column} > %s")
             parameters.append(last_key)
-        
-        # Build query
+
         if conditions:
             where_clause = " WHERE " + " AND ".join(conditions)
         else:
             where_clause = ""
-        
+
         base_query = f"""
             SELECT TOP {batch_size} {column_list}
             FROM {table_name}
@@ -156,25 +98,23 @@ class SQLQueryBuilder:
 
         Returns:
             Tuple of (query_string, parameters_tuple)
-            
+
         Raises:
             InvalidIdentifierError: If any identifier is invalid
         """
-        # Validate identifiers
-        SQLQueryBuilder._validate_and_raise(table_name, "table name")
+        IdentifierValidator.validate_and_raise(table_name, "table name")
         if date_column:
-            SQLQueryBuilder._validate_and_raise(date_column, "date column")
-        
+            IdentifierValidator.validate_and_raise(date_column, "date column")
+
         if date_column and date_key:
             query = f"""
                 SELECT COUNT(1) as total_count
                 FROM {table_name}
                 WHERE {date_column} = %s
             """
-            # Convert date_key based on date_column_type
             if date_column_type == 'int':
                 return query.strip(), (int(date_key),)
-            else:  # 'date' or string type
+            else:
                 return query.strip(), (date_key,)
         else:
             query = f"""
@@ -203,16 +143,15 @@ class SQLQueryBuilder:
 
         Returns:
             Tuple of (query_string, parameters_tuple)
-            
+
         Raises:
             InvalidIdentifierError: If any identifier is invalid
         """
-        # Validate identifiers
-        SQLQueryBuilder._validate_and_raise(table_name, "table name")
-        SQLQueryBuilder._validate_and_raise(order_by_column, "order by column")
+        IdentifierValidator.validate_and_raise(table_name, "table name")
+        IdentifierValidator.validate_and_raise(order_by_column, "order by column")
         if date_column:
-            SQLQueryBuilder._validate_and_raise(date_column, "date column")
-        
+            IdentifierValidator.validate_and_raise(date_column, "date column")
+
         if date_column and date_key:
             query = f"""
                 SELECT 
@@ -221,10 +160,9 @@ class SQLQueryBuilder:
                 FROM {table_name}
                 WHERE {date_column} = %s
             """
-            # Convert date_key based on date_column_type
             if date_column_type == 'int':
                 return query.strip(), (int(date_key),)
-            else:  # 'date' or string type
+            else:
                 return query.strip(), (date_key,)
         else:
             query = f"""

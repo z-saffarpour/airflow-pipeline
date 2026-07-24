@@ -11,7 +11,7 @@ from pipeline.core.TransferMetrics import TransferMetrics
 from pipeline.core.TransferResult import TransferResult
 from pipeline.database.MySQLDataReader import MySQLDataReader
 from pipeline.database.MSSQLServerWriter import MSSQLServerWriter
-from pipeline.database.SQLQueryBuilder import SQLQueryBuilder
+from pipeline.utils.IdentifierValidator import IdentifierValidator
 
 
 class MySQLToMSSQLQueryOrchestrator:
@@ -57,7 +57,7 @@ class MySQLToMSSQLQueryOrchestrator:
     def _resolve_staging_schema(sync_config: MasterDataSyncConfig) -> Optional[str]:
         schema = sync_config.staging_schema
         if schema:
-            SQLQueryBuilder._validate_and_raise(schema, "staging schema")
+            IdentifierValidator.validate_and_raise(schema, "staging schema")
         return schema
 
     @staticmethod
@@ -66,7 +66,7 @@ class MySQLToMSSQLQueryOrchestrator:
 
     @staticmethod
     def _quote_ident(identifier: str) -> str:
-        SQLQueryBuilder._validate_and_raise(identifier, "column name")
+        IdentifierValidator.validate_and_raise(identifier, "column name")
         return f"`{identifier}`"
 
     @classmethod

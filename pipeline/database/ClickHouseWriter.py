@@ -6,7 +6,7 @@ import logging
 
 from pipeline.database.ClickHouseConnectionFactory import ClickHouseConnectionFactory
 from pipeline.interfaces.DataWriter import DataWriter
-from pipeline.database.SQLQueryBuilder import SQLQueryBuilder
+from pipeline.utils.IdentifierValidator import IdentifierValidator
 
 
 class ClickHouseWriter(DataWriter):
@@ -49,7 +49,7 @@ class ClickHouseWriter(DataWriter):
             return 0
 
         # Validate identifiers (database and table) to avoid injection
-        SQLQueryBuilder._validate_and_raise(f"{database}.{table_name}", "table name")
+        IdentifierValidator.validate_and_raise(f"{database}.{table_name}", "table name")
 
         table_full = f"{database}.{table_name}"
         self.logger.info("Starting upsert_batch for %s, batch size: %d, version_id=%s", table_full, len(batch), str(version_id))
@@ -71,7 +71,7 @@ class ClickHouseWriter(DataWriter):
         columns = list(batch[0].keys())
         # Validate column names
         for col in columns:
-            SQLQueryBuilder._validate_and_raise(col, "column name")
+            IdentifierValidator.validate_and_raise(col, "column name")
 
         self.logger.info("Columns for insert: %s", columns)
 

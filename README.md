@@ -179,6 +179,8 @@ dag = kafka_health_monitor_dag(dag_config, conn_config, health_config)
 | `ClickHouseDataReader` / `ClickHouseWriter` / `ClickHouseTableOptimizer` | ClickHouse |
 | `IdempotentKafkaProducer` / `KafkaDataConsumer` | produce/consume |
 | `SQLQueryBuilder` | کوئری امن و keyset pagination |
+| `ValidationResult` | نتیجه validate اتصال (XCom) |
+| `IdentifierValidator` | اعتبارسنجی شناسهٔ SQL (جدول/ستون/schema) |
 | `SafeMsSqlHook` | pymssql / pyodbc + Kerberos |
 | `DagSyncTrigger` | trigger زنجیره‌ای DAGها |
 | `core.exceptions` | استثناهای مشترک لایه database/pipeline |

@@ -9,6 +9,7 @@ from airflow.exceptions import AirflowException  # type: ignore
 from pipeline.core.exceptions import DataReadError, PostgreSQLQueryError
 from pipeline.database.PostgreSQLConnectionFactory import PostgreSQLConnectionFactory
 from pipeline.database.SQLQueryBuilder import SQLQueryBuilder
+from pipeline.utils.IdentifierValidator import IdentifierValidator
 from pipeline.interfaces.DataReader import DataReader
 
 
@@ -91,12 +92,12 @@ class PostgreSQLDataReader(DataReader):
         """
         Stream table data using keyset pagination (PostgreSQL dialect).
         """
-        SQLQueryBuilder._validate_and_raise(table_name, "table name")
-        SQLQueryBuilder._validate_and_raise(order_by_column, "order by column")
+        IdentifierValidator.validate_and_raise(table_name, "table name")
+        IdentifierValidator.validate_and_raise(order_by_column, "order by column")
         if date_column:
-            SQLQueryBuilder._validate_and_raise(date_column, "date column")
+            IdentifierValidator.validate_and_raise(date_column, "date column")
         if columns:
-            SQLQueryBuilder._validate_columns(columns)
+            IdentifierValidator.validate_columns(columns)
 
         total_count = self.get_total_count(
             table_name=table_name,

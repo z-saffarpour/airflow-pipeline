@@ -14,8 +14,8 @@ from pipeline.config.MSSQLToKafkaSyncConfig import MSSQLToKafkaSyncConfig
 from pipeline.core.TransferMetrics import TransferMetrics
 from pipeline.core.TransferResult import TransferResult
 from pipeline.database.MSSQLDataReader import MSSQLDataReader
-from pipeline.database.SQLQueryBuilder import SQLQueryBuilder
 from pipeline.kafka.IdempotentKafkaProducer import IdempotentKafkaProducer
+from pipeline.utils.IdentifierValidator import IdentifierValidator
 
 
 class MSSQLToKafkaQueryOrchestrator:
@@ -79,7 +79,7 @@ class MSSQLToKafkaQueryOrchestrator:
         chunk_count: int,
     ) -> str:
         """Build NTILE-based chunk plan (SQL Server)."""
-        SQLQueryBuilder._validate_and_raise(chunk_column, "column name")
+        IdentifierValidator.validate_and_raise(chunk_column, "column name")
         inner_query = cls._normalize_source_query(source_query)
         return f"""
         WITH source_data AS (
@@ -106,7 +106,7 @@ class MSSQLToKafkaQueryOrchestrator:
         source_query: str,
         chunk_column: str,
     ) -> str:
-        SQLQueryBuilder._validate_and_raise(chunk_column, "column name")
+        IdentifierValidator.validate_and_raise(chunk_column, "column name")
         inner_query = cls._normalize_source_query(source_query)
         return f"""
         SELECT source_data.*

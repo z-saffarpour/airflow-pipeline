@@ -11,7 +11,7 @@ from pipeline.core.TransferMetrics import TransferMetrics
 from pipeline.core.TransferResult import TransferResult
 from pipeline.database.MSSQLDataReader import MSSQLDataReader
 from pipeline.database.MySQLServerWriter import MySQLServerWriter
-from pipeline.database.SQLQueryBuilder import SQLQueryBuilder
+from pipeline.utils.IdentifierValidator import IdentifierValidator
 
 
 class MSSQLToMySQLQueryOrchestrator:
@@ -55,7 +55,7 @@ class MSSQLToMySQLQueryOrchestrator:
     def _resolve_staging_schema(sync_config: MasterDataSyncConfig) -> Optional[str]:
         schema = sync_config.staging_schema
         if schema:
-            SQLQueryBuilder._validate_and_raise(schema, "staging schema")
+            IdentifierValidator.validate_and_raise(schema, "staging schema")
         return schema
 
     @staticmethod
@@ -70,7 +70,7 @@ class MSSQLToMySQLQueryOrchestrator:
         chunk_count: int,
     ) -> str:
         """Build NTILE-based chunk plan (SQL Server)."""
-        SQLQueryBuilder._validate_and_raise(chunk_column, "column name")
+        IdentifierValidator.validate_and_raise(chunk_column, "column name")
         inner_query = cls._normalize_source_query(source_query)
         return f"""
         WITH source_data AS (
@@ -97,7 +97,7 @@ class MSSQLToMySQLQueryOrchestrator:
         source_query: str,
         chunk_column: str,
     ) -> str:
-        SQLQueryBuilder._validate_and_raise(chunk_column, "column name")
+        IdentifierValidator.validate_and_raise(chunk_column, "column name")
         inner_query = cls._normalize_source_query(source_query)
         return f"""
         SELECT
@@ -115,8 +115,8 @@ class MSSQLToMySQLQueryOrchestrator:
         chunk_column: str,
         delete_scope_column: str,
     ) -> str:
-        SQLQueryBuilder._validate_and_raise(chunk_column, "column name")
-        SQLQueryBuilder._validate_and_raise(delete_scope_column, "column name")
+        IdentifierValidator.validate_and_raise(chunk_column, "column name")
+        IdentifierValidator.validate_and_raise(delete_scope_column, "column name")
         inner_query = cls._normalize_source_query(source_query)
         return f"""
         SELECT
@@ -135,7 +135,7 @@ class MSSQLToMySQLQueryOrchestrator:
         source_query: str,
         chunk_column: str,
     ) -> str:
-        SQLQueryBuilder._validate_and_raise(chunk_column, "column name")
+        IdentifierValidator.validate_and_raise(chunk_column, "column name")
         inner_query = cls._normalize_source_query(source_query)
         return f"""
         SELECT source_data.*
