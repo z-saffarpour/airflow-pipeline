@@ -205,14 +205,29 @@ class MSSQLServerWriter(DataWriter):
         return total_deleted
 
     @staticmethod
+    def _build_concat_expression(expressions: List[str]) -> str:
+        """Build a CONCAT expression within SQL Server's 2..254 argument limit."""
+        if not expressions:
+            raise ValueError("At least one expression is required for row hashing")
+        if len(expressions) == 1:
+            return expressions[0]
+
+        # Nest chunks so very wide tables also stay below CONCAT's 254-argument
+        # limit.  The nested form preserves the same concatenated value.
+        concat_expression = f"CONCAT({', '.join(expressions[:254])})"
+        for offset in range(254, len(expressions), 253):
+            chunk = expressions[offset : offset + 253]
+            concat_expression = f"CONCAT({concat_expression}, {', '.join(chunk)})"
+        return concat_expression
+
+    @staticmethod
     def _build_row_hash_expression(columns: List[str], table_alias: str) -> str:
-        hash_columns = ", ".join(
-            [
-                f"ISNULL(CAST({table_alias}.[{column}] AS NVARCHAR(MAX)),'NULL')"
-                for column in columns
-            ]
-        )
-        return f"HASHBYTES('SHA2_256', CONCAT({hash_columns}))"
+        hash_columns = [
+            f"ISNULL(CAST({table_alias}.[{column}] AS NVARCHAR(MAX)),'NULL')"
+            for column in columns
+        ]
+        concat_expression = MSSQLServerWriter._build_concat_expression(hash_columns)
+        return f"HASHBYTES('SHA2_256', {concat_expression})"
 
     def _build_merge_source_and_match_condition(
         self,
@@ -221,16 +236,15 @@ class MSSQLServerWriter(DataWriter):
         use_hash_change_detection: bool,
     ) -> Tuple[str, str]:
         if use_hash_change_detection and update_columns:
-            staging_hash_columns = ", ".join(
-                [
-                    f"ISNULL(CAST([{column}] AS NVARCHAR(MAX)),'NULL')"
-                    for column in update_columns
-                ]
-            )
+            staging_hash_columns = [
+                f"ISNULL(CAST([{column}] AS NVARCHAR(MAX)),'NULL')"
+                for column in update_columns
+            ]
+            staging_concat = self._build_concat_expression(staging_hash_columns)
             source_subquery = f"""
                 (
                     SELECT *,
-                           HASHBYTES('SHA2_256', CONCAT({staging_hash_columns})) AS row_hash
+                           HASHBYTES('SHA2_256', {staging_concat}) AS row_hash
                     FROM {staging_table}
                 ) AS source
             """
