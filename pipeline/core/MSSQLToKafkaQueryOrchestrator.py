@@ -16,9 +16,10 @@ from pipeline.core.TransferResult import TransferResult
 from pipeline.database.MSSQLDataReader import MSSQLDataReader
 from pipeline.kafka.IdempotentKafkaProducer import IdempotentKafkaProducer
 from pipeline.utils.IdentifierValidator import IdentifierValidator
+from pipeline.interfaces.SyncOrchestrator import SyncOrchestrator
 
 
-class MSSQLToKafkaQueryOrchestrator:
+class MSSQLToKafkaQueryOrchestrator(SyncOrchestrator):
     """
     Read batches from MSSQL and send them to a Kafka topic.
 

@@ -16,9 +16,10 @@ from pipeline.core.TransferResult import TransferResult
 from pipeline.database.ClickHouseWriter import ClickHouseWriter
 from pipeline.database.MSSQLDataReader import MSSQLDataReader
 from pipeline.utils.IdentifierValidator import IdentifierValidator
+from pipeline.interfaces.SyncOrchestrator import SyncOrchestrator
 
 
-class MSSQLToClickHouseQueryOrchestrator:
+class MSSQLToClickHouseQueryOrchestrator(SyncOrchestrator):
     """
     Read batches from MSSQL and bulk-insert into ClickHouse target tables.
 

@@ -11,9 +11,10 @@ from pipeline.core.TransferResult import TransferResult
 from pipeline.database.MSSQLServerWriter import MSSQLServerWriter
 from pipeline.kafka.KafkaDataConsumer import KafkaDataConsumer
 from pipeline.utils.IdentifierValidator import IdentifierValidator
+from pipeline.interfaces.SyncOrchestrator import SyncOrchestrator
 
 
-class KafkaToMSSQLQueryOrchestrator:
+class KafkaToMSSQLQueryOrchestrator(SyncOrchestrator):
     """
     Consume batches from Kafka and upsert into MSSQL target tables.
     Mirrors MySQL/Mongo → MSSQL orchestrators with Kafka source semantics.

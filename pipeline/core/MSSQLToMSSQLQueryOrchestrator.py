@@ -9,8 +9,9 @@ from pipeline.core.TransferResult import TransferResult
 from pipeline.database.MSSQLDataReader import MSSQLDataReader
 from pipeline.database.MSSQLServerWriter import MSSQLServerWriter
 from pipeline.utils.IdentifierValidator import IdentifierValidator
+from pipeline.interfaces.SyncOrchestrator import SyncOrchestrator
 
-class MSSQLToMSSQLQueryOrchestrator:
+class MSSQLToMSSQLQueryOrchestrator(SyncOrchestrator):
     def __init__(
         self,
         source_conn_id: str,

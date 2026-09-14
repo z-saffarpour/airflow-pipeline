@@ -12,9 +12,10 @@ from pipeline.core.TransferResult import TransferResult
 from pipeline.database.MSSQLDataReader import MSSQLDataReader
 from pipeline.database.MySQLServerWriter import MySQLServerWriter
 from pipeline.utils.IdentifierValidator import IdentifierValidator
+from pipeline.interfaces.SyncOrchestrator import SyncOrchestrator
 
 
-class MSSQLToMySQLQueryOrchestrator:
+class MSSQLToMySQLQueryOrchestrator(SyncOrchestrator):
     """
     Read batches from MSSQL and upsert into MySQL target tables.
     Mirrors MySQLToMSSQLQueryOrchestrator with reversed source/target dialects.

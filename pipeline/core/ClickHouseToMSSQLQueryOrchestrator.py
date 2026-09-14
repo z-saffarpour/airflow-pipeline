@@ -12,9 +12,10 @@ from pipeline.core.TransferResult import TransferResult
 from pipeline.database.ClickHouseDataReader import ClickHouseDataReader
 from pipeline.database.MSSQLServerWriter import MSSQLServerWriter
 from pipeline.utils.IdentifierValidator import IdentifierValidator
+from pipeline.interfaces.SyncOrchestrator import SyncOrchestrator
 
 
-class ClickHouseToMSSQLQueryOrchestrator:
+class ClickHouseToMSSQLQueryOrchestrator(SyncOrchestrator):
     """
     Read batches from ClickHouse and upsert into MSSQL target tables.
     Mirrors MySQLToMSSQLQueryOrchestrator behaviour with ClickHouse source dialect.
