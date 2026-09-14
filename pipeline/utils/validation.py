@@ -96,52 +96,6 @@ def validate_kafka_conn(conn_id: str) -> dict:
         raise AirflowException(f"Kafka validation failed for {conn_id}: {exc}")
 
 
-def validate_mssql_conn(conn_id: str, hook_class) -> dict:
-    """
-    Validate a SQL Server connection by executing a simple query.
-
-    Used by:
-    - make_validate_mssql_task() in sqlserver_kafka_query_sync.py
-    - make_validate_mssql_task() in sqlserver_kafka_table_sync.py
-
-    Args:
-        conn_id: Airflow Connection ID for the SQL Server instance.
-        hook_class: The MsSqlHook class to use (e.g., SafeMsSqlHook).
-
-    Returns:
-        dict with keys: status, conn_id, timestamp
-
-    Raises:
-        AirflowException: If the connection fails or query execution fails.
-
-    Example:
-        result = validate_mssql_conn("mssql_default")
-        #  {"status": "ok", "conn_id": "mssql_default", "timestamp": "..."}
-    """
-    logger.info("Validating SQL Server connection: %s", conn_id)
-    
-    try:
-        factory = MSSQLConnectionFactory(conn_id = conn_id)
-        result = factory.test_connection()
-               
-        if result == False:
-            raise AirflowException(f"SQL Server test query returned no results: {conn_id}")
-        
-        validation_result = ValidationResult(
-            status="ok",
-            conn_id=conn_id,
-            timestamp=datetime.now().isoformat(),
-        )
-        
-        logger.info("SQL Server validated: %s", conn_id)
-        return validation_result.to_dict()
-    
-    except Exception as exc:
-        logger.exception("SQL Server validation failed: %s", conn_id)
-        raise AirflowException(f"SQL Server validation failed for {conn_id}: {exc}")
-
-
-
 def validate_mssql_conn(conn_id: str) -> dict:
     """
     Validate a SQL Server connection by executing a simple query.
@@ -152,7 +106,6 @@ def validate_mssql_conn(conn_id: str) -> dict:
 
     Args:
         conn_id: Airflow Connection ID for the SQL Server instance.
-        hook_class: The MsSqlHook class to use (e.g., SafeMsSqlHook).
 
     Returns:
         dict with keys: status, conn_id, timestamp

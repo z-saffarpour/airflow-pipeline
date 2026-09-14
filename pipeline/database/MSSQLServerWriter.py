@@ -220,13 +220,39 @@ class MSSQLServerWriter(DataWriter):
             concat_expression = f"CONCAT({concat_expression}, {', '.join(chunk)})"
         return concat_expression
 
+    # Separator inserted between concatenated column values before hashing.
+    # Without it, CONCAT('AB','C') and CONCAT('A','BC') produce the same string
+    # (and therefore the same hash), so a value shifting across a column
+    # boundary would be silently treated as "unchanged" and skip the UPDATE.
+    # CHAR(31) (ASCII unit separator) is used since it cannot be typed and is
+    # vanishingly unlikely to occur in real column data.
+    _HASH_COLUMN_SEPARATOR_SQL = "CHAR(31)"
+
+    @staticmethod
+    def _interleave_hash_separator(expressions: List[str]) -> List[str]:
+        """Insert the hash column separator between expressions.
+
+        Ensures CONCAT-based row hashing is boundary-safe: adjacent column
+        values can no longer shift characters between each other and still
+        produce an identical concatenated string / hash.
+        """
+        if not expressions:
+            return expressions
+        interleaved = [expressions[0]]
+        for expression in expressions[1:]:
+            interleaved.append(MSSQLServerWriter._HASH_COLUMN_SEPARATOR_SQL)
+            interleaved.append(expression)
+        return interleaved
+
     @staticmethod
     def _build_row_hash_expression(columns: List[str], table_alias: str) -> str:
         hash_columns = [
             f"ISNULL(CAST({table_alias}.[{column}] AS NVARCHAR(MAX)),'NULL')"
             for column in columns
         ]
-        concat_expression = MSSQLServerWriter._build_concat_expression(hash_columns)
+        concat_expression = MSSQLServerWriter._build_concat_expression(
+            MSSQLServerWriter._interleave_hash_separator(hash_columns)
+        )
         return f"HASHBYTES('SHA2_256', {concat_expression})"
 
     def _build_merge_source_and_match_condition(
@@ -240,7 +266,9 @@ class MSSQLServerWriter(DataWriter):
                 f"ISNULL(CAST([{column}] AS NVARCHAR(MAX)),'NULL')"
                 for column in update_columns
             ]
-            staging_concat = self._build_concat_expression(staging_hash_columns)
+            staging_concat = self._build_concat_expression(
+                self._interleave_hash_separator(staging_hash_columns)
+            )
             source_subquery = f"""
                 (
                     SELECT *,
@@ -427,6 +455,7 @@ class MSSQLServerWriter(DataWriter):
             effective_staging_schema, table, "insert"
         )
         columns = list(data[0].keys())
+        IdentifierValidator.validate_columns(columns)
         column_list = ", ".join([f"[{col}]" for col in columns])
         insert_query = (
             f"INSERT INTO {table_full} ({column_list}) "
@@ -493,6 +522,7 @@ class MSSQLServerWriter(DataWriter):
             effective_staging_schema, table, "update"
         )
         columns = [col for col in data[0].keys() if col not in key_columns]
+        IdentifierValidator.validate_columns(columns)
         set_clause = ", ".join([f"target.[{col}] = source.[{col}]" for col in columns])
         join_clause = " AND ".join(
             [f"target.[{col}] = source.[{col}]" for col in key_columns]
@@ -925,6 +955,7 @@ class MSSQLServerWriter(DataWriter):
         staging_table: str,
     ) -> Dict[str, int]:
         columns = list(data[0].keys())
+        IdentifierValidator.validate_columns(columns)
 
         resolved_unique_keys = self._resolve_unique_keys(
             schema,
