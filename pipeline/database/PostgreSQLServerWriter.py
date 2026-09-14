@@ -66,13 +66,24 @@ class PostgreSQLServerWriter(DataWriter):
             )
         return " AND ".join(conditions)
 
+    # Separator inserted between concatenated column values before hashing.
+    # concat_ws already places this between every value, but a plain '|' is a
+    # printable character that can legitimately appear in real column data
+    # (addresses, notes, ...); if it does, two different rows could hash the
+    # same (e.g. concat_ws('|','A|B','C') == concat_ws('|','A','B|C')) and a
+    # changed row would be silently treated as "unchanged", skipping its
+    # UPDATE. chr(31) (ASCII unit separator) is used instead since it cannot
+    # be typed and is vanishingly unlikely to occur in real column data.
+    _HASH_COLUMN_SEPARATOR_SQL = "chr(31)"
+
     @staticmethod
     def _build_row_hash_expression(columns: List[str], table_alias: str) -> str:
         parts = [
             f"COALESCE(CAST({table_alias}.\"{column}\" AS TEXT), 'NULL')"
             for column in columns
         ]
-        return f"md5(concat_ws('|', {', '.join(parts)}))"
+        separator = PostgreSQLServerWriter._HASH_COLUMN_SEPARATOR_SQL
+        return f"md5(concat_ws({separator}, {', '.join(parts)}))"
 
     def _staging_table_name(self, staging_schema: str, table: str, suffix: str) -> str:
         return self._quote_table(staging_schema, f"{table}_staging_{suffix}")

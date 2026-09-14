@@ -66,13 +66,24 @@ class MySQLServerWriter(DataWriter):
             )
         return " AND ".join(conditions)
 
+    # Separator inserted between concatenated column values before hashing.
+    # CONCAT_WS already places this between every value, but a plain '|' is a
+    # printable character that can legitimately appear in real column data
+    # (addresses, notes, ...); if it does, two different rows could hash the
+    # same (e.g. CONCAT_WS('|','A|B','C') == CONCAT_WS('|','A','B|C')) and a
+    # changed row would be silently treated as "unchanged", skipping its
+    # UPDATE. CHAR(31) (ASCII unit separator) is used instead since it cannot
+    # be typed and is vanishingly unlikely to occur in real column data.
+    _HASH_COLUMN_SEPARATOR_SQL = "CHAR(31)"
+
     @staticmethod
     def _build_row_hash_expression(columns: List[str], table_alias: str) -> str:
         parts = [
             f"IFNULL(CAST({table_alias}.`{column}` AS CHAR), 'NULL')"
             for column in columns
         ]
-        return f"SHA2(CONCAT_WS('|', {', '.join(parts)}), 256)"
+        separator = MySQLServerWriter._HASH_COLUMN_SEPARATOR_SQL
+        return f"SHA2(CONCAT_WS({separator}, {', '.join(parts)}), 256)"
 
     def _staging_table_name(self, staging_schema: str, table: str, suffix: str) -> str:
         return self._quote_table(staging_schema, f"{table}_staging_{suffix}")
