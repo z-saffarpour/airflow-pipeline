@@ -16,7 +16,7 @@ from pipeline.core.exceptions import (
     SQLServerDeadlockError,
     is_sql_server_deadlock,
 )
-from pipeline.interfaces.ConnectionFactory import SQLConnectionFactory
+from pipeline.interfaces.SQLConnectionFactory import SQLConnectionFactory
 
 class MSSQLConnectionFactory(SQLConnectionFactory):
     """

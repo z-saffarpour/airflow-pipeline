@@ -10,7 +10,7 @@ from pipeline.core.exceptions import (
     MySQLConnectionError,
     MySQLQueryError,
 )
-from pipeline.interfaces.ConnectionFactory import SQLConnectionFactory
+from pipeline.interfaces.SQLConnectionFactory import SQLConnectionFactory
 
 
 class MySQLConnectionFactory(SQLConnectionFactory):

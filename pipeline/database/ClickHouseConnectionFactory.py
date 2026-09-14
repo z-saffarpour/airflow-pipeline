@@ -10,7 +10,7 @@ import json
                 
 from pipeline.core.exceptions import ClickHouseConnectionError
 from pipeline.compat.airflow_compat import get_connection 
-from pipeline.interfaces.ConnectionFactory import SQLConnectionFactory
+from pipeline.interfaces.SQLConnectionFactory import SQLConnectionFactory
 
 class ClickHouseConnectionFactory(SQLConnectionFactory):
     """
