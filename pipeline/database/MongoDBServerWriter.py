@@ -46,6 +46,30 @@ class MongoDBServerWriter(DataWriter):
         IdentifierValidator.validate_and_raise(name, label)
         return name
 
+    @staticmethod
+    def _validate_document_columns(data: List[Dict[str, Any]]) -> None:
+        """
+        Validate every data-column name that will become a MongoDB document
+        field, not just the key columns used in filters.
+
+        Previously only ``key_columns`` were run through
+        ``IdentifierValidator``; a source column name flowed straight from
+        ``row.items()`` (see ``_prepare_document``) into the document with no
+        check at all. In practice the risk is low since documents are written
+        via ``ReplaceOne``/``InsertOne`` (a full-document replace, not a
+        ``$set`` built from field names), but an unchecked field name is
+        still inconsistent with every other writer in this pipeline.
+
+        Validates the union of keys across the whole batch once (documents
+        aren't guaranteed to share identical keys) rather than per row, to
+        avoid re-validating the same column names on every document.
+        """
+        columns = set()
+        for row in data:
+            columns.update(row.keys())
+        for column in columns:
+            IdentifierValidator.validate_and_raise(column, "column name")
+
     def _keys_staging_collection_name(self, table: str, suffix: str) -> str:
         safe_suffix = re.sub(r"[^\w]", "_", str(suffix))[:50]
         return f"{table}_sync_keys_{safe_suffix}"
@@ -140,6 +164,7 @@ class MongoDBServerWriter(DataWriter):
             return 0
         self._validate_name(schema, "database name")
         self._validate_name(table, "collection name")
+        self._validate_document_columns(data)
 
         from pymongo import InsertOne  # type: ignore
 
@@ -170,6 +195,7 @@ class MongoDBServerWriter(DataWriter):
         self._validate_name(table, "collection name")
         for col in key_columns:
             self._validate_name(col, "column name")
+        self._validate_document_columns(data)
 
         from pymongo import ReplaceOne  # type: ignore
 
@@ -279,6 +305,7 @@ class MongoDBServerWriter(DataWriter):
 
         for col in key_columns:
             self._validate_name(col, "column name")
+        self._validate_document_columns(data)
 
         staging_db, staging_coll = self._split_qualified_collection(keys_staging_table)
         mongo_keys = self._mongo_key_columns(key_columns)
@@ -413,6 +440,7 @@ class MongoDBServerWriter(DataWriter):
         self._validate_name(table, "collection name")
         for col in key_columns:
             self._validate_name(col, "column name")
+        self._validate_document_columns(data)
 
         if unique_keys or resolve_unique_key_conflicts:
             self.logger.debug(
