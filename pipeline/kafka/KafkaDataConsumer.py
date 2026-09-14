@@ -10,9 +10,10 @@ from confluent_kafka import Consumer, KafkaError, TopicPartition  # type: ignore
 from pipeline.core.exceptions import KafkaConsumerError, KafkaConnectionError
 from pipeline.kafka.KafkaConnectionFactory import KafkaConnectionFactory
 from pipeline.kafka.MessageSerializer import MessageSerializer
+from pipeline.interfaces.MessageConsumer import MessageConsumer
 
 
-class KafkaDataConsumer:
+class KafkaDataConsumer(MessageConsumer):
     """
     Consumes JSON row messages from a Kafka topic in streaming batches.
 
