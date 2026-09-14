@@ -10,9 +10,10 @@ from pipeline.core.exceptions import (
     PostgreSQLConnectionError,
     PostgreSQLQueryError,
 )
+from pipeline.interfaces.ConnectionFactory import SQLConnectionFactory
 
 
-class PostgreSQLConnectionFactory:
+class PostgreSQLConnectionFactory(SQLConnectionFactory):
     """
     Factory for creating and managing PostgreSQL connections via Airflow PostgresHook.
     """

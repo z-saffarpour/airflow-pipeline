@@ -10,9 +10,10 @@ from confluent_kafka.admin import AdminClient  # type: ignore
 
 from pipeline.core.exceptions import KafkaConnectionError
 from pipeline.utils.connection_utils import get_connection, load_connection_extra
+from pipeline.interfaces.ConnectionFactory import ConnectionFactory
 
 
-class KafkaConnectionFactory:
+class KafkaConnectionFactory(ConnectionFactory):
     """
     Factory class for creating and managing Kafka clients from an Airflow Connection.
 

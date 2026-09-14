@@ -16,8 +16,9 @@ from pipeline.core.exceptions import (
     SQLServerDeadlockError,
     is_sql_server_deadlock,
 )
+from pipeline.interfaces.ConnectionFactory import SQLConnectionFactory
 
-class MSSQLConnectionFactory:
+class MSSQLConnectionFactory(SQLConnectionFactory):
     """
     Factory class for creating and managing SQL Server database connections.
     Hook instances are lightweight — no caching needed.

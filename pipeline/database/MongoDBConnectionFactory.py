@@ -13,9 +13,10 @@ from pipeline.core.exceptions import (
     MongoDBConnectionError,
     MongoDBQueryError,
 )
+from pipeline.interfaces.ConnectionFactory import ConnectionFactory
 
 
-class MongoDBConnectionFactory:
+class MongoDBConnectionFactory(ConnectionFactory):
     """
     Factory for creating and managing MongoDB clients via Airflow Connection + pymongo.
     """

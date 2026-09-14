@@ -10,9 +10,10 @@ from pipeline.core.exceptions import (
     MySQLConnectionError,
     MySQLQueryError,
 )
+from pipeline.interfaces.ConnectionFactory import SQLConnectionFactory
 
 
-class MySQLConnectionFactory:
+class MySQLConnectionFactory(SQLConnectionFactory):
     """
     Factory for creating and managing MySQL connections via Airflow MySqlHook.
     """

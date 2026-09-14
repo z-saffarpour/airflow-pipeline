@@ -10,8 +10,9 @@ import json
                 
 from pipeline.core.exceptions import ClickHouseConnectionError
 from pipeline.compat.airflow_compat import get_connection 
+from pipeline.interfaces.ConnectionFactory import SQLConnectionFactory
 
-class ClickHouseConnectionFactory:
+class ClickHouseConnectionFactory(SQLConnectionFactory):
     """
     Factory class for creating and managing ClickHouse connections.
     Implements Dependency Inversion Principle by providing abstraction layer.

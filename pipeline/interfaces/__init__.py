@@ -9,6 +9,7 @@ from pipeline.interfaces.MessageProducer import MessageProducer
 from pipeline.interfaces.TopicManager import TopicManager
 from pipeline.interfaces.MessageSerializerInterface import MessageSerializerInterface
 from pipeline.interfaces.DatabaseOptimizer import DatabaseOptimizer
+from pipeline.interfaces.ConnectionFactory import ConnectionFactory, SQLConnectionFactory
 
 __all__ = [
     "DataReader",
@@ -16,4 +17,6 @@ __all__ = [
     "TopicManager",
     "MessageSerializerInterface",
     "DatabaseOptimizer",
+    "ConnectionFactory",
+    "SQLConnectionFactory",
 ]
