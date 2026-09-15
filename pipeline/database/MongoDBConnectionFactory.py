@@ -22,6 +22,7 @@ class MongoDBConnectionFactory(ConnectionFactory):
     """
 
     def __init__(self, conn_id: str, database: Optional[str] = None) -> None:
+        self._cached_client = None
         if not conn_id:
             raise ValueError("conn_id cannot be empty.")
         self.conn_id = conn_id
@@ -86,24 +87,85 @@ class MongoDBConnectionFactory(ConnectionFactory):
             kwargs["connectTimeoutMS"] = int(extra["connectTimeoutMS"])
         return kwargs
 
+    def _is_client_alive(self, client) -> bool:
+        """Cheap liveness check (ping) before reusing a cached MongoClient."""
+        try:
+            client.admin.command("ping")
+            return True
+        except Exception:
+            return False
+
+    def close_connection(self) -> None:
+        """
+        Explicitly close and discard the cached MongoClient, if any.
+
+        Call this once the caller (e.g. a writer processing a sync's
+        whole batch loop through this factory) is done issuing queries,
+        so the underlying client's connections don't linger as idle
+        ('Sleeping') sessions. __del__ also calls this as a best-effort
+        safety net.
+        """
+        if self._cached_client is not None:
+            try:
+                self._cached_client.close()
+            except Exception:
+                pass
+            finally:
+                self._cached_client = None
+
+    def __del__(self):
+        try:
+            self.close_connection()
+        except Exception:
+            pass
+
     @contextmanager
     def get_client(self):
-        """Context manager yielding a pymongo MongoClient."""
+        """
+        Context manager yielding a pymongo MongoClient.
+
+        Reuses a single cached MongoClient across calls instead of creating
+        a fresh client (with its own connection pool and monitoring
+        threads) every time: a cheap ping validates the cached client
+        before it's handed out, and a dead/broken one is discarded and
+        replaced. On a normal exit the client is kept cached (NOT closed);
+        on any exception it is discarded so the next call always gets a
+        known-good client. Call close_connection() once the whole
+        batch/sync using this factory is done (so nothing lingers as an
+        idle 'Sleeping' session); __del__ also does this as a best-effort
+        safety net.
+        """
         from pymongo import MongoClient  # type: ignore
 
         client = None
+        keep_cached = False
+
         try:
-            conn = get_connection(self.conn_id)
-            extra = self._parse_extra(conn)
-            uri = self._build_uri(conn, extra)
-            self.logger.info(
-                "[MongoDBConnectionFactory.get_client] Opening MongoDB client | conn_id='%s'",
-                self.conn_id,
-            )
-            client = MongoClient(uri, **self._client_kwargs(extra))
-            # Force early failure if the cluster is unreachable.
-            client.admin.command("ping")
+            if self._cached_client is not None and self._is_client_alive(self._cached_client):
+                client = self._cached_client
+                self.logger.debug(
+                    "[MongoDBConnectionFactory.get_client] Reusing cached MongoDB client | conn_id='%s'",
+                    self.conn_id,
+                )
+            else:
+                if self._cached_client is not None:
+                    self.close_connection()
+
+                conn = get_connection(self.conn_id)
+                extra = self._parse_extra(conn)
+                uri = self._build_uri(conn, extra)
+                self.logger.info(
+                    "[MongoDBConnectionFactory.get_client] Opening MongoDB client | conn_id='%s'",
+                    self.conn_id,
+                )
+                client = MongoClient(uri, **self._client_kwargs(extra))
+                # Force early failure if the cluster is unreachable.
+                client.admin.command("ping")
+                self._cached_client = client
+
             yield client
+            keep_cached = True
+
         except MongoDBConnectionError:
             raise
         except Exception as exc:
@@ -117,14 +179,8 @@ class MongoDBConnectionFactory(ConnectionFactory):
                 f"Failed to connect to MongoDB: {exc}"
             ) from exc
         finally:
-            if client is not None:
-                try:
-                    client.close()
-                except Exception:
-                    self.logger.error(
-                        "[MongoDBConnectionFactory.get_client] Failed to close client.",
-                        exc_info=True,
-                    )
+            if not keep_cached:
+                self.close_connection()
 
     @contextmanager
     def get_database(self, database: Optional[str] = None):
