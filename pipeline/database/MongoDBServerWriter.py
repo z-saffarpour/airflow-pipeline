@@ -606,8 +606,12 @@ class MongoDBServerWriter(DataWriter):
             )
 
         self.logger.info(
-            f"[MongoDBServerWriter.upsert_batch] {schema}.{table} sync completed | inserted={inserted} | "
-            f"updated={updated} | hash_change_detection={use_hash_change_detection}"
+            '[MongoDBServerWriter.upsert_batch] %s.%s sync completed | inserted=%s | updated=%s | hash_change_detection=%s',
+            schema,
+            table,
+            inserted,
+            updated,
+            use_hash_change_detection,
         )
         return {
             "success": True,

@@ -566,7 +566,10 @@ class ClickHouseToMSSQLQueryOrchestrator(SyncOrchestrator):
                 metrics.increment_batch(batch_size)
 
                 self.logger.info(
-                    f"[ClickHouseToMSSQLQueryOrchestrator.sync_data] Batch {batch_number} | rows={batch_size} | transferred={metrics.transferred_records}"
+                    '[ClickHouseToMSSQLQueryOrchestrator.sync_data] Batch %s | rows=%s | transferred=%s',
+                    batch_number,
+                    batch_size,
+                    metrics.transferred_records,
                 )
 
             if delete_missing and keys_staging_table:

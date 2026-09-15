@@ -175,7 +175,11 @@ class ClickHouseDataReader(DataReader):
 
                 processed += len(batch)
                 self.logger.info(
-                    f"[ClickHouseDataReader.stream_data] Batch {batch_number} | rows={len(batch)} | processed={processed}/{total_count}"
+                    '[ClickHouseDataReader.stream_data] Batch %s | rows=%s | processed=%s/%s',
+                    batch_number,
+                    len(batch),
+                    processed,
+                    total_count,
                 )
                 yield batch
 
@@ -183,8 +187,10 @@ class ClickHouseDataReader(DataReader):
                     break
             except Exception as exc:
                 self.logger.error(
-                    f"[ClickHouseDataReader.stream_data] ERROR reading batch {batch_number} | error={exc}",
-                    exc_info=True
+                    '[ClickHouseDataReader.stream_data] ERROR reading batch %s | error=%s',
+                    batch_number,
+                    exc,
+                    exc_info=True,
                 )
                 raise AirflowException(f"ClickHouse read error: {exc}") from exc
 
@@ -270,9 +276,17 @@ class ClickHouseDataReader(DataReader):
         if total_count:
             percentage = processed / total_count * 100
             self.logger.info(
-                f"[ClickHouseDataReader._log_stream_batch] Batch {batch_number} | rows={batch_len} | processed={processed:,}/{total_count:,} ({percentage:.1f}%)"
+                '[ClickHouseDataReader._log_stream_batch] Batch %s | rows=%s | processed=%s/%s (%.1f%%)',
+                batch_number,
+                batch_len,
+                format(processed, ','),
+                format(total_count, ','),
+                percentage,
             )
         else:
             self.logger.info(
-                f"[ClickHouseDataReader._log_stream_batch] Batch {batch_number} | rows={batch_len} | processed={processed:,}"
+                '[ClickHouseDataReader._log_stream_batch] Batch %s | rows=%s | processed=%s',
+                batch_number,
+                batch_len,
+                format(processed, ','),
             )

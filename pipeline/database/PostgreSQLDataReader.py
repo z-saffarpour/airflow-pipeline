@@ -145,7 +145,11 @@ class PostgreSQLDataReader(DataReader):
 
                 processed += len(batch)
                 self.logger.info(
-                    f"[PostgreSQLDataReader.stream_data] Batch {batch_number} | rows={len(batch)} | processed={processed}/{total_count}"
+                    '[PostgreSQLDataReader.stream_data] Batch %s | rows=%s | processed=%s/%s',
+                    batch_number,
+                    len(batch),
+                    processed,
+                    total_count,
                 )
                 yield batch
 
@@ -153,8 +157,10 @@ class PostgreSQLDataReader(DataReader):
                     break
             except Exception as exc:
                 self.logger.error(
-                    f"[PostgreSQLDataReader.stream_data] ERROR reading batch {batch_number} | error={exc}",
-                    exc_info=True
+                    '[PostgreSQLDataReader.stream_data] ERROR reading batch %s | error=%s',
+                    batch_number,
+                    exc,
+                    exc_info=True,
                 )
                 raise AirflowException(f"PostgreSQL read error: {exc}") from exc
 
@@ -206,11 +212,19 @@ class PostgreSQLDataReader(DataReader):
                     if total_count:
                         percentage = processed / total_count * 100
                         self.logger.info(
-                            f"[PostgreSQLDataReader.stream_query] Batch {batch_number} | rows={len(batch)} | processed={processed:,}/{total_count:,} ({percentage:.1f}%)"
+                            '[PostgreSQLDataReader.stream_query] Batch %s | rows=%s | processed=%s/%s (%.1f%%)',
+                            batch_number,
+                            len(batch),
+                            format(processed, ','),
+                            format(total_count, ','),
+                            percentage,
                         )
                     else:
                         self.logger.info(
-                            f"[PostgreSQLDataReader.stream_query] Batch {batch_number} | rows={len(batch)} | processed={processed:,}"
+                            '[PostgreSQLDataReader.stream_query] Batch %s | rows=%s | processed=%s',
+                            batch_number,
+                            len(batch),
+                            format(processed, ','),
                         )
 
                     yield batch

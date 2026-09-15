@@ -162,7 +162,12 @@ class MSSQLServerWriter(DataWriter):
                     for column in unique_key
                     if column.upper() not in available
                 ]
-                self.logger.warning(f"[MSSQLServerWriter._delete_unique_key_conflicts] Skipping unique key {unique_key} for {table_full}; missing staging columns: {missing}")
+                self.logger.warning(
+                    '[MSSQLServerWriter._delete_unique_key_conflicts] Skipping unique key %s for %s; missing staging columns: %s',
+                    unique_key,
+                    table_full,
+                    missing,
+                )
                 continue
 
             for column in filtered_columns:
@@ -184,7 +189,12 @@ class MSSQLServerWriter(DataWriter):
             deleted = cursor.rowcount if cursor.rowcount and cursor.rowcount > 0 else 0
             if deleted:
                 total_deleted += deleted
-                self.logger.info(f'[MSSQLServerWriter._delete_unique_key_conflicts] Deleted {deleted} conflicting row(s) from {table_full} for unique key ({", ".join(filtered_columns)})')
+                self.logger.info(
+                    '[MSSQLServerWriter._delete_unique_key_conflicts] Deleted %s conflicting row(s) from %s for unique key (%s)',
+                    deleted,
+                    table_full,
+                    ", ".join(filtered_columns),
+                )
 
         return total_deleted
 
@@ -456,12 +466,14 @@ class MSSQLServerWriter(DataWriter):
                 )
                 success = True
                 self.logger.info(
-                    f"[MSSQLServerWriter.insert_batch] Successfully inserted {total_inserted} records into {table_full} | "
-                    f"staging: {staging_table}"
+                    '[MSSQLServerWriter.insert_batch] Successfully inserted %s records into %s | staging: %s',
+                    total_inserted,
+                    table_full,
+                    staging_table,
                 )
                 return total_inserted
             except Exception as e:
-                self.logger.error(f"[MSSQLServerWriter.insert_batch] Insert failed for {table_full}: {e}")
+                self.logger.error('[MSSQLServerWriter.insert_batch] Insert failed for %s: %s', table_full, e)
                 raise
             finally:
                 self._cleanup_staging_table(conn, cursor, staging_table)
@@ -529,13 +541,14 @@ class MSSQLServerWriter(DataWriter):
                 )
                 success = True
                 self.logger.info(
-                    f"[MSSQLServerWriter.update_batch] Successfully updated {total_updated} records in {table_full} | staging: {staging_table}"
+                    '[MSSQLServerWriter.update_batch] Successfully updated %s records in %s | staging: %s',
+                    total_updated,
+                    table_full,
+                    staging_table,
                 )
                 return total_updated
             except Exception as e:
-                self.logger.error(
-                    f"[MSSQLServerWriter.update_batch] Update failed for {table_full}: {e}"
-                )
+                self.logger.error('[MSSQLServerWriter.update_batch] Update failed for %s: %s', table_full, e)
                 raise
             finally:
                 self._cleanup_staging_table(conn, cursor, staging_table)
@@ -610,11 +623,14 @@ class MSSQLServerWriter(DataWriter):
                 )
                 success = True
                 self.logger.info(
-                    f"[MSSQLServerWriter.delete_batch] Successfully deleted {total_deleted} records from {table_full} | staging: {staging_table}"
+                    '[MSSQLServerWriter.delete_batch] Successfully deleted %s records from %s | staging: %s',
+                    total_deleted,
+                    table_full,
+                    staging_table,
                 )
                 return total_deleted
             except Exception as e:
-                self.logger.error(f"[MSSQLServerWriter.delete_batch] Delete failed for {table_full}: {e}")
+                self.logger.error('[MSSQLServerWriter.delete_batch] Delete failed for %s: %s', table_full, e)
                 raise
             finally:
                 self._cleanup_staging_table(conn, cursor, staging_table)
@@ -705,10 +721,18 @@ class MSSQLServerWriter(DataWriter):
                     cursor.executemany(insert_query, values)
                     total_appended += len(batch)
                 success = True
-                self.logger.debug(f"[MSSQLServerWriter.append_keys_to_staging] Appended {total_appended} key row(s) to {keys_staging_table}")
+                self.logger.debug(
+                    '[MSSQLServerWriter.append_keys_to_staging] Appended %s key row(s) to %s',
+                    total_appended,
+                    keys_staging_table,
+                )
                 return total_appended
             except Exception as exc:
-                self.logger.error(f"[MSSQLServerWriter.append_keys_to_staging] Failed to append keys to {keys_staging_table}: {exc}")
+                self.logger.error(
+                    '[MSSQLServerWriter.append_keys_to_staging] Failed to append keys to %s: %s',
+                    keys_staging_table,
+                    exc,
+                )
                 raise
             finally:
                 self._finalize_connection(conn, cursor, commit=success)
@@ -866,13 +890,17 @@ class MSSQLServerWriter(DataWriter):
                 attempt = retry_ctx.current_attempt + 1
                 if attempt >= retry_ctx.max_attempts:
                     self.logger.error(
-                        f"[MSSQLServerWriter.upsert_batch] Deadlock persisted after "
-                        f"{retry_ctx.max_attempts} attempts for {table_full}: {exc}"
+                        '[MSSQLServerWriter.upsert_batch] Deadlock persisted after %s attempts for %s: %s',
+                        retry_ctx.max_attempts,
+                        table_full,
+                        exc,
                     )
                     raise
                 self.logger.warning(
-                    f"[MSSQLServerWriter.upsert_batch] Deadlock victim on attempt "
-                    f"{attempt}/{retry_ctx.max_attempts} for {table_full}, retrying..."
+                    '[MSSQLServerWriter.upsert_batch] Deadlock victim on attempt %s/%s for %s, retrying...',
+                    attempt,
+                    retry_ctx.max_attempts,
+                    table_full,
                 )
                 retry_ctx.record_failure(exc)
 
@@ -973,17 +1001,19 @@ class MSSQLServerWriter(DataWriter):
                 success = True
 
                 self.logger.info(
-                    f"[MSSQLServerWriter._upsert_batch_once] {table_full} sync completed | "
-                    f"staging: {staging_table} | "
-                    f"Inserted: {inserted_count} | "
-                    f"Updated: {updated_count} | "
-                    f"Deleted: {deleted_count} | "
-                    f"hash_change_detection={use_hash_change_detection}"
+                    '[MSSQLServerWriter._upsert_batch_once] %s sync completed | staging: %s | Inserted: %s | Updated: %s | Deleted: %s | hash_change_detection=%s',
+                    table_full,
+                    staging_table,
+                    inserted_count,
+                    updated_count,
+                    deleted_count,
+                    use_hash_change_detection,
                 )
 
                 self.logger.debug(
-                    f"[MSSQLServerWriter._upsert_batch_once] Upsert completed for {table_full} "
-                    f"(delete_missing={delete_missing})"
+                    '[MSSQLServerWriter._upsert_batch_once] Upsert completed for %s (delete_missing=%s)',
+                    table_full,
+                    delete_missing,
                 )
 
                 return {
@@ -995,9 +1025,7 @@ class MSSQLServerWriter(DataWriter):
                 }
 
             except Exception as e:
-                self.logger.error(
-                    f"[MSSQLServerWriter._upsert_batch_once] Upsert failed for {table_full}: {e}"
-                )
+                self.logger.error('[MSSQLServerWriter._upsert_batch_once] Upsert failed for %s: %s', table_full, e)
                 raise
             finally:
                 self._cleanup_staging_table(conn, cursor, staging_table)

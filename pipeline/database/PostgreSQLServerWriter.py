@@ -194,7 +194,12 @@ class PostgreSQLServerWriter(DataWriter):
             deleted = cursor.rowcount if cursor.rowcount and cursor.rowcount > 0 else 0
             if deleted:
                 total_deleted += deleted
-                self.logger.info(f'[PostgreSQLServerWriter._delete_unique_key_conflicts] Deleted {deleted} conflicting row(s) from {table_full} for unique key ({", ".join(filtered_columns)})')
+                self.logger.info(
+                    '[PostgreSQLServerWriter._delete_unique_key_conflicts] Deleted %s conflicting row(s) from %s for unique key (%s)',
+                    deleted,
+                    table_full,
+                    ", ".join(filtered_columns),
+                )
         return total_deleted
 
     def _drop_staging_table(self, cursor, staging_table: str) -> None:
@@ -614,9 +619,19 @@ class PostgreSQLServerWriter(DataWriter):
                     raise
                 attempt = retry_ctx.current_attempt + 1
                 if attempt >= retry_ctx.max_attempts:
-                    self.logger.error(f"[PostgreSQLServerWriter.upsert_batch] Deadlock persisted after {retry_ctx.max_attempts} attempts for {table_full}: {exc}")
+                    self.logger.error(
+                        '[PostgreSQLServerWriter.upsert_batch] Deadlock persisted after %s attempts for %s: %s',
+                        retry_ctx.max_attempts,
+                        table_full,
+                        exc,
+                    )
                     raise
-                self.logger.warning(f"[PostgreSQLServerWriter.upsert_batch] Deadlock victim on attempt {attempt}/{retry_ctx.max_attempts} for {table_full}, retrying...")
+                self.logger.warning(
+                    '[PostgreSQLServerWriter.upsert_batch] Deadlock victim on attempt %s/%s for %s, retrying...',
+                    attempt,
+                    retry_ctx.max_attempts,
+                    table_full,
+                )
                 retry_ctx.record_failure(exc)
 
     def _upsert_batch_once(
@@ -712,8 +727,12 @@ class PostgreSQLServerWriter(DataWriter):
                 success = True
 
                 self.logger.info(
-                    f"[PostgreSQLServerWriter._upsert_batch_once] {table_full} sync completed | "
-                    f"staging={staging_table} | inserted={inserted_count} | updated={updated_count} | hash_change_detection={use_hash_change_detection}"
+                    '[PostgreSQLServerWriter._upsert_batch_once] %s sync completed | staging=%s | inserted=%s | updated=%s | hash_change_detection=%s',
+                    table_full,
+                    staging_table,
+                    inserted_count,
+                    updated_count,
+                    use_hash_change_detection,
                 )
                 return {
                     "success": True,
@@ -723,7 +742,11 @@ class PostgreSQLServerWriter(DataWriter):
                     "total": inserted_count + updated_count,
                 }
             except Exception as exc:
-                self.logger.error(f"[PostgreSQLServerWriter._upsert_batch_once] Upsert failed for {table_full}: {exc}")
+                self.logger.error(
+                    '[PostgreSQLServerWriter._upsert_batch_once] Upsert failed for %s: %s',
+                    table_full,
+                    exc,
+                )
                 raise
             finally:
                 self._cleanup_staging_table(conn, cursor, staging_table)

@@ -145,7 +145,11 @@ class MySQLDataReader(DataReader):
 
                 processed += len(batch)
                 self.logger.info(
-                    f"[MySQLDataReader.stream_data] Batch {batch_number} | rows={len(batch)} | processed={processed}/{total_count}"
+                    '[MySQLDataReader.stream_data] Batch %s | rows=%s | processed=%s/%s',
+                    batch_number,
+                    len(batch),
+                    processed,
+                    total_count,
                 )
                 yield batch
 
@@ -153,8 +157,10 @@ class MySQLDataReader(DataReader):
                     break
             except Exception as exc:
                 self.logger.error(
-                    f"[MySQLDataReader.stream_data] ERROR reading batch {batch_number} | error={exc}",
-                    exc_info=True
+                    '[MySQLDataReader.stream_data] ERROR reading batch %s | error=%s',
+                    batch_number,
+                    exc,
+                    exc_info=True,
                 )
                 raise AirflowException(f"MySQL read error: {exc}") from exc
 
@@ -203,11 +209,19 @@ class MySQLDataReader(DataReader):
                     if total_count:
                         percentage = processed / total_count * 100
                         self.logger.info(
-                            f"[MySQLDataReader.stream_query] Batch {batch_number} | rows={len(batch)} | processed={processed:,}/{total_count:,} ({percentage:.1f}%)"
+                            '[MySQLDataReader.stream_query] Batch %s | rows=%s | processed=%s/%s (%.1f%%)',
+                            batch_number,
+                            len(batch),
+                            format(processed, ','),
+                            format(total_count, ','),
+                            percentage,
                         )
                     else:
                         self.logger.info(
-                            f"[MySQLDataReader.stream_query] Batch {batch_number} | rows={len(batch)} | processed={processed:,}"
+                            '[MySQLDataReader.stream_query] Batch %s | rows=%s | processed=%s',
+                            batch_number,
+                            len(batch),
+                            format(processed, ','),
                         )
 
                     yield batch

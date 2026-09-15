@@ -28,7 +28,7 @@ class MySQLConnectionFactory(SQLConnectionFactory):
         """Create a fresh MySqlHook instance per call."""
         from airflow.providers.mysql.hooks.mysql import MySqlHook  # type: ignore
 
-        self.logger.debug(f"[MySQLConnectionFactory.get_hook] Creating MySqlHook for conn_id={self.conn_id}")
+        self.logger.debug('[MySQLConnectionFactory.get_hook] Creating MySqlHook for conn_id=%s', self.conn_id)
         return MySqlHook(mysql_conn_id=self.conn_id)
 
     @contextmanager
@@ -37,7 +37,8 @@ class MySQLConnectionFactory(SQLConnectionFactory):
         connection = None
         try:
             self.logger.info(
-                f"[MySQLConnectionFactory.get_connection] Opening MySQL connection | conn_id='{self.conn_id}'"
+                "[MySQLConnectionFactory.get_connection] Opening MySQL connection | conn_id='%s'",
+                self.conn_id,
             )
             hook = self.get_hook()
             connection = hook.get_conn()
@@ -46,8 +47,10 @@ class MySQLConnectionFactory(SQLConnectionFactory):
             raise
         except Exception as exc:
             self.logger.error(
-                f"[MySQLConnectionFactory.get_connection] Database connection failed | conn_id='{self.conn_id}' | error={exc}",
-                exc_info=True
+                "[MySQLConnectionFactory.get_connection] Database connection failed | conn_id='%s' | error=%s",
+                self.conn_id,
+                exc,
+                exc_info=True,
             )
             raise MySQLConnectionError(
                 f"Failed to connect to MySQL: {exc}"
@@ -85,8 +88,10 @@ class MySQLConnectionFactory(SQLConnectionFactory):
                 yield cursor
             except Exception as exc:
                 self.logger.error(
-                    f"[MySQLConnectionFactory.get_cursor] ERROR creating cursor | conn_id='{self.conn_id}' | error={exc}",
-                    exc_info=True
+                    "[MySQLConnectionFactory.get_cursor] ERROR creating cursor | conn_id='%s' | error=%s",
+                    self.conn_id,
+                    exc,
+                    exc_info=True,
                 )
                 raise MySQLConnectionError(str(exc)) from exc
             finally:
@@ -94,7 +99,10 @@ class MySQLConnectionFactory(SQLConnectionFactory):
                     try:
                         cursor.close()
                     except Exception as cursor_error:
-                        self.logger.warning(f"[MySQLConnectionFactory.get_cursor] Failed to close cursor: {cursor_error}")
+                        self.logger.warning(
+                            '[MySQLConnectionFactory.get_cursor] Failed to close cursor: %s',
+                            cursor_error,
+                        )
 
     def test_connection(self) -> bool:
         """Return True if a simple SELECT 1 succeeds."""
@@ -125,7 +133,7 @@ class MySQLConnectionFactory(SQLConnectionFactory):
         parameters: Optional[Tuple] = None,
     ) -> List[Dict[str, Any]]:
         """Execute a SQL query and return all rows as dictionaries."""
-        self.logger.debug(f"[MySQLConnectionFactory.execute_query] START | params_provided={parameters is not None}")
+        self.logger.debug('[MySQLConnectionFactory.execute_query] START | params_provided=%s', parameters is not None)
         try:
             with self.get_cursor(as_dict=True) as cursor:
                 if parameters:
@@ -135,7 +143,7 @@ class MySQLConnectionFactory(SQLConnectionFactory):
                 rows = cursor.fetchall() or []
                 return self._normalize_rows(cursor, list(rows))
         except Exception as exc:
-            self.logger.error(f"[MySQLConnectionFactory.execute_query] Query failed: {exc}", exc_info=True)
+            self.logger.error('[MySQLConnectionFactory.execute_query] Query failed: %s', exc, exc_info=True)
             raise MySQLQueryError(f"MySQL query failed: {exc}") from exc
 
     def execute_scalar(
@@ -157,5 +165,5 @@ class MySQLConnectionFactory(SQLConnectionFactory):
                     return next(iter(row.values()))
                 return row[0]
         except Exception as exc:
-            self.logger.error(f"[MySQLConnectionFactory.execute_scalar] Query failed: {exc}", exc_info=True)
+            self.logger.error('[MySQLConnectionFactory.execute_scalar] Query failed: %s', exc, exc_info=True)
             raise MySQLQueryError(f"MySQL scalar query failed: {exc}") from exc

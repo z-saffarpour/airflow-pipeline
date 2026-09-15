@@ -394,7 +394,11 @@ class DagSyncTrigger:
             if not next_pending:
                 break
 
-            self.logger.info(f"[DagSyncTrigger._wait_for_dag_runs] Waiting for {len(next_pending)} downstream DagRun(s) to complete: {sorted(next_pending)}")
+            self.logger.info(
+                '[DagSyncTrigger._wait_for_dag_runs] Waiting for %s downstream DagRun(s) to complete: %s',
+                len(next_pending),
+                sorted(next_pending),
+            )
             pending = next_pending
             time.sleep(self.poke_interval)
 
@@ -418,7 +422,13 @@ class DagSyncTrigger:
             if not failed_runs:
                 break
 
-            self.logger.info(f"[DagSyncTrigger._wait_for_dag_runs_with_retry] Auto-retry {retry_attempt}/{self.failed_dag_run_retries} for {len(failed_runs)} failed DagRun(s): {failed_runs}")
+            self.logger.info(
+                '[DagSyncTrigger._wait_for_dag_runs_with_retry] Auto-retry %s/%s for %s failed DagRun(s): %s',
+                retry_attempt,
+                self.failed_dag_run_retries,
+                len(failed_runs),
+                failed_runs,
+            )
             time.sleep(self.failed_dag_run_retry_delay)
 
             runs_to_retry: List[Tuple[str, str]] = []

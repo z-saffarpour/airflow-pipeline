@@ -46,7 +46,7 @@ class MSSQLConnectionFactory(SQLConnectionFactory):
         Hook objects are lightweight config wrappers.
         Caching them risks stale state in multi-threaded Airflow workers.
         """
-        self.logger.debug(f"[MSSQLConnectionFactory.get_hook] Creating SafeMsSqlHook for conn_id={self.conn_id}")
+        self.logger.debug('[MSSQLConnectionFactory.get_hook] Creating SafeMsSqlHook for conn_id=%s', self.conn_id)
         return SafeMsSqlHook(mssql_conn_id=self.conn_id)
 
     def create_connection(self, server, port, database, username, password, appname, timeout, login_timeout, query_timeout, driver_type, driver) -> Any:
@@ -94,7 +94,8 @@ class MSSQLConnectionFactory(SQLConnectionFactory):
 
         except Exception as e:
             self.logger.error(
-                f"[MSSQLConnectionFactory.create_connection] ERROR creating connection | error={str(e)}",
+                '[MSSQLConnectionFactory.create_connection] ERROR creating connection | error=%s',
+                str(e),
                 exc_info=True,
             )
             raise SQLServerConnectionError(str(e))
@@ -116,7 +117,10 @@ class MSSQLConnectionFactory(SQLConnectionFactory):
         connection = None
         
         try:
-            self.logger.info(f"[MSSQLConnectionFactory.get_connection] Opening SQL Server connection | conn_id='{self.conn_id}'")
+            self.logger.info(
+                "[MSSQLConnectionFactory.get_connection] Opening SQL Server connection | conn_id='%s'",
+                self.conn_id,
+            )
             if self.is_connection_string:
                 # Parse connection string: mssql+pymssql://user:pass@host:port/db?appname=MyApp&timeout=600&login_timeout=30&query_timeout=300
                 # Parse connection string: mssql+pyodbc://user:pass@host:port/db?driver=ODBC+Driver+18+for+SQL+Server&appname=MyApp&timeout=600&login_timeout=30&query_timeout=300
@@ -153,7 +157,10 @@ class MSSQLConnectionFactory(SQLConnectionFactory):
                 hook = self.get_hook()
                 connection = hook.get_conn()
             
-            self.logger.debug( f"[MSSQLConnectionFactory.get_connection] SQL Server connection established successfully | conn_id='{self.conn_id}'")    
+            self.logger.debug(
+                "[MSSQLConnectionFactory.get_connection] SQL Server connection established successfully | conn_id='%s'",
+                self.conn_id,
+            )    
             yield connection
             
         except SQLServerConnectionError:
@@ -166,19 +173,24 @@ class MSSQLConnectionFactory(SQLConnectionFactory):
                     connection.rollback()
                 except Exception as rollback_error:
                     self.logger.warning(
-                        f"[MSSQLConnectionFactory.get_connection] Rollback failed | "
-                        f"conn_id={self.conn_id} | error={str(rollback_error)}"
+                        '[MSSQLConnectionFactory.get_connection] Rollback failed | conn_id=%s | error=%s',
+                        self.conn_id,
+                        str(rollback_error),
                     )
             if is_sql_server_deadlock(e):
                 self.logger.warning(
-                    f"[MSSQLConnectionFactory.get_connection] SQL Server deadlock detected | conn_id='{self.conn_id}' | error={e}"
+                    "[MSSQLConnectionFactory.get_connection] SQL Server deadlock detected | conn_id='%s' | error=%s",
+                    self.conn_id,
+                    e,
                 )
                 raise SQLServerDeadlockError(
                     f"[MSSQLConnectionFactory.get_connection] SQL Server deadlock detected: {str(e)}"
                 ) from e
             self.logger.error(
-                f"[MSSQLConnectionFactory.get_connection] Database connection failed | conn_id='{self.conn_id}' | error={e}",
-                exc_info=True
+                "[MSSQLConnectionFactory.get_connection] Database connection failed | conn_id='%s' | error=%s",
+                self.conn_id,
+                e,
+                exc_info=True,
             )
             raise SQLServerConnectionError(
                 f"[MSSQLConnectionFactory.get_connection] Failed to connect to SQL Server: {str(e)}"
@@ -222,14 +234,18 @@ class MSSQLConnectionFactory(SQLConnectionFactory):
                 else:
                     cursor = connection.cursor()
 
-                self.logger.debug(f"[MSSQLConnectionFactory.get_cursor] SQL Server cursor created successfully | "
-                                 f"conn_id='{self.conn_id}'")
+                self.logger.debug(
+                    "[MSSQLConnectionFactory.get_cursor] SQL Server cursor created successfully | conn_id='%s'",
+                    self.conn_id,
+                )
                 yield cursor
             except Exception as e:
-                self.logger.error(f"[MSSQLConnectionFactory.get_cursor] ERROR creating cursor | "
-                                  f"conn_id='{self.conn_id}' | "
-                                  f"error={e}",
-                                  exc_info=True,)
+                self.logger.error(
+                    "[MSSQLConnectionFactory.get_cursor] ERROR creating cursor | conn_id='%s' | error=%s",
+                    self.conn_id,
+                    e,
+                    exc_info=True,
+                )
                 raise SQLServerConnectionError(str(e))
             finally:
                 if cursor:
@@ -237,9 +253,14 @@ class MSSQLConnectionFactory(SQLConnectionFactory):
                         cursor.close()
                         self.logger.debug("[MSSQLConnectionFactory.get_cursor] Cursor closed.")                        
                     except Exception as cursor_error:
-                        self.logger.warning(f"[MSSQLConnectionFactory.get_cursor] Failed to close cursor.: {cursor_error}")
-                self.logger.debug("[MSSQLConnectionFactory.get_cursor] SQL Server connection closed | "
-                                 f"conn_id='{self.conn_id}'")
+                        self.logger.warning(
+                            '[MSSQLConnectionFactory.get_cursor] Failed to close cursor.: %s',
+                            cursor_error,
+                        )
+                self.logger.debug(
+                    "[MSSQLConnectionFactory.get_cursor] SQL Server connection closed | conn_id='%s'",
+                    self.conn_id,
+                )
 
     def test_connection(self) -> bool:
         """
@@ -285,11 +306,9 @@ class MSSQLConnectionFactory(SQLConnectionFactory):
         - optional parameters
         - column name extraction for tuple-based drivers (pyodbc)
         """
-        self.logger.debug(
-            f"[MSSQLConnectionFactory.execute_query] START | params_provided={parameters is not None}"
-        )
-        self.logger.debug(f"[MSSQLConnectionFactory.execute_query] Query:\n{query}")
-        self.logger.debug(f"[MSSQLConnectionFactory.execute_query] Params={parameters}")        
+        self.logger.debug('[MSSQLConnectionFactory.execute_query] START | params_provided=%s', parameters is not None)
+        self.logger.debug('[MSSQLConnectionFactory.execute_query] Query:\n%s', query)
+        self.logger.debug('[MSSQLConnectionFactory.execute_query] Params=%s', parameters)        
         try:
             # Use get_connection to detect underlying driver and adapt paramstyle
             with self.get_connection() as connection:
@@ -335,7 +354,8 @@ class MSSQLConnectionFactory(SQLConnectionFactory):
                 return normalized_rows
         except Exception as e:
                 self.logger.error(
-                    f"[MSSQLConnectionFactory.execute_query] ERROR executing query | error={e}",
+                    '[MSSQLConnectionFactory.execute_query] ERROR executing query | error=%s',
+                    e,
                     exc_info=True,
                 )
                 raise SQLServerQueryError(str(e))
@@ -352,10 +372,8 @@ class MSSQLConnectionFactory(SQLConnectionFactory):
         Returns:
             Single scalar value, or None if no rows
         """
-        self.logger.debug(
-            f"[MSSQLConnectionFactory.execute_scalar] START | params_provided={parameters is not None}"
-        )
-        self.logger.debug(f"[MSSQLConnectionFactory.execute_scalar] Query:\n{query}")
+        self.logger.debug('[MSSQLConnectionFactory.execute_scalar] START | params_provided=%s', parameters is not None)
+        self.logger.debug('[MSSQLConnectionFactory.execute_scalar] Query:\n%s', query)
 
         try:
             # Use get_connection to detect driver and adapt paramstyle
@@ -396,8 +414,5 @@ class MSSQLConnectionFactory(SQLConnectionFactory):
 
                 return result[0]
         except Exception as e:
-            self.logger.error(
-                f"[MSSQLConnectionFactory.execute_scalar] ERROR | error={e}",
-                exc_info=True,
-            )
+            self.logger.error('[MSSQLConnectionFactory.execute_scalar] ERROR | error=%s', e, exc_info=True)
             raise SQLServerQueryError(str(e))

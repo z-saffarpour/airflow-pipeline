@@ -96,7 +96,10 @@ class MongoDBConnectionFactory(ConnectionFactory):
             conn = get_connection(self.conn_id)
             extra = self._parse_extra(conn)
             uri = self._build_uri(conn, extra)
-            self.logger.info(f"[MongoDBConnectionFactory.get_client] Opening MongoDB client | conn_id='{self.conn_id}'")
+            self.logger.info(
+                "[MongoDBConnectionFactory.get_client] Opening MongoDB client | conn_id='%s'",
+                self.conn_id,
+            )
             client = MongoClient(uri, **self._client_kwargs(extra))
             # Force early failure if the cluster is unreachable.
             client.admin.command("ping")
@@ -105,8 +108,10 @@ class MongoDBConnectionFactory(ConnectionFactory):
             raise
         except Exception as exc:
             self.logger.error(
-                f"[MongoDBConnectionFactory.get_client] Connection failed | conn_id='{self.conn_id}' | error={exc}",
-                exc_info=True
+                "[MongoDBConnectionFactory.get_client] Connection failed | conn_id='%s' | error=%s",
+                self.conn_id,
+                exc,
+                exc_info=True,
             )
             raise MongoDBConnectionError(
                 f"Failed to connect to MongoDB: {exc}"
@@ -158,7 +163,7 @@ class MongoDBConnectionFactory(ConnectionFactory):
             with self.get_collection(collection, database=database) as coll:
                 return int(coll.count_documents(filter_query or {}))
         except Exception as exc:
-            self.logger.error(f"[MongoDBConnectionFactory.count_documents] Failed: {exc}", exc_info=True)
+            self.logger.error('[MongoDBConnectionFactory.count_documents] Failed: %s', exc, exc_info=True)
             raise MongoDBQueryError(f"MongoDB count failed: {exc}") from exc
 
     def find_documents(
@@ -185,7 +190,7 @@ class MongoDBConnectionFactory(ConnectionFactory):
                 cursor = cursor.batch_size(int(batch_size))
                 return list(cursor)
         except Exception as exc:
-            self.logger.error(f"[MongoDBConnectionFactory.find_documents] Failed: {exc}", exc_info=True)
+            self.logger.error('[MongoDBConnectionFactory.find_documents] Failed: %s', exc, exc_info=True)
             raise MongoDBQueryError(f"MongoDB find failed: {exc}") from exc
 
     def aggregate(
@@ -201,5 +206,5 @@ class MongoDBConnectionFactory(ConnectionFactory):
                 cursor = coll.aggregate(pipeline, batchSize=int(batch_size))
                 return list(cursor)
         except Exception as exc:
-            self.logger.error(f"[MongoDBConnectionFactory.aggregate] Failed: {exc}", exc_info=True)
+            self.logger.error('[MongoDBConnectionFactory.aggregate] Failed: %s', exc, exc_info=True)
             raise MongoDBQueryError(f"MongoDB aggregate failed: {exc}") from exc

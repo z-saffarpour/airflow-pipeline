@@ -28,7 +28,7 @@ class PostgreSQLConnectionFactory(SQLConnectionFactory):
         """Create a fresh PostgresHook instance per call."""
         from airflow.providers.postgres.hooks.postgres import PostgresHook  # type: ignore
 
-        self.logger.debug(f"[PostgreSQLConnectionFactory.get_hook] Creating PostgresHook for conn_id={self.conn_id}")
+        self.logger.debug('[PostgreSQLConnectionFactory.get_hook] Creating PostgresHook for conn_id=%s', self.conn_id)
         return PostgresHook(postgres_conn_id=self.conn_id)
 
     @contextmanager
@@ -37,7 +37,8 @@ class PostgreSQLConnectionFactory(SQLConnectionFactory):
         connection = None
         try:
             self.logger.info(
-                f"[PostgreSQLConnectionFactory.get_connection] Opening PostgreSQL connection | conn_id='{self.conn_id}'"
+                "[PostgreSQLConnectionFactory.get_connection] Opening PostgreSQL connection | conn_id='%s'",
+                self.conn_id,
             )
             hook = self.get_hook()
             connection = hook.get_conn()
@@ -46,9 +47,10 @@ class PostgreSQLConnectionFactory(SQLConnectionFactory):
             raise
         except Exception as exc:
             self.logger.error(
-                f"[PostgreSQLConnectionFactory.get_connection] Database connection failed | "
-                f"conn_id='{self.conn_id}' | error={exc}",
-                exc_info=True
+                "[PostgreSQLConnectionFactory.get_connection] Database connection failed | conn_id='%s' | error=%s",
+                self.conn_id,
+                exc,
+                exc_info=True,
             )
             raise PostgreSQLConnectionError(
                 f"Failed to connect to PostgreSQL: {exc}"
@@ -86,8 +88,10 @@ class PostgreSQLConnectionFactory(SQLConnectionFactory):
                 yield cursor
             except Exception as exc:
                 self.logger.error(
-                    f"[PostgreSQLConnectionFactory.get_cursor] ERROR creating cursor | conn_id='{self.conn_id}' | error={exc}",
-                    exc_info=True
+                    "[PostgreSQLConnectionFactory.get_cursor] ERROR creating cursor | conn_id='%s' | error=%s",
+                    self.conn_id,
+                    exc,
+                    exc_info=True,
                 )
                 raise PostgreSQLConnectionError(str(exc)) from exc
             finally:
@@ -95,7 +99,10 @@ class PostgreSQLConnectionFactory(SQLConnectionFactory):
                     try:
                         cursor.close()
                     except Exception as cursor_error:
-                        self.logger.warning(f"[PostgreSQLConnectionFactory.get_cursor] Failed to close cursor: {cursor_error}")
+                        self.logger.warning(
+                            '[PostgreSQLConnectionFactory.get_cursor] Failed to close cursor: %s',
+                            cursor_error,
+                        )
 
     def test_connection(self) -> bool:
         """Return True if a simple SELECT 1 succeeds."""
@@ -127,7 +134,8 @@ class PostgreSQLConnectionFactory(SQLConnectionFactory):
     ) -> List[Dict[str, Any]]:
         """Execute a SQL query and return all rows as dictionaries."""
         self.logger.debug(
-            f"[PostgreSQLConnectionFactory.execute_query] START | params_provided={parameters is not None}"
+            '[PostgreSQLConnectionFactory.execute_query] START | params_provided=%s',
+            parameters is not None,
         )
         try:
             with self.get_cursor(as_dict=True) as cursor:
@@ -138,7 +146,7 @@ class PostgreSQLConnectionFactory(SQLConnectionFactory):
                 rows = cursor.fetchall() or []
                 return self._normalize_rows(cursor, list(rows))
         except Exception as exc:
-            self.logger.error(f"[PostgreSQLConnectionFactory.execute_query] Query failed: {exc}", exc_info=True)
+            self.logger.error('[PostgreSQLConnectionFactory.execute_query] Query failed: %s', exc, exc_info=True)
             raise PostgreSQLQueryError(f"PostgreSQL query failed: {exc}") from exc
 
     def execute_scalar(
@@ -160,5 +168,5 @@ class PostgreSQLConnectionFactory(SQLConnectionFactory):
                     return next(iter(row.values()))
                 return row[0]
         except Exception as exc:
-            self.logger.error(f"[PostgreSQLConnectionFactory.execute_scalar] Query failed: {exc}", exc_info=True)
+            self.logger.error('[PostgreSQLConnectionFactory.execute_scalar] Query failed: %s', exc, exc_info=True)
             raise PostgreSQLQueryError(f"PostgreSQL scalar query failed: {exc}") from exc

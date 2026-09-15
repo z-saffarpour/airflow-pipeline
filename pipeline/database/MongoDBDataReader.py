@@ -270,7 +270,10 @@ class MongoDBDataReader(DataReader):
                         batch_number += 1
                         processed += len(batch)
                         self.logger.info(
-                            f"[MongoDBDataReader.stream_collection] Batch {batch_number} | rows={len(batch)} | processed={processed:,}"
+                            '[MongoDBDataReader.stream_collection] Batch %s | rows=%s | processed=%s',
+                            batch_number,
+                            len(batch),
+                            format(processed, ','),
                         )
                         yield self.normalize_batch(batch)
                         batch = []

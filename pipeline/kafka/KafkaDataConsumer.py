@@ -155,7 +155,10 @@ class KafkaDataConsumer(MessageConsumer):
             return
         try:
             consumer.commit(offsets=list(offsets.values()), asynchronous=False)
-            self.logger.debug(f"[KafkaDataConsumer.commit_offsets] Committed Kafka offsets | partitions={len(offsets)}")
+            self.logger.debug(
+                '[KafkaDataConsumer.commit_offsets] Committed Kafka offsets | partitions=%s',
+                len(offsets),
+            )
         except Exception as exc:
             raise KafkaConsumerError(f"Failed to commit Kafka offsets: {exc}") from exc
 
@@ -322,14 +325,18 @@ class KafkaDataConsumer(MessageConsumer):
                     if batch:
                         batch_number += 1
                         self.logger.info(
-                            f"[KafkaDataConsumer._stream_with_consumer] Batch {batch_number} | rows={len(batch)} | processed={processed:,} (flush on idle)"
+                            '[KafkaDataConsumer._stream_with_consumer] Batch %s | rows=%s | processed=%s (flush on idle)',
+                            batch_number,
+                            len(batch),
+                            format(processed, ','),
                         )
                         yield batch, dict(offsets)
                         batch = []
                         offsets = {}
                     if idle_polls >= self.max_idle_polls:
                         self.logger.info(
-                            f"[KafkaDataConsumer._stream_with_consumer] Idle limit reached | idle_polls={idle_polls}"
+                            '[KafkaDataConsumer._stream_with_consumer] Idle limit reached | idle_polls=%s',
+                            idle_polls,
                         )
                         break
                     continue
@@ -357,7 +364,10 @@ class KafkaDataConsumer(MessageConsumer):
                 if len(batch) >= self.batch_size:
                     batch_number += 1
                     self.logger.info(
-                        f"[KafkaDataConsumer._stream_with_consumer] Batch {batch_number} | rows={len(batch)} | processed={processed:,}"
+                        '[KafkaDataConsumer._stream_with_consumer] Batch %s | rows=%s | processed=%s',
+                        batch_number,
+                        len(batch),
+                        format(processed, ','),
                     )
                     yield batch, dict(offsets)
                     batch = []

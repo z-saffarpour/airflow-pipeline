@@ -398,8 +398,13 @@ class MSSQLToMSSQLQueryOrchestrator(SyncOrchestrator):
                 metrics.increment_batch(batch_size)
 
                 self.logger.info(
-                    f"[MSSQLToMSSQLQueryOrchestrator.sync_data_chunk] Chunk sync progress | "
-                    f"table={sync_config.target_table} | chunk={chunk_no} | batch={batch_number} | rows={batch_size} | staged={metrics.transferred_records}/{expected_rows or metrics.transferred_records}"
+                    '[MSSQLToMSSQLQueryOrchestrator.sync_data_chunk] Chunk sync progress | table=%s | chunk=%s | batch=%s | rows=%s | staged=%s/%s',
+                    sync_config.target_table,
+                    chunk_no,
+                    batch_number,
+                    batch_size,
+                    metrics.transferred_records,
+                    expected_rows or metrics.transferred_records,
                 )
 
             if sync_config.delete_missing and keys_staging_table:
@@ -573,7 +578,11 @@ class MSSQLToMSSQLQueryOrchestrator(SyncOrchestrator):
                 batch_size = len(batch)
 
                 self.logger.debug(
-                    f"[MSSQLToMSSQLQueryOrchestrator.sync_data] Processing batch {batch_number} | rows={batch_size} | target={sync_config.target_schema}.{sync_config.target_table}"
+                    '[MSSQLToMSSQLQueryOrchestrator.sync_data] Processing batch %s | rows=%s | target=%s.%s',
+                    batch_number,
+                    batch_size,
+                    sync_config.target_schema,
+                    sync_config.target_table,
                 )
 
                 batch_result = writer.upsert_batch(
@@ -602,16 +611,22 @@ class MSSQLToMSSQLQueryOrchestrator(SyncOrchestrator):
                 metrics.deleted += batch_result.get("deleted", 0)
 
                 self.logger.debug(
-                    f"[MSSQLToMSSQLQueryOrchestrator.sync_data] Batch {batch_number} processed | rows={batch_size}"
+                    '[MSSQLToMSSQLQueryOrchestrator.sync_data] Batch %s processed | rows=%s',
+                    batch_number,
+                    batch_size,
                 )
 
                 metrics.increment_batch(batch_size)
 
                 progress = metrics.get_progress_percentage()
                 self.logger.debug(
-                    f"[MSSQLToMSSQLQueryOrchestrator.sync_data] Batch transferred | table={sync_config.source_name} | "
-                    f"batch={batch_number} | batch_size={batch_size} | transferred={metrics.transferred_records} | "
-                    f"total={total_count if sync_config.source_query_count is not None else None} | progress={round(progress, 1) if progress is not None else None}%"
+                    '[MSSQLToMSSQLQueryOrchestrator.sync_data] Batch transferred | table=%s | batch=%s | batch_size=%s | transferred=%s | total=%s | progress=%s%%',
+                    sync_config.source_name,
+                    batch_number,
+                    batch_size,
+                    metrics.transferred_records,
+                    total_count if sync_config.source_query_count is not None else None,
+                    round(progress, 1) if progress is not None else None,
                 )
 
             if delete_missing and keys_staging_table:

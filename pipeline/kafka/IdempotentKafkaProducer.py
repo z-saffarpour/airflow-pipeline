@@ -102,8 +102,9 @@ class IdempotentKafkaProducer(MessageProducer):
                 'timestamp': datetime.now().isoformat()
             })
             self.logger.error(
-                f"[IdempotentKafkaProducer._delivery_callback] Message delivery failed | "
-                f"topic={msg.topic() if msg else None} | error={str(err)}"
+                '[IdempotentKafkaProducer._delivery_callback] Message delivery failed | topic=%s | error=%s',
+                msg.topic() if msg else None,
+                str(err),
             )
         else:
             self.delivered_records.append({
@@ -157,8 +158,10 @@ class IdempotentKafkaProducer(MessageProducer):
         except BufferError as e:
             # Queue is full, flush and retry
             self.logger.warning(
-                f"[IdempotentKafkaProducer.produce] Producer queue is full, polling to clear delivery queue "
-                f"before retry | topic={topic} | client_id={self.client_id} | message_count={self._message_count}"
+                '[IdempotentKafkaProducer.produce] Producer queue is full, polling to clear delivery queue before retry | topic=%s | client_id=%s | message_count=%s',
+                topic,
+                self.client_id,
+                self._message_count,
             )
             self.producer.poll(KAFKA_CONFIG.QUEUE_FULL_POLL_TIMEOUT)
             try:
@@ -172,22 +175,26 @@ class IdempotentKafkaProducer(MessageProducer):
                 )
             except Exception as retry_error:
                 self.logger.error(
-                    f"[IdempotentKafkaProducer.produce] Failed to produce message after retry | "
-                    f"topic={topic} | error={str(retry_error)}",
-                    exc_info=True
+                    '[IdempotentKafkaProducer.produce] Failed to produce message after retry | topic=%s | error=%s',
+                    topic,
+                    str(retry_error),
+                    exc_info=True,
                 )
                 raise KafkaProducerError(f"Producer queue full and retry failed: {str(retry_error)}") from retry_error
         except ConfluentKafkaException as e:
             self.logger.error(
-                f"[IdempotentKafkaProducer.produce] Kafka error producing message | topic={topic} | error={str(e)}",
-                exc_info=True
+                '[IdempotentKafkaProducer.produce] Kafka error producing message | topic=%s | error=%s',
+                topic,
+                str(e),
+                exc_info=True,
             )
             raise KafkaProducerError(f"Kafka produce error: {str(e)}") from e
         except Exception as e:
             self.logger.error(
-                f"[IdempotentKafkaProducer.produce] Unexpected error producing message | "
-                f"topic={topic} | error={str(e)}",
-                exc_info=True
+                '[IdempotentKafkaProducer.produce] Unexpected error producing message | topic=%s | error=%s',
+                topic,
+                str(e),
+                exc_info=True,
             )
             raise KafkaProducerError(f"Unexpected produce error: {str(e)}") from e
     
@@ -202,17 +209,19 @@ class IdempotentKafkaProducer(MessageProducer):
             KafkaProducerError: If flush times out with pending messages
         """
         self.logger.info(
-            f"[IdempotentKafkaProducer.flush] Flushing Kafka producer | timeout={timeout} | "
-            f"message_count={self._message_count}"
+            '[IdempotentKafkaProducer.flush] Flushing Kafka producer | timeout=%s | message_count=%s',
+            timeout,
+            self._message_count,
         )
-        self.logger.debug(f"[IdempotentKafkaProducer.flush] Flushing producer with timeout={timeout}s")
+        self.logger.debug('[IdempotentKafkaProducer.flush] Flushing producer with timeout=%ss', timeout)
         remaining = self.producer.flush(timeout)
         if remaining > 0:
             self.logger.error(
-                f"[IdempotentKafkaProducer.flush] Producer flush timeout | "
-                f"remaining_messages={remaining} | timeout={timeout}"
+                '[IdempotentKafkaProducer.flush] Producer flush timeout | remaining_messages=%s | timeout=%s',
+                remaining,
+                timeout,
             )
-            self.logger.warning(f"[IdempotentKafkaProducer.flush] {remaining} messages still in queue after flush")
+            self.logger.warning('[IdempotentKafkaProducer.flush] %s messages still in queue after flush', remaining)
             raise KafkaProducerError(
                 f"Producer flush timeout: {remaining} messages still pending after {timeout}s"
             )
