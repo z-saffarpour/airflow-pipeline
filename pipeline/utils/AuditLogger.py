@@ -5,6 +5,7 @@ Logs are written in JSONL format for easy parsing and analysis.
 """
 
 import json
+import re
 import logging
 from datetime import datetime
 from pathlib import Path
@@ -37,11 +38,26 @@ class AuditLogger:
         if not self.logger.handlers:
             self._setup_logger()
     
+    @staticmethod
+    def _sanitize_for_filename(value: str) -> str:
+        """
+        Sanitize a value before using it in the audit log file name.
+
+        dag_id/run_id can be operator- or trigger-controlled (e.g. a
+        custom run_id supplied via the Airflow UI/API), so strip
+        everything except a safe character set to prevent path
+        traversal (e.g. run_id="../../etc/passwd").
+        """
+        safe = re.sub(r"[^A-Za-z0-9_-]", "_", value or "")
+        return safe or "unknown"
+
     def _setup_logger(self):
         """Setup JSON logger with file handler."""
         if not self.logger.handlers:
             self.logger.setLevel(logging.INFO)        
-            log_file = self.log_dir / f"{self.dag_id}_{self.run_id}.jsonl"
+            safe_dag_id = self._sanitize_for_filename(self.dag_id)
+            safe_run_id = self._sanitize_for_filename(self.run_id)
+            log_file = self.log_dir / f"{safe_dag_id}_{safe_run_id}.jsonl"
             handler = logging.FileHandler(log_file)
             handler.setFormatter(logging.Formatter('%(message)s'))
             self.logger.addHandler(handler)
