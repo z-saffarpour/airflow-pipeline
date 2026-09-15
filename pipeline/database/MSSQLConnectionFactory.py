@@ -71,7 +71,7 @@ class MSSQLConnectionFactory(SQLConnectionFactory):
         self.logger.debug('[MSSQLConnectionFactory.get_hook] Creating SafeMsSqlHook for conn_id=%s', self._safe_conn_id())
         return SafeMsSqlHook(mssql_conn_id=self.conn_id)
 
-    def create_connection(self, server, port, database, username, password, appname, timeout, login_timeout, query_timeout, driver_type, driver) -> Any:
+    def create_connection(self, server, port, database, username, password, appname, timeout, login_timeout, query_timeout, driver_type, driver, encrypt: str = "yes", trust_server_certificate: str = "yes") -> Any:
         """
         driver_type: 'pymssql' or 'pyodbc'
         """
@@ -85,16 +85,17 @@ class MSSQLConnectionFactory(SQLConnectionFactory):
                     f"PWD={password};"
                     f"APP={appname};"
                     f"LoginTimeout={login_timeout};"
-                    f"Encrypt=no;"
-                    f"TrustServerCertificate=no;"
+                    f"Encrypt={encrypt};"
+                    f"TrustServerCertificate={trust_server_certificate};"
                 )
                 
                 conn = pyodbc.connect(connection_string, timeout=timeout or 0)
                 conn.timeout = query_timeout
                 self.logger.info(
-                    "[MSSQLConnectionFactory.create_connection] Creating PYODBC connection "
-                    # f"| encrypt={encrypt} | trust={trust_cert}"
-                )            
+                    "[MSSQLConnectionFactory.create_connection] Creating PYODBC connection | encrypt=%s | trust_server_certificate=%s",
+                    encrypt,
+                    trust_server_certificate,
+                )
                 return conn
             elif driver_type == "pymssql":
                 self.logger.info(
@@ -164,6 +165,8 @@ class MSSQLConnectionFactory(SQLConnectionFactory):
                 timeout=int(query_params.get('timeout', ['600'])[0])
                 login_timeout=int(query_params.get('login_timeout', ['30'])[0])
                 query_timeout = int(query_params.get('query_timeout', ['300'])[0])
+                encrypt = query_params.get('encrypt', ['yes'])[0]
+                trust_server_certificate = query_params.get('trust_server_certificate', ['yes'])[0]
                 
                 # Determine driver type from URI scheme
                 driver_type = 'pyodbc' if 'pyodbc' in parsed.scheme else 'pymssql'
@@ -173,7 +176,7 @@ class MSSQLConnectionFactory(SQLConnectionFactory):
                 else:
                     driver = None
                     
-                connection = self.create_connection(server, port, database, username, password, appname, timeout, login_timeout, query_timeout, driver_type, driver)
+                connection = self.create_connection(server, port, database, username, password, appname, timeout, login_timeout, query_timeout, driver_type, driver, encrypt, trust_server_certificate)
             else:
                 # Original hook-based approach
                 hook = self.get_hook()
