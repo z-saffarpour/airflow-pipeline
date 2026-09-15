@@ -205,12 +205,15 @@ class MSSQLDataReader(DataReader):
                 columns=columns,
             )
 
-            self.logger.info(
-                f"[MSSQLDataReader.stream_data] Batch {batch_number} | "
-                f"last_key={last_key} | executing query with params={params}"
-            )
+            # Batch number / last_key / row counts already surface in the
+            # "SUCCESS" log once the batch completes below. The raw params
+            # tuple (actual date_key / last_key VALUES) and the full query
+            # text are only logged at DEBUG - logging real data values at
+            # INFO for every batch adds needless log volume on large syncs
+            # and can leak sensitive values into log aggregators.
             self.logger.debug(
-                f"[MSSQLDataReader.stream_data] Batch {batch_number} query:\n{query}"
+                f"[MSSQLDataReader.stream_data] Batch {batch_number} | "
+                f"last_key={last_key} | params={params} | query:\n{query}"
             )
 
             # Execute query in separate connection
@@ -233,10 +236,14 @@ class MSSQLDataReader(DataReader):
                 processed += len(batch)
                 percentage = (processed / total_count * 100) if total_count > 0 else 0
                 
+                # last_key (an actual data value, e.g. a business key) is
+                # already logged at DEBUG above when it updates; keep it out
+                # of this INFO progress log, matching the sibling readers
+                # (MySQL/PostgreSQL/ClickHouse), whose per-batch INFO logs
+                # carry only counts, never row/column values.
                 self.logger.info(
                     f"[MSSQLDataReader.stream_data] Batch {batch_number} SUCCESS | "
-                    f"rows={len(batch)} | processed={processed:,}/{total_count:,} ({percentage:.1f}%) | "
-                    f"last_key={last_key}"
+                    f"rows={len(batch)} | processed={processed:,}/{total_count:,} ({percentage:.1f}%)"
                 )
                 
                 yield batch
