@@ -212,8 +212,11 @@ class MSSQLDataReader(DataReader):
             # INFO for every batch adds needless log volume on large syncs
             # and can leak sensitive values into log aggregators.
             self.logger.debug(
-                f"[MSSQLDataReader.stream_data] Batch {batch_number} | "
-                f"last_key={last_key} | params={params} | query:\n{query}"
+                '[MSSQLDataReader.stream_data] Batch %s | last_key=%s | params=%s | query:\n%s',
+                batch_number,
+                last_key,
+                params,
+                query,
             )
 
             # Execute query in separate connection
@@ -221,16 +224,16 @@ class MSSQLDataReader(DataReader):
                 batch = self.connection_factory.execute_query(query, params)
                 
                 if not batch:
-                    self.logger.info(
-                        f"[MSSQLDataReader.stream_data] Batch {batch_number} returned 0 rows. STOP."
-                    )                    
+                    self.logger.info('[MSSQLDataReader.stream_data] Batch %s returned 0 rows. STOP.', batch_number)                    
                     break
                 
                 # Update last key for next iteration
                 if batch and order_by_column in batch[-1]:
                     last_key = batch[-1][order_by_column]
                     self.logger.debug(
-                        f"[MSSQLDataReader.stream_data] Batch {batch_number} last_key updated => {last_key}"
+                        '[MSSQLDataReader.stream_data] Batch %s last_key updated => %s',
+                        batch_number,
+                        last_key,
                     )
 
                 processed += len(batch)
@@ -242,8 +245,12 @@ class MSSQLDataReader(DataReader):
                 # (MySQL/PostgreSQL/ClickHouse), whose per-batch INFO logs
                 # carry only counts, never row/column values.
                 self.logger.info(
-                    f"[MSSQLDataReader.stream_data] Batch {batch_number} SUCCESS | "
-                    f"rows={len(batch)} | processed={processed:,}/{total_count:,} ({percentage:.1f}%)"
+                    '[MSSQLDataReader.stream_data] Batch %s SUCCESS | rows=%s | processed=%s/%s (%.1f%%)',
+                    batch_number,
+                    len(batch),
+                    format(processed, ','),
+                    format(total_count, ','),
+                    percentage,
                 )
                 
                 yield batch
@@ -251,15 +258,20 @@ class MSSQLDataReader(DataReader):
                 # Safety check
                 if processed >= total_count or len(batch) < self.batch_size:
                     self.logger.info(
-                        f"[MSSQLDataReader.stream_data] STOP CONDITION MET | processed={processed:,} | "
-                        f"batch_rows={len(batch)} | batch_size={self.batch_size}"
+                        '[MSSQLDataReader.stream_data] STOP CONDITION MET | processed=%s | batch_rows=%s | batch_size=%s',
+                        format(processed, ','),
+                        len(batch),
+                        self.batch_size,
                     )                    
                     break
                     
             except Exception as e:
                 self.logger.error(
-                    f"[MSSQLDataReader.stream_data] ERROR reading batch {batch_number} | "
-                    f"table={table_name} | last_key={last_key} | error={str(e)}",
+                    '[MSSQLDataReader.stream_data] ERROR reading batch %s | table=%s | last_key=%s | error=%s',
+                    batch_number,
+                    table_name,
+                    last_key,
+                    str(e),
                     exc_info=True,
                 )
                 raise AirflowException(f"SQL Server read error: {e}") from e
@@ -342,13 +354,19 @@ class MSSQLDataReader(DataReader):
                     if total_count:
                         percentage = (processed / total_count * 100)
                         self.logger.info(
-                            f"[MSSQLDataReader.stream_query] Batch {batch_number} | "
-                            f"rows={len(batch)} | processed={processed:,}/{total_count:,} ({percentage:.1f}%)"
+                            '[MSSQLDataReader.stream_query] Batch %s | rows=%s | processed=%s/%s (%.1f%%)',
+                            batch_number,
+                            len(batch),
+                            format(processed, ','),
+                            format(total_count, ','),
+                            percentage,
                         )
                     else:
                         self.logger.info(
-                            f"[MSSQLDataReader.stream_query] Batch {batch_number} | "
-                            f"rows={len(batch)} | processed={processed:,}"
+                            '[MSSQLDataReader.stream_query] Batch %s | rows=%s | processed=%s',
+                            batch_number,
+                            len(batch),
+                            format(processed, ','),
                         )
 
                     yield batch
