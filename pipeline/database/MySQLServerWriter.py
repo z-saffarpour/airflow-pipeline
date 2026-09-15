@@ -42,6 +42,19 @@ class MySQLServerWriter(DataWriter):
         self.logger = logging.getLogger(self.__class__.__name__)
         self._cached_unique_keys: Dict[str, Tuple[Tuple[str, ...], ...]] = {}
 
+    def close_connection(self) -> None:
+        """
+        Explicitly release the underlying connection/client held by
+        this writer's connection factory.
+
+        Call this once the caller (e.g. an orchestrator) is done with
+        the whole batch/sync using this writer, so nothing lingers as
+        an idle ('Sleeping') session. Delegates to the factory, which
+        also does this on its own via __del__ as a best-effort safety
+        net.
+        """
+        self.connection_factory.close_connection()
+
     @staticmethod
     def _quote_ident(identifier: str) -> str:
         IdentifierValidator.validate_and_raise(identifier, "identifier")

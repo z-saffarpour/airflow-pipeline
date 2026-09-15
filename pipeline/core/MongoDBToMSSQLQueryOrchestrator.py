@@ -236,6 +236,7 @@ class MongoDBToMSSQLQueryOrchestrator(SyncOrchestrator):
             f"chunk={chunk_no} | {mongo_field}=[{min_key}, {max_key}] | expected_rows={expected_rows}"
         )
 
+        writer = None
         try:
             # Restore ObjectId for range filter when chunking on _id.
             range_min, range_max = min_key, max_key
@@ -345,6 +346,10 @@ class MongoDBToMSSQLQueryOrchestrator(SyncOrchestrator):
                 deleted=metrics.deleted,
             )
 
+        finally:
+            if writer is not None:
+                writer.close_connection()
+
     def sync_data(
         self,
         sync_config: MongoSyncConfig,
@@ -362,6 +367,7 @@ class MongoDBToMSSQLQueryOrchestrator(SyncOrchestrator):
             f"target={sync_config.target_schema}.{sync_config.target_table} | batch_size={self.batch_size}"
         )
 
+        writer = None
         try:
             reader = self._create_reader(sync_config)
             staging_schema = self._resolve_staging_schema(sync_config)
@@ -519,3 +525,6 @@ class MongoDBToMSSQLQueryOrchestrator(SyncOrchestrator):
                 updated=metrics.updated,
                 deleted=metrics.deleted,
             )
+        finally:
+            if writer is not None:
+                writer.close_connection()

@@ -342,6 +342,7 @@ class MSSQLToMSSQLQueryOrchestrator(SyncOrchestrator):
             f"{chunk_column}<={max_key} | expected_rows={expected_rows}"
         )
 
+        writer = None
         try:
             reader = MSSQLDataReader(
                 conn_id=self.source_conn_id,
@@ -456,6 +457,10 @@ class MSSQLToMSSQLQueryOrchestrator(SyncOrchestrator):
                 updated=metrics.updated,
                 deleted=metrics.deleted,
             )
+
+        finally:
+            if writer is not None:
+                writer.close_connection()
 
     def sync_data(self, 
                  sync_config: MasterDataSyncConfig, 
@@ -680,3 +685,6 @@ class MSSQLToMSSQLQueryOrchestrator(SyncOrchestrator):
                 updated=metrics.updated,
                 deleted=metrics.deleted,
             )
+        finally:
+            if writer is not None:
+                writer.close_connection()

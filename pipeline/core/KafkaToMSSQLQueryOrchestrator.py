@@ -163,96 +163,99 @@ class KafkaToMSSQLQueryOrchestrator(SyncOrchestrator):
     ) -> TransferResult:
         consumer = self._create_consumer(sync_config, client_id_suffix=client_id_suffix)
         writer = self._create_writer()
-        staging_schema = self._resolve_staging_schema(sync_config)
-        primary_keys = list(sync_config.primary_keys or ())
-        delete_missing = sync_config.delete_missing
-        keys_staging_table = None
-        scope_column = None
-        min_key = None
-        max_key = None
-        suffix = staging_suffix or self._sanitize_staging_suffix(execution_date)
+        try:
+            staging_schema = self._resolve_staging_schema(sync_config)
+            primary_keys = list(sync_config.primary_keys or ())
+            delete_missing = sync_config.delete_missing
+            keys_staging_table = None
+            scope_column = None
+            min_key = None
+            max_key = None
+            suffix = staging_suffix or self._sanitize_staging_suffix(execution_date)
 
-        if delete_missing:
-            scope_column = self._resolve_delete_scope_column(sync_config)
-            keys_staging_table = writer.prepare_keys_staging_table(
-                schema=sync_config.target_schema,
-                table=sync_config.target_table,
-                key_columns=primary_keys,
-                suffix=suffix,
-                staging_schema=staging_schema,
-            )
+            if delete_missing:
+                scope_column = self._resolve_delete_scope_column(sync_config)
+                keys_staging_table = writer.prepare_keys_staging_table(
+                    schema=sync_config.target_schema,
+                    table=sync_config.target_table,
+                    key_columns=primary_keys,
+                    suffix=suffix,
+                    staging_schema=staging_schema,
+                )
 
-        batch_number = 0
-        for batch, offsets, kafka_consumer in consumer.iter_batches(
-            topic=sync_config.kafka_topic,
-            assigned_partitions=assigned_partitions,
-        ):
-            batch_number += 1
-            batch_size = len(batch)
+            batch_number = 0
+            for batch, offsets, kafka_consumer in consumer.iter_batches(
+                topic=sync_config.kafka_topic,
+                assigned_partitions=assigned_partitions,
+            ):
+                batch_number += 1
+                batch_size = len(batch)
 
-            batch_result = writer.upsert_batch(
-                schema=sync_config.target_schema,
-                table=sync_config.target_table,
-                data=batch,
-                key_columns=primary_keys,
-                batch_size=self.batch_size,
-                delete_missing=False,
-                unique_keys=sync_config.unique_keys,
-                resolve_unique_key_conflicts=sync_config.resolve_unique_key_conflicts,
-                use_hash_change_detection=sync_config.use_hash_change_detection,
-                staging_schema=staging_schema,
-                staging_suffix=f"upsert_{suffix}",
-            ) or {}
-
-            if delete_missing and keys_staging_table and batch:
-                writer.append_keys_to_staging(
-                    keys_staging_table=keys_staging_table,
+                batch_result = writer.upsert_batch(
+                    schema=sync_config.target_schema,
+                    table=sync_config.target_table,
                     data=batch,
                     key_columns=primary_keys,
                     batch_size=self.batch_size,
+                    delete_missing=False,
+                    unique_keys=sync_config.unique_keys,
+                    resolve_unique_key_conflicts=sync_config.resolve_unique_key_conflicts,
+                    use_hash_change_detection=sync_config.use_hash_change_detection,
+                    staging_schema=staging_schema,
+                    staging_suffix=f"upsert_{suffix}",
+                ) or {}
+
+                if delete_missing and keys_staging_table and batch:
+                    writer.append_keys_to_staging(
+                        keys_staging_table=keys_staging_table,
+                        data=batch,
+                        key_columns=primary_keys,
+                        batch_size=self.batch_size,
+                    )
+                    min_key, max_key = self._update_key_bounds(
+                        min_key,
+                        max_key,
+                        batch,
+                        scope_column,
+                    )
+
+                # Commit only after successful MSSQL upsert (at-least-once).
+                consumer.commit_offsets(kafka_consumer, offsets)
+
+                metrics.inserted += batch_result.get("inserted", 0)
+                metrics.updated += batch_result.get("updated", 0)
+                metrics.deleted += batch_result.get("deleted", 0)
+                metrics.increment_batch(batch_size)
+
+                self.logger.info(
+                    '[KafkaToMSSQLQueryOrchestrator._sync_consume] Batch %s | rows=%s | transferred=%s',
+                    batch_number,
+                    batch_size,
+                    metrics.transferred_records,
                 )
-                min_key, max_key = self._update_key_bounds(
-                    min_key,
-                    max_key,
-                    batch,
-                    scope_column,
+
+            if delete_missing and keys_staging_table:
+                metrics.deleted += self._finalize_delete_missing(
+                    writer=writer,
+                    sync_config=sync_config,
+                    keys_staging_table=keys_staging_table,
+                    scope_column=scope_column,
+                    min_key=min_key,
+                    max_key=max_key,
                 )
 
-            # Commit only after successful MSSQL upsert (at-least-once).
-            consumer.commit_offsets(kafka_consumer, offsets)
-
-            metrics.inserted += batch_result.get("inserted", 0)
-            metrics.updated += batch_result.get("updated", 0)
-            metrics.deleted += batch_result.get("deleted", 0)
-            metrics.increment_batch(batch_size)
-
-            self.logger.info(
-                '[KafkaToMSSQLQueryOrchestrator._sync_consume] Batch %s | rows=%s | transferred=%s',
-                batch_number,
-                batch_size,
-                metrics.transferred_records,
+            metrics.mark_completed()
+            return TransferResult.create_success(
+                records_transferred=metrics.transferred_records,
+                batch_count=metrics.batch_count,
+                duration_seconds=metrics.duration_seconds,
+                total_records=metrics.transferred_records,
+                inserted=metrics.inserted,
+                updated=metrics.updated,
+                deleted=metrics.deleted,
             )
-
-        if delete_missing and keys_staging_table:
-            metrics.deleted += self._finalize_delete_missing(
-                writer=writer,
-                sync_config=sync_config,
-                keys_staging_table=keys_staging_table,
-                scope_column=scope_column,
-                min_key=min_key,
-                max_key=max_key,
-            )
-
-        metrics.mark_completed()
-        return TransferResult.create_success(
-            records_transferred=metrics.transferred_records,
-            batch_count=metrics.batch_count,
-            duration_seconds=metrics.duration_seconds,
-            total_records=metrics.transferred_records,
-            inserted=metrics.inserted,
-            updated=metrics.updated,
-            deleted=metrics.deleted,
-        )
+        finally:
+            writer.close_connection()
 
     def sync_data_chunk(
         self,

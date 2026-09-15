@@ -330,6 +330,7 @@ class MySQLToMSSQLQueryOrchestrator(SyncOrchestrator):
             f"chunk={chunk_no} | {chunk_column}=[{min_key}, {max_key}] | expected_rows={expected_rows}"
         )
 
+        writer = None
         try:
             reader = MySQLDataReader(
                 conn_id=self.source_conn_id,
@@ -435,6 +436,10 @@ class MySQLToMSSQLQueryOrchestrator(SyncOrchestrator):
                 deleted=metrics.deleted,
             )
 
+        finally:
+            if writer is not None:
+                writer.close_connection()
+
     def sync_data(
         self,
         sync_config: MasterDataSyncConfig,
@@ -451,6 +456,7 @@ class MySQLToMSSQLQueryOrchestrator(SyncOrchestrator):
             f"source={self.source_conn_id} | target={sync_config.target_schema}.{sync_config.target_table} | batch_size={self.batch_size}"
         )
 
+        writer = None
         try:
             reader = MySQLDataReader(
                 conn_id=self.source_conn_id,
@@ -608,3 +614,6 @@ class MySQLToMSSQLQueryOrchestrator(SyncOrchestrator):
                 updated=metrics.updated,
                 deleted=metrics.deleted,
             )
+        finally:
+            if writer is not None:
+                writer.close_connection()
