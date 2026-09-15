@@ -188,11 +188,7 @@ def make_sync_kafka_to_mssql_task(
                     "duration_seconds": result.duration_seconds,
                 },
             )
-            logger.info(
-                "Kafka→MSSQL sync completed: %s rows in %.2fs",
-                result.records_transferred,
-                result.duration_seconds,
-            )
+            logger.info(f"[kafka_to_mssql_sync_dag_factory.sync_kafka_to_mssql] Kafka→MSSQL sync completed: {result.records_transferred} rows in {result.duration_seconds:.2f}s")
             return {
                 "success": True,
                 "source": sync_config.source_name,
@@ -262,12 +258,7 @@ def make_create_sync_chunks_task(
                 "approx_lag": sum(chunk.get("row_count", 0) for chunk in chunks),
             },
         )
-        logger.info(
-            "Created %d partition sync chunks for topic=%s table=%s",
-            len(chunks),
-            sync_config.kafka_topic,
-            sync_config.target_table,
-        )
+        logger.info(f"[kafka_to_mssql_sync_dag_factory.create_sync_chunks] Created {len(chunks)} partition sync chunks for topic={sync_config.kafka_topic} table={sync_config.target_table}")
         return chunks
 
     return create_sync_chunks
@@ -397,7 +388,7 @@ def make_report_sync_metrics_task():
         total_records = 0
         total_duration = 0.0
 
-        logger.info("----- Kafka → MSSQL Sync Metrics -----")
+        logger.info("[kafka_to_mssql_sync_dag_factory.report_sync_metrics] ----- Kafka → MSSQL Sync Metrics -----")
         for row in result_rows:
             if not row or not row.get("success"):
                 continue
@@ -413,26 +404,9 @@ def make_report_sync_metrics_task():
             total_records += records
             total_duration += duration
 
-            logger.info(
-                "chunk/source=%s partition=%s -> inserted=%s, updated=%s, deleted=%s, "
-                "records=%s, duration=%.2fs",
-                row.get("chunk_no", row.get("source")),
-                row.get("partition_id"),
-                inserted,
-                updated,
-                deleted,
-                records,
-                duration,
-            )
+            logger.info(f'[kafka_to_mssql_sync_dag_factory.report_sync_metrics] chunk/source={row.get("chunk_no", row.get("source"))} partition={row.get("partition_id")} -> inserted={inserted}, updated={updated}, deleted={deleted}, records={records}, duration={duration:.2f}s')
 
-        logger.info(
-            "TOTAL -> inserted=%s, updated=%s, deleted=%s, records=%s, duration=%.2fs",
-            total_inserted,
-            total_updated,
-            total_deleted,
-            total_records,
-            total_duration,
-        )
+        logger.info(f"[kafka_to_mssql_sync_dag_factory.report_sync_metrics] TOTAL -> inserted={total_inserted}, updated={total_updated}, deleted={total_deleted}, records={total_records}, duration={total_duration:.2f}s")
         return {
             "inserted": total_inserted,
             "updated": total_updated,

@@ -80,7 +80,7 @@ def make_validate_kafka_task(conn_config: ConnectionConfig):
     )
     def validate_kafka():
         if not conn_config.kafka_conn_id:
-            logger.info("Kafka connection validation skipped (no kafka_conn_id provided)")
+            logger.info("[mssql_to_kafka_clickhouse_sync_dag_factory.validate_kafka] Kafka connection validation skipped (no kafka_conn_id provided)")
             return {"status": "skipped"}
         
         return validate_kafka_conn(conn_config.kafka_conn_id)
@@ -97,7 +97,7 @@ def make_validate_clickhouse_task(conn_config: ConnectionConfig):
     )
     def validate_clickhouse_connection():
         if not conn_config.clickhouse_conn_id:
-            logger.info("ClickHouse connection validation skipped (no clickhouse_conn_id provided)")
+            logger.info("[mssql_to_kafka_clickhouse_sync_dag_factory.validate_clickhouse_connection] ClickHouse connection validation skipped (no clickhouse_conn_id provided)")
             return {"status": "skipped"}
         
         return validate_clickhouse_conn(conn_config.clickhouse_conn_id)
@@ -114,7 +114,7 @@ def make_ensure_topic_task(conn_config: ConnectionConfig, sync_config: SyncConfi
     )
     def ensure_kafka_topic(**context):
         if not conn_config.kafka_conn_id or not sync_config.is_send_kafka:
-            logger.info("Kafka topic creation skipped (no kafka_conn_id provided)")
+            logger.info("[mssql_to_kafka_clickhouse_sync_dag_factory.ensure_kafka_topic] Kafka topic creation skipped (no kafka_conn_id provided)")
             return {"status": "skipped"}
         
         topic_manager = KafkaTopicManager(conn_config.kafka_conn_id)
@@ -150,9 +150,9 @@ def make_transfer_task(dag_config: DAGConfig, sync_config: SyncConfig, conn_conf
 
         resolved_config = query_config.with_resolved_params(execution_date_key, execution_ds)
 
-        logger.info(f"Starting query transfer for date: {execution_ds}")
+        logger.info(f"[mssql_to_kafka_clickhouse_sync_dag_factory.transfer_query_to_kafka] Starting query transfer for date: {execution_ds}")
         if kafka_topic_config:
-            logger.info(f"Source: {resolved_config.source_name} -> Topic: {kafka_topic_config.name}")
+            logger.info(f"[mssql_to_kafka_clickhouse_sync_dag_factory.transfer_query_to_kafka] Source: {resolved_config.source_name} -> Topic: {kafka_topic_config.name}")
 
         orchestrator = MSSQLDataTransferOrchestrator(
             mssql_conn_id=conn_config.mssql_conn_id,
@@ -201,8 +201,8 @@ def make_verify_task(query_config: QueryConfiguration):
         )
         transferred_records = transfer_result.get("total_records", 0) if transfer_result else 0
 
-        logger.info(f"Verifying transfer: {transferred_records} records transferred")
-        logger.info(f"Minimum expected: {query_config.min_expected_records}")
+        logger.info(f"[mssql_to_kafka_clickhouse_sync_dag_factory.verify_query_transfer] Verifying transfer: {transferred_records} records transferred")
+        logger.info(f"[mssql_to_kafka_clickhouse_sync_dag_factory.verify_query_transfer] Minimum expected: {query_config.min_expected_records}")
 
         if transferred_records < query_config.min_expected_records:
             raise AirflowException(

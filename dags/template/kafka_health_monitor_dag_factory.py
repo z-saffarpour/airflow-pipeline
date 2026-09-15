@@ -99,11 +99,7 @@ def make_validate_kafka_health_task(kafka_conn_id: str):
         if broker_count == 0:
             raise AirflowException("No Kafka brokers available")
 
-        logger.info(
-            "Kafka cluster healthy: %s brokers, %s topics",
-            broker_count,
-            topic_count,
-        )
+        logger.info(f"[kafka_health_monitor_dag_factory.validate_kafka_health] Kafka cluster healthy: {broker_count} brokers, {topic_count} topics")
 
         return {
             "status": "healthy",
@@ -132,7 +128,7 @@ def make_check_consumer_lag_task(kafka_conn_id: str, health_config: KafkaHealthM
 
         if not topic or not consumer_group:
             logger.warning(
-                "Topic or consumer_group not specified, skipping lag check"
+                "[kafka_health_monitor_dag_factory.check_consumer_lag] Topic or consumer_group not specified, skipping lag check"
             )
             return {"status": "skipped", "reason": "missing parameters"}
 
@@ -161,12 +157,7 @@ def make_check_consumer_lag_task(kafka_conn_id: str, health_config: KafkaHealthM
                     f"({health_config.max_lag_records})"
                 )
 
-            logger.info(
-                "Consumer lag check: %s/%s - Total lag: %s",
-                topic,
-                consumer_group,
-                total_lag,
-            )
+            logger.info(f"[kafka_health_monitor_dag_factory.check_consumer_lag] Consumer lag check: {topic}/{consumer_group} - Total lag: {total_lag}")
 
             return {
                 "status": status,
@@ -180,7 +171,7 @@ def make_check_consumer_lag_task(kafka_conn_id: str, health_config: KafkaHealthM
             }
 
         except Exception as exc:
-            logger.error("Consumer lag check failed for %s", topic, exc_info=True)
+            logger.error(f"[kafka_health_monitor_dag_factory.check_consumer_lag] Consumer lag check failed for {topic}", exc_info=True)
             return {
                 "status": "error",
                 "topic": topic,
@@ -204,7 +195,7 @@ def make_check_topic_stats_task(kafka_conn_id: str, health_config: KafkaHealthMo
     def check_topic_stats() -> Dict[str, Any]:
         topic = health_config.kafka_topic
         if not topic:
-            logger.warning("Topic not specified, skipping stats check")
+            logger.warning("[kafka_health_monitor_dag_factory.check_topic_stats] Topic not specified, skipping stats check")
             return {"status": "skipped", "reason": "missing topic"}
 
         try:
@@ -219,7 +210,7 @@ def make_check_topic_stats_task(kafka_conn_id: str, health_config: KafkaHealthMo
                     "timestamp": datetime.now().isoformat(),
                 }
 
-            logger.info("Topic stats for %s: %s", topic, stats)
+            logger.info(f"[kafka_health_monitor_dag_factory.check_topic_stats] Topic stats for {topic}: {stats}")
             return {
                 "status": "success",
                 "topic": topic,
@@ -228,7 +219,7 @@ def make_check_topic_stats_task(kafka_conn_id: str, health_config: KafkaHealthMo
             }
 
         except Exception as exc:
-            logger.error("Topic stats check failed for %s", topic, exc_info=True)
+            logger.error(f"[kafka_health_monitor_dag_factory.check_topic_stats] Topic stats check failed for {topic}", exc_info=True)
             return {
                 "status": "error",
                 "topic": topic,
@@ -250,7 +241,7 @@ def make_sample_recent_messages_task(kafka_conn_id: str, health_config: KafkaHea
     def sample_recent_messages() -> Dict[str, Any]:
         topic = health_config.kafka_topic
         if not topic:
-            logger.warning("Topic not specified, skipping message sampling")
+            logger.warning("[kafka_health_monitor_dag_factory.sample_recent_messages] Topic not specified, skipping message sampling")
             return {"status": "skipped", "reason": "missing topic"}
 
         try:
@@ -279,7 +270,7 @@ def make_sample_recent_messages_task(kafka_conn_id: str, health_config: KafkaHea
                     }
                 )
 
-            logger.info("Sampled %s messages from %s", len(messages), topic)
+            logger.info(f"[kafka_health_monitor_dag_factory.sample_recent_messages] Sampled {len(messages)} messages from {topic}")
             return {
                 "status": "success",
                 "topic": topic,
@@ -289,7 +280,7 @@ def make_sample_recent_messages_task(kafka_conn_id: str, health_config: KafkaHea
             }
 
         except Exception as exc:
-            logger.error("Message sampling failed for %s", topic, exc_info=True)
+            logger.error(f"[kafka_health_monitor_dag_factory.sample_recent_messages] Message sampling failed for {topic}", exc_info=True)
             return {
                 "status": "error",
                 "topic": topic,
@@ -365,11 +356,9 @@ def make_generate_health_report_task(health_config: KafkaHealthMonitorConfig):
             },
         }
 
-        logger.info(
-            "Health Report: %s - %s alerts", overall_status, len(alerts)
-        )
+        logger.info(f"[kafka_health_monitor_dag_factory.generate_health_report] Health Report: {overall_status} - {len(alerts)} alerts")
         for alert in alerts:
-            logger.warning("  ALERT: %s", alert)
+            logger.warning(f"[kafka_health_monitor_dag_factory.generate_health_report]   ALERT: {alert}")
 
         return report
 

@@ -86,7 +86,7 @@ def make_check_table_health_before_task(clickhouse_conn_id: str, config: ClickHo
                 raise AirflowException(f"Optimization failed: {result.error_message}")
             return result
         except Exception as e:
-            logger.error(f"Health check failed: {str(e)}", exc_info=True)
+            logger.error(f"[clickhouse_optimizer_dag_factory.check_table_health_before] Health check failed: {str(e)}", exc_info=True)
             raise AirflowException(f"Health check failed: {str(e)}")
 
     return check_table_health_before
@@ -106,9 +106,9 @@ def make_run_optimization_task(clickhouse_conn_id: str, config: ClickHouseOptimi
         # Get execution date
         execution_date = ExecutionDateExtractor.get_date_key_from_context(context)
         
-        logger.info(f"Starting optimization for {config.full_table_name}")
-        logger.info(f"Execution date: {execution_date}")
-        logger.info(f"Final: {config.final}, Deduplicate: {config.deduplicate}")
+        logger.info(f"[clickhouse_optimizer_dag_factory.run_optimization] Starting optimization for {config.full_table_name}")
+        logger.info(f"[clickhouse_optimizer_dag_factory.run_optimization] Execution date: {execution_date}")
+        logger.info(f"[clickhouse_optimizer_dag_factory.run_optimization] Final: {config.final}, Deduplicate: {config.deduplicate}")
         
         # Create orchestrator and run optimization
         orchestrator = ClickHouseOptimizationOrchestrator(conn_id=clickhouse_conn_id)
@@ -172,8 +172,8 @@ def make_check_table_health_after_task(clickhouse_conn_id: str, config: ClickHou
             parts_after = result.get('parts_count',0)
             parts_reduced = parts_before - parts_after
             
-            logger.info(f"Health after optimization: {result['health_status']}")
-            logger.info(f"Parts reduced: {parts_before} -> {parts_after} ({parts_reduced} merged)")
+            logger.info(f"[clickhouse_optimizer_dag_factory.check_table_health_after] Health after optimization: {result['health_status']}")
+            logger.info(f"[clickhouse_optimizer_dag_factory.check_table_health_after] Parts reduced: {parts_before} -> {parts_after} ({parts_reduced} merged)")
             
             return {
                 'table_name': result['table_name'],
@@ -188,7 +188,7 @@ def make_check_table_health_after_task(clickhouse_conn_id: str, config: ClickHou
             }
             
         except Exception as e:
-            logger.error(f"Post-optimization health check failed: {str(e)}", exc_info=True)
+            logger.error(f"[clickhouse_optimizer_dag_factory.check_table_health_after] Post-optimization health check failed: {str(e)}", exc_info=True)
             raise AirflowException(f"Post-optimization check failed: {str(e)}")
 
     return check_table_health_after

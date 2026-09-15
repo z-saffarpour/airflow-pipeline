@@ -187,11 +187,7 @@ def make_sync_mssql_to_mongo_task(
                     "duration_seconds": result.duration_seconds,
                 },
             )
-            logger.info(
-                "MSSQL→Mongo sync completed: %s rows in %.2fs",
-                result.records_transferred,
-                result.duration_seconds,
-            )
+            logger.info(f"[mssql_to_mongo_sync_dag_factory.sync_mssql_to_mongo] MSSQL→Mongo sync completed: {result.records_transferred} rows in {result.duration_seconds:.2f}s")
             return {
                 "success": True,
                 "source": sync_config.source_name,
@@ -265,11 +261,7 @@ def make_create_sync_chunks_task(
                 "total_rows": sum(chunk.get("row_count", 0) for chunk in chunks),
             },
         )
-        logger.info(
-            "Created %d sync chunks for collection=%s",
-            len(chunks),
-            sync_config.target_table,
-        )
+        logger.info(f"[mssql_to_mongo_sync_dag_factory.create_sync_chunks] Created {len(chunks)} sync chunks for collection={sync_config.target_table}")
         return chunks
 
     return create_sync_chunks
@@ -399,7 +391,7 @@ def make_report_sync_metrics_task():
         total_records = 0
         total_duration = 0.0
 
-        logger.info("----- MSSQL → MongoDB Sync Metrics -----")
+        logger.info("[mssql_to_mongo_sync_dag_factory.report_sync_metrics] ----- MSSQL → MongoDB Sync Metrics -----")
         for row in result_rows:
             if not row or not row.get("success"):
                 continue
@@ -415,25 +407,9 @@ def make_report_sync_metrics_task():
             total_records += records
             total_duration += duration
 
-            logger.info(
-                "chunk/source=%s -> inserted=%s, updated=%s, deleted=%s, "
-                "records=%s, duration=%.2fs",
-                row.get("chunk_no", row.get("source")),
-                inserted,
-                updated,
-                deleted,
-                records,
-                duration,
-            )
+            logger.info(f'[mssql_to_mongo_sync_dag_factory.report_sync_metrics] chunk/source={row.get("chunk_no", row.get("source"))} -> inserted={inserted}, updated={updated}, deleted={deleted}, records={records}, duration={duration:.2f}s')
 
-        logger.info(
-            "TOTAL -> inserted=%s, updated=%s, deleted=%s, records=%s, duration=%.2fs",
-            total_inserted,
-            total_updated,
-            total_deleted,
-            total_records,
-            total_duration,
-        )
+        logger.info(f"[mssql_to_mongo_sync_dag_factory.report_sync_metrics] TOTAL -> inserted={total_inserted}, updated={total_updated}, deleted={total_deleted}, records={total_records}, duration={total_duration:.2f}s")
         return {
             "inserted": total_inserted,
             "updated": total_updated,

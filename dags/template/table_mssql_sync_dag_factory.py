@@ -82,7 +82,7 @@ def make_validate_kafka_task(conn_config: ConnectionConfig):
     )
     def validate_kafka_connection():
         if not conn_config.kafka_conn_id:
-            logger.info("Kafka connection validation skipped (no kafka_conn_id provided)")
+            logger.info("[table_mssql_sync_dag_factory.validate_kafka_connection] Kafka connection validation skipped (no kafka_conn_id provided)")
             return {"status": "skipped"}
         
         return validate_kafka_conn(conn_config.kafka_conn_id)
@@ -99,7 +99,7 @@ def make_validate_clickhouse_task(conn_config: ConnectionConfig):
     )
     def validate_clickhouse_connection():
         if not conn_config.clickhouse_conn_id:
-            logger.info("ClickHouse connection validation skipped (no clickhouse_conn_id provided)")
+            logger.info("[table_mssql_sync_dag_factory.validate_clickhouse_connection] ClickHouse connection validation skipped (no clickhouse_conn_id provided)")
             return {"status": "skipped"}
         
         return validate_clickhouse_conn(conn_config.clickhouse_conn_id)
@@ -116,7 +116,7 @@ def make_ensure_topic_task(conn_config: ConnectionConfig, sync_config: SyncConfi
     )
     def ensure_kafka_topic():
         if not conn_config.kafka_conn_id or not sync_config.is_send_kafka:
-            logger.info("Kafka topic creation skipped (no kafka_conn_id provided)")
+            logger.info("[table_mssql_sync_dag_factory.ensure_kafka_topic] Kafka topic creation skipped (no kafka_conn_id provided)")
             return {"status": "skipped"}
         
         topic_manager = KafkaTopicManager(conn_config.kafka_conn_id)
@@ -154,10 +154,10 @@ def make_transfer_task(dag_config: DAGConfig, sync_config: SyncConfig, conn_conf
         else:
             execution_date = execution_ds
 
-        logger.info(f"Starting data transfer for date: {execution_date}")
+        logger.info(f"[table_mssql_sync_dag_factory.transfer_data_to_kafka] Starting data transfer for date: {execution_date}")
         
         if kafka_topic_config:
-            logger.info(f"Table: {table_config.table_name} -> Topic: {kafka_topic_config.name}")
+            logger.info(f"[table_mssql_sync_dag_factory.transfer_data_to_kafka] Table: {table_config.table_name} -> Topic: {kafka_topic_config.name}")
 
         orchestrator = MSSQLDataTransferOrchestrator(
             mssql_conn_id=conn_config.mssql_conn_id,
@@ -216,8 +216,8 @@ def make_verify_task(sync_config: SyncConfig, conn_config: ConnectionConfig, tab
         )
         transferred_count = transfer_result.get("total_records", 0) if transfer_result else 0
 
-        logger.info(f"Starting verification for date: {execution_date}")
-        logger.info(f"Transferred records: {transferred_count}")
+        logger.info(f"[table_mssql_sync_dag_factory.verify_transfer] Starting verification for date: {execution_date}")
+        logger.info(f"[table_mssql_sync_dag_factory.verify_transfer] Transferred records: {transferred_count}")
 
         try:
             hook = SafeMsSqlHook(mssql_conn_id=conn_config.mssql_conn_id)
@@ -234,7 +234,7 @@ def make_verify_task(sync_config: SyncConfig, conn_config: ConnectionConfig, tab
                     result = cursor.fetchone()
                     source_count = result[0] if result else 0
 
-            logger.info(f"Source count: {source_count} | Transferred: {transferred_count}")
+            logger.info(f"[table_mssql_sync_dag_factory.verify_transfer] Source count: {source_count} | Transferred: {transferred_count}")
 
             if source_count == transferred_count:
                 verification_status = "success"
@@ -266,7 +266,7 @@ def make_verify_task(sync_config: SyncConfig, conn_config: ConnectionConfig, tab
         except AirflowException:
             raise
         except Exception as e:
-            logger.error("Verification error", exc_info=True)
+            logger.error("[table_mssql_sync_dag_factory.verify_transfer] Verification error", exc_info=True)
             raise AirflowException(f"Verification error: {e}")
 
     return verify_transfer

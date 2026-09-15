@@ -342,10 +342,7 @@ def make_fetch_store_server_connection_task():
         rows  = factory.execute_query(query)
 
         if not rows:
-            logger.error(
-                "No connection info found for store_number=%s",
-                store_number,
-            )
+            logger.error(f"[mssql_masterdata_to_mssql_store_sync_dag_factory.fetch_store_server_connection] No connection info found for store_number={store_number}")
             raise AirflowFailException(
                 f"connection info not found for store_number={store_number}"
             )
@@ -366,7 +363,7 @@ def make_fetch_store_server_connection_task():
             {'store_count': len(server)}
         )
         
-        logger.info(f"Retrieved {len(server)} servers")
+        logger.info(f"[mssql_masterdata_to_mssql_store_sync_dag_factory.fetch_store_server_connection] Retrieved {len(server)} servers")
         return server
 
     return fetch_store_server_connection
@@ -469,12 +466,7 @@ def make_validate_mssql_connection_task():
             },
         )
 
-        logger.info(
-            "Store MSSQL connection validated for store=%s server=%s database=%s",
-            store_number,
-            server_ip,
-            database,
-        )
+        logger.info(f"[mssql_masterdata_to_mssql_store_sync_dag_factory.validate_mssql_connection] Store MSSQL connection validated for store={store_number} server={server_ip} database={database}")
         return store_connection
 
     return validate_mssql_connection
@@ -538,7 +530,7 @@ def make_sync_replication_md_store_task(dag_config: DAGConfig, sync_config: Mast
 
             if not result.success:
                 audit.log(EventType.DATA_TRANSFER_ORCHESTRATOR, task_id, EventStatus.FAILED, {'store': store_number, 'duration_seconds': result.duration_seconds}, error=result.error_message)
-                logger.error(f"Transfer failed for store {store_number} after {result.duration_seconds:.2f}s: {result.error_message}")
+                logger.error(f"[mssql_masterdata_to_mssql_store_sync_dag_factory.sync_replication_md_store] Transfer failed for store {store_number} after {result.duration_seconds:.2f}s: {result.error_message}")
                 message = f"Sync failed for store {store_number}: {result.error_message}"
                 if is_transient_sql_server_error_message(result.error_message or ""):
                     raise AirflowException(message)
@@ -546,10 +538,10 @@ def make_sync_replication_md_store_task(dag_config: DAGConfig, sync_config: Mast
             
             if is_slow:
                 audit.log(EventType.DATA_TRANSFER_ORCHESTRATOR, task_id, EventStatus.WARNING, {'store': store_number, 'records': result.records_transferred, 'duration_seconds': result.duration_seconds},f"Store {store_number} transfer took {result.duration_seconds:.2f}s (>{STORE_DURATION_THRESHOLD_SEC}s threshold)")
-                logger.warning(f"Store {store_number} transfer took {result.duration_seconds:.2f}s (>{STORE_DURATION_THRESHOLD_SEC}s threshold)")
+                logger.warning(f"[mssql_masterdata_to_mssql_store_sync_dag_factory.sync_replication_md_store] Store {store_number} transfer took {result.duration_seconds:.2f}s (>{STORE_DURATION_THRESHOLD_SEC}s threshold)")
                 
             audit.log(EventType.PROCESSING_SERVER, task_id, EventStatus.SUCCESS, {'store': store_number, 'records': result.records_transferred, 'duration_seconds': result.duration_seconds})
-            logger.info(f"Successfully processed store {store_number}: {result.records_transferred} rows in {result.duration_seconds:.2f}s")
+            logger.info(f"[mssql_masterdata_to_mssql_store_sync_dag_factory.sync_replication_md_store] Successfully processed store {store_number}: {result.records_transferred} rows in {result.duration_seconds:.2f}s")
             return {
                     "success": True,
                     "store": store_number, 
@@ -563,7 +555,7 @@ def make_sync_replication_md_store_task(dag_config: DAGConfig, sync_config: Mast
             
         except Exception as e:
             audit.log( EventType.PROCESSING_SERVER, task_id, EventStatus.FAILED, {'store': store_number}, error=str(e))
-            logger.error(f"Failed processing store {store_number}: {str(e)}")
+            logger.error(f"[mssql_masterdata_to_mssql_store_sync_dag_factory.sync_replication_md_store] Failed processing store {store_number}: {str(e)}")
             raise_sync_task_error(
                 f"Sync failed for store {store_number}: {str(e)}",
                 e,
@@ -625,12 +617,7 @@ def make_create_sync_chunks_task(sync_config: MasterDataSyncConfig):
                 "total_rows": sum(chunk.get("row_count", 0) for chunk in chunks),
             },
         )
-        logger.info(
-            "Created %d sync chunks for store=%s table=%s",
-            len(chunks),
-            store_number,
-            sync_config.target_table,
-        )
+        logger.info(f"[mssql_masterdata_to_mssql_store_sync_dag_factory.create_sync_chunks] Created {len(chunks)} sync chunks for store={store_number} table={sync_config.target_table}")
         return chunks
 
     return create_sync_chunks
@@ -786,7 +773,7 @@ def make_report_sync_metrics_task():
         total_records = 0
         total_duration = 0
 
-        logger.info("----- Store Sync Metrics -----")
+        logger.info("[mssql_masterdata_to_mssql_store_sync_dag_factory.report_sync_metrics] ----- Store Sync Metrics -----")
 
         for r in result_rows:
 
@@ -807,7 +794,7 @@ def make_report_sync_metrics_task():
             total_duration += duration
 
             logger.info(
-                f"Store {store} -> "
+                f"[mssql_masterdata_to_mssql_store_sync_dag_factory.report_sync_metrics] Store {store} -> "
                 f"inserted={inserted}, "
                 f"updated={updated}, "
                 f"deleted={deleted}, "
@@ -815,15 +802,15 @@ def make_report_sync_metrics_task():
                 f"duration={duration:.2f}s"
             )
 
-        logger.info("----- Aggregated Sync Metrics -----")
+        logger.info("[mssql_masterdata_to_mssql_store_sync_dag_factory.report_sync_metrics] ----- Aggregated Sync Metrics -----")
         logger.info(
-            f"TOTAL -> inserted={total_inserted}, "
+            f"[mssql_masterdata_to_mssql_store_sync_dag_factory.report_sync_metrics] TOTAL -> inserted={total_inserted}, "
             f"updated={total_updated}, "
             f"deleted={total_deleted}, "
             f"records={total_records}, "
             f"duration={total_duration:.2f}s"
         )
-        logger.info("-----------------------------------")
+        logger.info("[mssql_masterdata_to_mssql_store_sync_dag_factory.report_sync_metrics] -----------------------------------")
         
         return {
             "inserted": total_inserted,
