@@ -46,7 +46,7 @@ class MSSQLConnectionFactory(SQLConnectionFactory):
         Hook objects are lightweight config wrappers.
         Caching them risks stale state in multi-threaded Airflow workers.
         """
-        self.logger.debug("Creating SafeMsSqlHook for conn_id=%s", self.conn_id)
+        self.logger.debug("[MSSQLConnectionFactory.get_hook] Creating SafeMsSqlHook for conn_id=%s", self.conn_id)
         return SafeMsSqlHook(mssql_conn_id=self.conn_id)
 
     def create_connection(self, server, port, database, username, password, appname, timeout, login_timeout, query_timeout, driver_type, driver) -> Any:
@@ -166,8 +166,8 @@ class MSSQLConnectionFactory(SQLConnectionFactory):
                     connection.rollback()
                 except Exception as rollback_error:
                     self.logger.warning(
-                        "[MSSQLConnectionFactory.get_connection] Rollback failed",
-                        extra={"error": str(rollback_error), "conn_id": self.conn_id},
+                        f"[MSSQLConnectionFactory.get_connection] Rollback failed | "
+                        f"conn_id={self.conn_id} | error={str(rollback_error)}"
                     )
             if is_sql_server_deadlock(e):
                 self.logger.warning(

@@ -436,7 +436,7 @@ class MongoDBServerWriter(DataWriter):
         id to delete before issuing any delete.
         """
         self.logger.warning(
-            "[MongoDBServerWriter.delete_missing_in_scope] staging database '%s' "
+            "[MongoDBServerWriter._delete_missing_in_scope_via_python_diff] staging database '%s' "
             "differs from target database '%s'; $lookup cannot join across "
             "databases here, falling back to a Python-side key diff (loads all "
             "staged keys into memory).",

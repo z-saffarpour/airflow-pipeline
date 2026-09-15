@@ -124,12 +124,12 @@ class MSSQLToClickHouseQueryOrchestrator(SyncOrchestrator):
     def _warn_unsupported_flags(self, sync_config: MasterDataSyncConfig) -> None:
         if sync_config.delete_missing:
             self.logger.warning(
-                "[MSSQLToClickHouseQueryOrchestrator] delete_missing=True is ignored; "
+                "[MSSQLToClickHouseQueryOrchestrator._warn_unsupported_flags] delete_missing=True is ignored; "
                 "ClickHouse sync uses bulk INSERT / ReplacingMergeTree only"
             )
         if sync_config.use_hash_change_detection:
             self.logger.debug(
-                "[MSSQLToClickHouseQueryOrchestrator] use_hash_change_detection is ignored "
+                "[MSSQLToClickHouseQueryOrchestrator._warn_unsupported_flags] use_hash_change_detection is ignored "
                 "on ClickHouse path"
             )
 

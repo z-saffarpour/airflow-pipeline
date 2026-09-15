@@ -83,12 +83,8 @@ def retry_with_backoff(
                     
                     if attempt >= max_attempts:
                         logger.error(
-                            f"Function {func.__name__} failed after {max_attempts} attempts",
-                            extra={
-                                "function": func.__name__,
-                                "attempts": max_attempts,
-                                "error": str(e)
-                            },
+                            f"[retry_helper.wrapper] Function {func.__name__} failed after {max_attempts} "
+                            f"attempts | error={str(e)}",
                             exc_info=True
                         )
                         if reraise:
@@ -104,15 +100,8 @@ def retry_with_backoff(
                     )
                     
                     logger.warning(
-                        f"Function {func.__name__} failed on attempt {attempt}/{max_attempts}, "
-                        f"retrying in {delay:.2f}s",
-                        extra={
-                            "function": func.__name__,
-                            "attempt": attempt,
-                            "max_attempts": max_attempts,
-                            "delay": delay,
-                            "error": str(e)
-                        }
+                        f"[retry_helper.wrapper] Function {func.__name__} failed on attempt "
+                        f"{attempt}/{max_attempts}, retrying in {delay:.2f}s | error={str(e)}"
                     )
                     
                     # Call on_retry callback if provided
@@ -121,7 +110,7 @@ def retry_with_backoff(
                             on_retry(e, attempt)
                         except Exception as callback_error:
                             logger.warning(
-                                f"on_retry callback failed: {callback_error}",
+                                f"[retry_helper.wrapper] on_retry callback failed: {callback_error}",
                                 exc_info=True
                             )
                     
@@ -198,7 +187,7 @@ class RetryContext:
             )
             
             logger.warning(
-                f"Attempt {self.current_attempt}/{self.max_attempts} failed, "
+                f"[RetryContext.record_failure] Attempt {self.current_attempt}/{self.max_attempts} failed, "
                 f"retrying in {delay:.2f}s: {str(exception)}"
             )
             
@@ -208,7 +197,7 @@ class RetryContext:
         """Raise the last exception if all retries failed."""
         if self.current_attempt >= self.max_attempts and self.last_exception:
             logger.error(
-                f"All {self.max_attempts} retry attempts failed",
+                f"[RetryContext.raise_if_failed] All {self.max_attempts} retry attempts failed",
                 exc_info=True
             )
             raise self.last_exception

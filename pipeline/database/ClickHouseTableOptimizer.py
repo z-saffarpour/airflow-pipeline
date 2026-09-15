@@ -94,7 +94,7 @@ class ClickHouseTableOptimizer(DatabaseOptimizer):
         if deduplicate:
             query += " DEDUPLICATE"
         
-        self.logger.info(f"Executing optimization: {query}")
+        self.logger.info(f"[ClickHouseTableOptimizer.optimize_table] Executing optimization: {query}")
         
         try:
             self.factory.execute_query(query)
@@ -111,11 +111,11 @@ class ClickHouseTableOptimizer(DatabaseOptimizer):
                 'timestamp': datetime.now().isoformat(),
             }
             
-            self.logger.info(f"Optimization completed in {duration:.2f}s")
+            self.logger.info(f"[ClickHouseTableOptimizer.optimize_table] Optimization completed in {duration:.2f}s")
             return result
             
         except Exception as e:
-            self.logger.error(f"Optimization failed: {str(e)}", exc_info=True)
+            self.logger.error(f"[ClickHouseTableOptimizer.optimize_table] Optimization failed: {str(e)}", exc_info=True)
             return {
                 'status': 'failed',
                 'table_name': table_name,
@@ -182,7 +182,7 @@ class ClickHouseTableOptimizer(DatabaseOptimizer):
             return {'database': database, 'table': table, 'total_rows': 0}
             
         except Exception as e:
-            self.logger.error(f"Failed to get table stats: {str(e)}")
+            self.logger.error(f"[ClickHouseTableOptimizer.get_table_stats] Failed to get table stats: {str(e)}")
             return {'error': str(e)}
     
     def get_parts_info(self, table_name: str) -> List[Dict]:
@@ -237,7 +237,7 @@ class ClickHouseTableOptimizer(DatabaseOptimizer):
             ]
             
         except Exception as e:
-            self.logger.error(f"Failed to get parts info: {str(e)}")
+            self.logger.error(f"[ClickHouseTableOptimizer.get_parts_info] Failed to get parts info: {str(e)}")
             return []
     
     def check_table_health(self, table_name: str) -> Dict:

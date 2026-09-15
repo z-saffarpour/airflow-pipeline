@@ -28,7 +28,7 @@ class MySQLConnectionFactory(SQLConnectionFactory):
         """Create a fresh MySqlHook instance per call."""
         from airflow.providers.mysql.hooks.mysql import MySqlHook  # type: ignore
 
-        self.logger.debug("Creating MySqlHook for conn_id=%s", self.conn_id)
+        self.logger.debug("[MySQLConnectionFactory.get_hook] Creating MySqlHook for conn_id=%s", self.conn_id)
         return MySqlHook(mysql_conn_id=self.conn_id)
 
     @contextmanager

@@ -65,8 +65,8 @@ class ClickHouseConnectionFactory(SQLConnectionFactory):
             raise
         except Exception as e:
             self.logger.error(
-                "ClickHouse connection failed",
-                extra={"error": str(e), "conn_id": self.conn_id},
+                f"[ClickHouseConnectionFactory.get_connection] ClickHouse connection failed | "
+                f"conn_id={self.conn_id} | error={str(e)}",
                 exc_info=True
             )
             raise ClickHouseConnectionError(
@@ -78,8 +78,8 @@ class ClickHouseConnectionFactory(SQLConnectionFactory):
                     client.disconnect()
                 except Exception as close_error:
                     self.logger.warning(
-                        "Connection close failed",
-                        extra={"error": str(close_error), "conn_id": self.conn_id}
+                        f"[ClickHouseConnectionFactory.get_connection] Connection close failed | "
+                        f"conn_id={self.conn_id} | error={str(close_error)}"
                     )
 
     def test_connection(self) -> bool:
@@ -111,7 +111,7 @@ class ClickHouseConnectionFactory(SQLConnectionFactory):
             with self.get_connection() as client:
                 return client.execute(query, params or {})
         except Exception as e:
-            self.logger.error(f"Query execution failed: {e}")
+            self.logger.error(f"[ClickHouseConnectionFactory.execute_query] Query execution failed: {e}")
             raise
 
     def execute_query_as_dicts(
@@ -144,7 +144,7 @@ class ClickHouseConnectionFactory(SQLConnectionFactory):
                 column_names = [col[0] for col in columns_with_types]
                 return [dict(zip(column_names, row)) for row in rows]
         except Exception as e:
-            self.logger.error(f"Query (as dicts) execution failed: {e}")
+            self.logger.error(f"[ClickHouseConnectionFactory.execute_query_as_dicts] Query (as dicts) execution failed: {e}")
             raise
 
     def execute_scalar(self, query: str, params: Optional[dict] = None) -> Any:
@@ -165,7 +165,7 @@ class ClickHouseConnectionFactory(SQLConnectionFactory):
                     return None
                 return result[0][0]
         except Exception as e:
-            self.logger.error(f"Scalar query execution failed: {e}")
+            self.logger.error(f"[ClickHouseConnectionFactory.execute_scalar] Scalar query execution failed: {e}")
             raise
 
     def close_client(self) -> None:

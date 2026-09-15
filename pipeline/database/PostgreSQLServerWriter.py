@@ -758,7 +758,7 @@ class PostgreSQLServerWriter(DataWriter):
                 success = True
 
                 self.logger.info(
-                    "[PostgreSQLServerWriter.upsert_batch] %s sync completed | staging=%s | "
+                    "[PostgreSQLServerWriter._upsert_batch_once] %s sync completed | staging=%s | "
                     "inserted=%s | updated=%s | hash_change_detection=%s",
                     table_full,
                     staging_table,
@@ -775,7 +775,7 @@ class PostgreSQLServerWriter(DataWriter):
                 }
             except Exception as exc:
                 self.logger.error(
-                    "[PostgreSQLServerWriter.upsert_batch] Upsert failed for %s: %s",
+                    "[PostgreSQLServerWriter._upsert_batch_once] Upsert failed for %s: %s",
                     table_full,
                     exc,
                 )

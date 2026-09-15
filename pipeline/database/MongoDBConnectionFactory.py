@@ -36,7 +36,7 @@ class MongoDBConnectionFactory(ConnectionFactory):
             return json.loads(raw) if raw else {}
         except json.JSONDecodeError:
             self.logger.warning(
-                "[MongoDBConnectionFactory] Invalid extra JSON for conn_id=%s",
+                "[MongoDBConnectionFactory._parse_extra] Invalid extra JSON for conn_id=%s",
                 self.conn_id,
             )
             return {}

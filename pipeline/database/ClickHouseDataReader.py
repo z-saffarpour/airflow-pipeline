@@ -306,7 +306,7 @@ class ClickHouseDataReader(DataReader):
         if total_count:
             percentage = processed / total_count * 100
             self.logger.info(
-                "[ClickHouseDataReader.stream_query] Batch %s | rows=%s | "
+                "[ClickHouseDataReader._log_stream_batch] Batch %s | rows=%s | "
                 "processed=%s/%s (%.1f%%)",
                 batch_number,
                 batch_len,
@@ -316,7 +316,7 @@ class ClickHouseDataReader(DataReader):
             )
         else:
             self.logger.info(
-                "[ClickHouseDataReader.stream_query] Batch %s | rows=%s | "
+                "[ClickHouseDataReader._log_stream_batch] Batch %s | rows=%s | "
                 "processed=%s",
                 batch_number,
                 batch_len,

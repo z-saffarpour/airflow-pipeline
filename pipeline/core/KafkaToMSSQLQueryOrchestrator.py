@@ -233,7 +233,7 @@ class KafkaToMSSQLQueryOrchestrator(SyncOrchestrator):
             metrics.increment_batch(batch_size)
 
             self.logger.info(
-                "[KafkaToMSSQLQueryOrchestrator] Batch %s | rows=%s | transferred=%s",
+                "[KafkaToMSSQLQueryOrchestrator._sync_consume] Batch %s | rows=%s | transferred=%s",
                 batch_number,
                 batch_size,
                 metrics.transferred_records,

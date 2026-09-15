@@ -28,7 +28,7 @@ class PostgreSQLConnectionFactory(SQLConnectionFactory):
         """Create a fresh PostgresHook instance per call."""
         from airflow.providers.postgres.hooks.postgres import PostgresHook  # type: ignore
 
-        self.logger.debug("Creating PostgresHook for conn_id=%s", self.conn_id)
+        self.logger.debug("[PostgreSQLConnectionFactory.get_hook] Creating PostgresHook for conn_id=%s", self.conn_id)
         return PostgresHook(postgres_conn_id=self.conn_id)
 
     @contextmanager

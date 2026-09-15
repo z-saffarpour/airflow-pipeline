@@ -46,7 +46,7 @@ class ClickHouseOptimizationOrchestrator:
         start_time = datetime.now()
         
         self.logger.info(
-            f"Starting optimization: {config.full_table_name} "
+            f"[ClickHouseOptimizationOrchestrator.optimize_table] Starting optimization: {config.full_table_name} "
             f"for date {execution_date}"
         )
         
@@ -62,7 +62,7 @@ class ClickHouseOptimizationOrchestrator:
             rows_before = stats_before.get('total_rows', 0)
             
             self.logger.info(
-                f"Before optimization: {parts_before} parts, {rows_before} rows"
+                f"[ClickHouseOptimizationOrchestrator.optimize_table] Before optimization: {parts_before} parts, {rows_before} rows"
             )
             
             # Determine partition to optimize
@@ -88,7 +88,7 @@ class ClickHouseOptimizationOrchestrator:
             duration = (datetime.now() - start_time).total_seconds()
             
             self.logger.info(
-                f"Optimization completed: {parts_before} -> {parts_after} parts "
+                f"[ClickHouseOptimizationOrchestrator.optimize_table] Optimization completed: {parts_before} -> {parts_after} parts "
                 f"in {duration:.2f}s"
             )
             
@@ -106,7 +106,7 @@ class ClickHouseOptimizationOrchestrator:
         except Exception as e:
             duration = (datetime.now() - start_time).total_seconds()
             self.logger.error(
-                f"Optimization failed for {config.full_table_name}: {str(e)}",
+                f"[ClickHouseOptimizationOrchestrator.optimize_table] Optimization failed for {config.full_table_name}: {str(e)}",
                 exc_info=True
             )
             
@@ -149,14 +149,14 @@ class ClickHouseOptimizationOrchestrator:
             parts_count = health.get('parts_count', 0)
             
             self.logger.info(
-                f"Table {config.full_table_name}: {parts_count} parts, "
+                f"[ClickHouseOptimizationOrchestrator.check_and_optimize_if_needed] Table {config.full_table_name}: {parts_count} parts, "
                 f"health={health.get('health_status')}"
             )
             
             # Decide if optimization is needed
             if parts_count < parts_threshold:
                 self.logger.info(
-                    f"Skipping optimization: parts count ({parts_count}) "
+                    f"[ClickHouseOptimizationOrchestrator.check_and_optimize_if_needed] Skipping optimization: parts count ({parts_count}) "
                     f"below threshold ({parts_threshold})"
                 )
                 return OptimizationResult(
@@ -186,8 +186,8 @@ class ClickHouseOptimizationOrchestrator:
             health = optimizer.check_table_health(full_table_name)
             stats = optimizer.get_table_stats(full_table_name)
             
-            self.logger.info(f"Table health before optimization: {health}")
-            self.logger.info(f"Table stats: {stats}")
+            self.logger.info(f"[ClickHouseOptimizationOrchestrator.check_table_health] Table health before optimization: {health}")
+            self.logger.info(f"[ClickHouseOptimizationOrchestrator.check_table_health] Table stats: {stats}")
             
             return {
                 'status':'success',
@@ -200,7 +200,7 @@ class ClickHouseOptimizationOrchestrator:
             }
             
         except Exception as e:
-            self.logger.error(f"Health check failed: {str(e)}", exc_info=True)
+            self.logger.error(f"[ClickHouseOptimizationOrchestrator.check_table_health] Health check failed: {str(e)}", exc_info=True)
             return {
                 'status':'failed',
                 'table_name': full_table_name,

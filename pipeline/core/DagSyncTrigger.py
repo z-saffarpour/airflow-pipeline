@@ -719,7 +719,7 @@ class DagSyncTrigger:
     def log_trigger_metrics(results: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Log structured per-store and aggregated sync trigger metrics."""
         logger = logging.getLogger("DagSyncTrigger")
-        logger.info("----- Store Sync Metrics -----")
+        logger.info("[DagSyncTrigger.log_trigger_metrics] ----- Store Sync Metrics -----")
 
         totals = {
             "triggered": 0,
@@ -739,7 +739,7 @@ class DagSyncTrigger:
             duration = result.get("duration_seconds", 0.0)
 
             logger.info(
-                "Store %s -> triggered=%d, skipped=%d, succeeded=%d, failed=%d, duration=%.2fs",
+                "[DagSyncTrigger.log_trigger_metrics] Store %s -> triggered=%d, skipped=%d, succeeded=%d, failed=%d, duration=%.2fs",
                 store,
                 triggered,
                 skipped,
@@ -750,7 +750,7 @@ class DagSyncTrigger:
 
             for dag_status in result.get("dag_statuses", []):
                 line = (
-                    f"Store {store} -> {dag_status['dag_id']} -> "
+                    f"[DagSyncTrigger.log_trigger_metrics] Store {store} -> {dag_status['dag_id']} -> "
                     f"status={dag_status['status']}, action={dag_status['action']}, "
                     f"run_id={dag_status['run_id']}"
                 )
@@ -765,16 +765,16 @@ class DagSyncTrigger:
             totals["failed"] += failed
             totals["duration"] += duration
 
-        logger.info("----- Aggregated Sync Metrics -----")
+        logger.info("[DagSyncTrigger.log_trigger_metrics] ----- Aggregated Sync Metrics -----")
         logger.info(
-            "TOTAL -> triggered=%d, skipped=%d, succeeded=%d, failed=%d, duration=%.2fs",
+            "[DagSyncTrigger.log_trigger_metrics] TOTAL -> triggered=%d, skipped=%d, succeeded=%d, failed=%d, duration=%.2fs",
             totals["triggered"],
             totals["skipped"],
             totals["succeeded"],
             totals["failed"],
             totals["duration"],
         )
-        logger.info("-----------------------------------")
+        logger.info("[DagSyncTrigger.log_trigger_metrics] -----------------------------------")
 
         return {
             "stores": len(results),

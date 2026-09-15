@@ -73,7 +73,7 @@ class KafkaTopicManager(TopicManager):
                 topics = self.factory.list_topics(timeout=10)
 
                 if topic_name not in topics.topics:
-                    self.logger.info("Creating topic: %s", topic_name)
+                    self.logger.info("[KafkaTopicManager.ensure_topic_exists] Creating topic: %s", topic_name)
 
                     topic = NewTopic(
                         topic=topic_name,
@@ -88,23 +88,23 @@ class KafkaTopicManager(TopicManager):
                             try:
                                 future.result()
                                 self.logger.info(
-                                    "Topic %s created successfully", topic_name_future
+                                    "[KafkaTopicManager.ensure_topic_exists] Topic %s created successfully", topic_name_future
                                 )
                             except Exception as e:
                                 self.logger.error(
-                                    "Failed to create topic %s: %s",
+                                    "[KafkaTopicManager.ensure_topic_exists] Failed to create topic %s: %s",
                                     topic_name_future,
                                     e,
                                 )
                                 raise
                 else:
-                    self.logger.info("Topic %s already exists", topic_name)
+                    self.logger.info("[KafkaTopicManager.ensure_topic_exists] Topic %s already exists", topic_name)
                 return
             except KafkaException as e:
                 if attempt < max_retries - 1:
                     delay = base_delay * (2 ** attempt)
                     self.logger.warning(
-                        "Kafka connection failed (attempt %s/%s): %s. Retrying in %ss...",
+                        "[KafkaTopicManager.ensure_topic_exists] Kafka connection failed (attempt %s/%s): %s. Retrying in %ss...",
                         attempt + 1,
                         max_retries,
                         e,
@@ -113,7 +113,7 @@ class KafkaTopicManager(TopicManager):
                     time.sleep(delay)
                 else:
                     self.logger.error(
-                        "Failed to connect to Kafka after %s attempts", max_retries
+                        "[KafkaTopicManager.ensure_topic_exists] Failed to connect to Kafka after %s attempts", max_retries
                     )
                     raise
 
@@ -257,7 +257,7 @@ class KafkaTopicManager(TopicManager):
                 if msg.error():
                     if msg.error().code() == KafkaError._PARTITION_EOF:
                         break
-                    self.logger.warning("Consumer error: %s", msg.error())
+                    self.logger.warning("[KafkaTopicManager.sample_messages] Consumer error: %s", msg.error())
                     break
 
                 try:

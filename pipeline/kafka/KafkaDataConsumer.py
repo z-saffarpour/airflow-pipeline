@@ -77,7 +77,7 @@ class KafkaDataConsumer(MessageConsumer):
         try:
             config = self._build_consumer_config()
             self.logger.debug(
-                "Creating Kafka Consumer | conn_id=%s | group=%s | bootstrap=%s",
+                "[KafkaDataConsumer.create_consumer] Creating Kafka Consumer | conn_id=%s | group=%s | bootstrap=%s",
                 self.conn_id,
                 self.consumer_group,
                 config.get("bootstrap.servers"),
@@ -85,8 +85,8 @@ class KafkaDataConsumer(MessageConsumer):
             return Consumer(config)
         except Exception as exc:
             self.logger.error(
-                "Failed to create Kafka Consumer",
-                extra={"error": str(exc), "conn_id": self.conn_id},
+                f"[KafkaDataConsumer.create_consumer] Failed to create Kafka Consumer | "
+                f"conn_id={self.conn_id} | error={str(exc)}",
                 exc_info=True,
             )
             raise KafkaConnectionError(
@@ -108,7 +108,7 @@ class KafkaDataConsumer(MessageConsumer):
                     consumer.close()
                 except Exception:
                     self.logger.warning(
-                        "Error closing Kafka consumer",
+                        "[KafkaDataConsumer.get_consumer] Error closing Kafka consumer",
                         exc_info=True,
                     )
 
@@ -158,7 +158,7 @@ class KafkaDataConsumer(MessageConsumer):
         try:
             consumer.commit(offsets=list(offsets.values()), asynchronous=False)
             self.logger.debug(
-                "Committed Kafka offsets | partitions=%s",
+                "[KafkaDataConsumer.commit_offsets] Committed Kafka offsets | partitions=%s",
                 len(offsets),
             )
         except Exception as exc:
@@ -276,14 +276,14 @@ class KafkaDataConsumer(MessageConsumer):
             tps = [TopicPartition(topic, int(p)) for p in assigned_partitions]
             consumer.assign(tps)
             self.logger.info(
-                "[KafkaDataConsumer] Assigned partitions | topic=%s | partitions=%s",
+                "[KafkaDataConsumer._subscribe_or_assign] Assigned partitions | topic=%s | partitions=%s",
                 topic,
                 list(assigned_partitions),
             )
         else:
             consumer.subscribe([topic])
             self.logger.info(
-                "[KafkaDataConsumer] Subscribed | topic=%s | group=%s",
+                "[KafkaDataConsumer._subscribe_or_assign] Subscribed | topic=%s | group=%s",
                 topic,
                 self.consumer_group,
             )
@@ -313,7 +313,7 @@ class KafkaDataConsumer(MessageConsumer):
             self._subscribe_or_assign(consumer, topic, assigned_partitions)
 
             self.logger.info(
-                "[KafkaDataConsumer.stream] START | topic=%s | group=%s | "
+                "[KafkaDataConsumer._stream_with_consumer] START | topic=%s | group=%s | "
                 "batch_size=%s | max_messages=%s",
                 topic,
                 self.consumer_group,
@@ -335,7 +335,7 @@ class KafkaDataConsumer(MessageConsumer):
                     if batch:
                         batch_number += 1
                         self.logger.info(
-                            "[KafkaDataConsumer.stream] Batch %s | rows=%s | "
+                            "[KafkaDataConsumer._stream_with_consumer] Batch %s | rows=%s | "
                             "processed=%s (flush on idle)",
                             batch_number,
                             len(batch),
@@ -346,7 +346,7 @@ class KafkaDataConsumer(MessageConsumer):
                         offsets = {}
                     if idle_polls >= self.max_idle_polls:
                         self.logger.info(
-                            "[KafkaDataConsumer.stream] Idle limit reached | "
+                            "[KafkaDataConsumer._stream_with_consumer] Idle limit reached | "
                             "idle_polls=%s",
                             idle_polls,
                         )
@@ -376,7 +376,7 @@ class KafkaDataConsumer(MessageConsumer):
                 if len(batch) >= self.batch_size:
                     batch_number += 1
                     self.logger.info(
-                        "[KafkaDataConsumer.stream] Batch %s | rows=%s | processed=%s",
+                        "[KafkaDataConsumer._stream_with_consumer] Batch %s | rows=%s | processed=%s",
                         batch_number,
                         len(batch),
                         f"{processed:,}",
@@ -395,7 +395,7 @@ class KafkaDataConsumer(MessageConsumer):
             if batch:
                 batch_number += 1
                 self.logger.info(
-                    "[KafkaDataConsumer.stream] Batch %s | rows=%s | processed=%s "
+                    "[KafkaDataConsumer._stream_with_consumer] Batch %s | rows=%s | processed=%s "
                     "(final flush)",
                     batch_number,
                     len(batch),
@@ -404,7 +404,7 @@ class KafkaDataConsumer(MessageConsumer):
                 yield batch, dict(offsets)
 
             self.logger.info(
-                "[KafkaDataConsumer.stream] FINISH | processed=%s | batches=%s | "
+                "[KafkaDataConsumer._stream_with_consumer] FINISH | processed=%s | batches=%s | "
                 "reached_limit=%s",
                 processed,
                 batch_number,
@@ -414,7 +414,7 @@ class KafkaDataConsumer(MessageConsumer):
             raise
         except Exception as exc:
             self.logger.error(
-                "[KafkaDataConsumer.stream] ERROR | processed=%s | error=%s",
+                "[KafkaDataConsumer._stream_with_consumer] ERROR | processed=%s | error=%s",
                 processed,
                 exc,
                 exc_info=True,
@@ -427,6 +427,6 @@ class KafkaDataConsumer(MessageConsumer):
                     consumer.close()
                 except Exception:
                     self.logger.warning(
-                        "Error closing Kafka consumer after stream",
+                        "[KafkaDataConsumer._stream_with_consumer] Error closing Kafka consumer after stream",
                         exc_info=True,
                     )

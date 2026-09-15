@@ -89,14 +89,9 @@ class MSSQLDataTransferOrchestrator:
         )
 
         self.logger.info(
-            "Starting data transfer",
-            extra={
-                "table_name": config.table_name,
-                "kafka_topic": kafka_topic,
-                "execution_date": execution_date,
-                "batch_size": batch_size,
-                "has_columns_filter": config.columns is not None
-            }
+            f"[MSSQLDataTransferOrchestrator.transfer_table_data] START | table_name={config.table_name} | "
+            f"kafka_topic={kafka_topic} | execution_date={execution_date} | batch_size={batch_size} | "
+            f"has_columns_filter={config.columns is not None}"
         )
 
         # Initialize components
@@ -135,18 +130,14 @@ class MSSQLDataTransferOrchestrator:
             metrics.total_records = total_count
 
             self.logger.info(
-                "Total records to transfer",
-                extra={
-                    "table_name": config.table_name,
-                    "total_count": total_count,
-                    "execution_date": execution_date
-                }
+                f"[MSSQLDataTransferOrchestrator.transfer_table_data] Total records to transfer | "
+                f"table_name={config.table_name} | total_count={total_count:,} | execution_date={execution_date}"
             )
 
             if total_count == 0:
                 self.logger.info(
-                    "No records to transfer",
-                    extra={"table_name": config.table_name, "execution_date": execution_date}
+                    f"[MSSQLDataTransferOrchestrator.transfer_table_data] No records to transfer | "
+                    f"table_name={config.table_name} | execution_date={execution_date}"
                 )
                 metrics.mark_completed()
                 return TransferResult.create_success(
@@ -172,7 +163,7 @@ class MSSQLDataTransferOrchestrator:
                 # Send batch
                 if self.is_send_kafka and producer:
                     try:
-                        self.logger.info(f"kafka conn_id : {self.kafka_conn_id}")
+                        self.logger.info(f"[MSSQLDataTransferOrchestrator.transfer_table_data] kafka conn_id : {self.kafka_conn_id}")
                         producer.send_batch_to_kafka(
                             batch=batch,
                             topic=kafka_topic,
@@ -182,18 +173,18 @@ class MSSQLDataTransferOrchestrator:
                             batch_number=batch_number,
                             version=self.version
                         )
-                        self.logger.debug(f"Batch {batch_number} flushed to Kafka ({len(batch)} records)")
+                        self.logger.debug(f"[MSSQLDataTransferOrchestrator.transfer_table_data] Batch {batch_number} flushed to Kafka ({len(batch)} records)")
                     except Exception as e:
-                        self.logger.error(f"Kafka send failed: {e}")
+                        self.logger.error(f"[MSSQLDataTransferOrchestrator.transfer_table_data] Kafka send failed: {e}")
                         if self.fail_on_error:
                             raise
                         
                 if self.is_send_clickhouse and clickhouse_writer:
                     try:
                         clickhouse_writer.upsert_batch(clickhouse_database, clickhouse_table_name, batch, self.version)
-                        self.logger.debug(f"Batch {batch_number} Inserted to clickhouse ({len(batch)} records)")
+                        self.logger.debug(f"[MSSQLDataTransferOrchestrator.transfer_table_data] Batch {batch_number} Inserted to clickhouse ({len(batch)} records)")
                     except Exception as e:
-                        self.logger.error(f"ClickHouse write failed: {e}")
+                        self.logger.error(f"[MSSQLDataTransferOrchestrator.transfer_table_data] ClickHouse write failed: {e}")
                         if self.fail_on_error:
                             raise
 
@@ -203,29 +194,18 @@ class MSSQLDataTransferOrchestrator:
                 # Log progress
                 progress = metrics.get_progress_percentage()
                 self.logger.info(
-                    "Batch transferred",
-                    extra={
-                        "batch_number": batch_number,
-                        "batch_size": batch_size,
-                        "transferred": metrics.transferred_records,
-                        "total": total_count,
-                        "progress_pct": round(progress, 1),
-                        "table_name": config.table_name
-                    }
+                    f"[MSSQLDataTransferOrchestrator.transfer_table_data] Batch {batch_number} | rows={batch_size} | "
+                    f"transferred={metrics.transferred_records:,}/{total_count:,} ({round(progress, 1)}%) | "
+                    f"table_name={config.table_name}"
                 )
 
             # Mark as completed
             metrics.mark_completed()
             summary = metrics.get_summary_message()
             self.logger.info(
-                "Data transfer completed successfully",
-                extra={
-                    "table_name": config.table_name,
-                    "records_transferred": metrics.transferred_records,
-                    "batch_count": metrics.batch_count,
-                    "duration_seconds": metrics.duration_seconds,
-                    "summary": summary
-                }
+                f"[MSSQLDataTransferOrchestrator.transfer_table_data] FINISH | table_name={config.table_name} | "
+                f"records_transferred={metrics.transferred_records:,} | batch_count={metrics.batch_count} | "
+                f"duration_seconds={metrics.duration_seconds:.2f} | summary={summary}"
             )
 
             return TransferResult.create_success(
@@ -241,14 +221,9 @@ class MSSQLDataTransferOrchestrator:
         except Exception as e:
             error_message = f"Transfer failed for {config.table_name}: {str(e)}"
             self.logger.error(
-                "Data transfer failed",
-                extra={
-                    "table_name": config.table_name,
-                    "execution_date": execution_date,
-                    "error": str(e),
-                    "records_transferred": metrics.transferred_records,
-                    "batch_count": metrics.batch_count
-                },
+                f"[MSSQLDataTransferOrchestrator.transfer_table_data] ERROR | table_name={config.table_name} | "
+                f"execution_date={execution_date} | records_transferred={metrics.transferred_records:,} | "
+                f"batch_count={metrics.batch_count} | error={str(e)}",
                 exc_info=True
             )
             metrics.mark_failed(error_message)
@@ -267,7 +242,7 @@ class MSSQLDataTransferOrchestrator:
                 try:
                     producer.close()
                 except Exception as e:
-                    self.logger.warning(f"Error closing producer: {e}")
+                    self.logger.warning(f"[MSSQLDataTransferOrchestrator.transfer_table_data] Error closing producer: {e}")
 
     def transfer_query_data(
         self,
@@ -295,13 +270,8 @@ class MSSQLDataTransferOrchestrator:
         )
 
         self.logger.info(
-            "Starting query transfer",
-            extra={
-                "source_name": config.source_name,
-                "kafka_topic": kafka_topic,
-                "execution_date": execution_date,
-                "batch_size": batch_size,
-            }
+            f"[MSSQLDataTransferOrchestrator.transfer_query_data] START | source_name={config.source_name} | "
+            f"kafka_topic={kafka_topic} | execution_date={execution_date} | batch_size={batch_size}"
         )
 
         # Initialize components
@@ -339,18 +309,14 @@ class MSSQLDataTransferOrchestrator:
                 metrics.total_records = total_count
 
                 self.logger.info(
-                    "Total records to transfer",
-                    extra={
-                        "source_name": config.source_name,
-                        "total_count": total_count,
-                        "execution_date": execution_date
-                    }
+                    f"[MSSQLDataTransferOrchestrator.transfer_query_data] Total records to transfer | "
+                    f"source_name={config.source_name} | total_count={total_count:,} | execution_date={execution_date}"
                 )
 
                 if total_count == 0:
                     self.logger.info(
-                        "No records to transfer",
-                        extra={"source_name": config.source_name, "execution_date": execution_date}
+                        f"[MSSQLDataTransferOrchestrator.transfer_query_data] No records to transfer | "
+                        f"source_name={config.source_name} | execution_date={execution_date}"
                     )
                     metrics.mark_completed()
                     return TransferResult.create_success(
@@ -382,18 +348,18 @@ class MSSQLDataTransferOrchestrator:
                             batch_number=batch_number,
                             version=self.version
                         )
-                        self.logger.debug(f"Batch {batch_number} flushed to Kafka ({len(batch)} records)")
+                        self.logger.debug(f"[MSSQLDataTransferOrchestrator.transfer_query_data] Batch {batch_number} flushed to Kafka ({len(batch)} records)")
                     except Exception as e:
-                        self.logger.error(f"Kafka send failed: {e}")
+                        self.logger.error(f"[MSSQLDataTransferOrchestrator.transfer_query_data] Kafka send failed: {e}")
                         if self.fail_on_error:
                             raise
                                         
                 if self.is_send_clickhouse and clickhouse_writer:
                     try:
                         clickhouse_writer.upsert_batch(clickhouse_database, clickhouse_table_name, batch, self.version)
-                        self.logger.debug(f"Batch {batch_number} Inserted to clickhouse ({len(batch)} records)")
+                        self.logger.debug(f"[MSSQLDataTransferOrchestrator.transfer_query_data] Batch {batch_number} Inserted to clickhouse ({len(batch)} records)")
                     except Exception as e:
-                        self.logger.error(f"ClickHouse write failed: {e}")
+                        self.logger.error(f"[MSSQLDataTransferOrchestrator.transfer_query_data] ClickHouse write failed: {e}")
                         if self.fail_on_error:
                             raise
                         
@@ -402,30 +368,20 @@ class MSSQLDataTransferOrchestrator:
 
                 # Log progress
                 progress = metrics.get_progress_percentage()
+                total_display = f"{total_count:,}" if config.count_query is not None else "N/A"
                 self.logger.info(
-                    "Batch transferred",
-                    extra={
-                        "batch_number": batch_number,
-                        "batch_size": batch_size,
-                        "transferred": metrics.transferred_records,
-                        "total": total_count if config.count_query is not None else None,
-                        "progress_pct": round(progress, 1),
-                        "source_name": config.source_name
-                    }
+                    f"[MSSQLDataTransferOrchestrator.transfer_query_data] Batch {batch_number} | rows={batch_size} | "
+                    f"transferred={metrics.transferred_records:,}/{total_display} ({round(progress, 1)}%) | "
+                    f"source_name={config.source_name}"
                 )    
 
             # Mark as completed
             metrics.mark_completed()
             summary = metrics.get_summary_message()
             self.logger.info(
-                "Query transfer completed successfully",
-                extra={
-                    "source_name": config.source_name,
-                    "records_transferred": metrics.transferred_records,
-                    "batch_count": metrics.batch_count,
-                    "duration_seconds": metrics.duration_seconds,
-                    "summary": summary
-                }
+                f"[MSSQLDataTransferOrchestrator.transfer_query_data] FINISH | source_name={config.source_name} | "
+                f"records_transferred={metrics.transferred_records:,} | batch_count={metrics.batch_count} | "
+                f"duration_seconds={metrics.duration_seconds:.2f} | summary={summary}"
             )
 
             return TransferResult.create_success(
@@ -440,14 +396,9 @@ class MSSQLDataTransferOrchestrator:
         except Exception as e:
             error_message = f"Query transfer failed for {config.source_name}: {str(e)}"
             self.logger.error(
-                "Query transfer failed",
-                extra={
-                    "source_name": config.source_name,
-                    "execution_date": execution_date,
-                    "error": str(e),
-                    "records_transferred": metrics.transferred_records,
-                    "batch_count": metrics.batch_count,
-                },
+                f"[MSSQLDataTransferOrchestrator.transfer_query_data] ERROR | source_name={config.source_name} | "
+                f"execution_date={execution_date} | records_transferred={metrics.transferred_records:,} | "
+                f"batch_count={metrics.batch_count} | error={str(e)}",
                 exc_info=True
             )
             metrics.mark_failed(error_message)
@@ -465,4 +416,4 @@ class MSSQLDataTransferOrchestrator:
                 try:
                     producer.close()
                 except Exception as e:
-                    self.logger.warning(f"Error closing producer: {e}")
+                    self.logger.warning(f"[MSSQLDataTransferOrchestrator.transfer_query_data] Error closing producer: {e}")

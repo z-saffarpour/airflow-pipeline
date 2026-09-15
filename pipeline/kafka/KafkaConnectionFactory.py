@@ -110,15 +110,15 @@ class KafkaConnectionFactory(ConnectionFactory):
         try:
             config = self.get_client_config(**overrides)
             self.logger.debug(
-                "Creating Kafka AdminClient | conn_id=%s | bootstrap=%s",
+                "[KafkaConnectionFactory.create_admin_client] Creating Kafka AdminClient | conn_id=%s | bootstrap=%s",
                 self.conn_id,
                 config.get("bootstrap.servers"),
             )
             return AdminClient(config)
         except Exception as e:
             self.logger.error(
-                "Failed to create Kafka AdminClient",
-                extra={"error": str(e), "conn_id": self.conn_id},
+                f"[KafkaConnectionFactory.create_admin_client] Failed to create Kafka AdminClient | "
+                f"conn_id={self.conn_id} | error={str(e)}",
                 exc_info=True,
             )
             raise KafkaConnectionError(
@@ -145,8 +145,8 @@ class KafkaConnectionFactory(ConnectionFactory):
             raise
         except Exception as e:
             self.logger.error(
-                "Kafka AdminClient operation failed",
-                extra={"error": str(e), "conn_id": self.conn_id},
+                f"[KafkaConnectionFactory.get_admin_client] Kafka AdminClient operation failed | "
+                f"conn_id={self.conn_id} | error={str(e)}",
                 exc_info=True,
             )
             raise KafkaConnectionError(
@@ -177,8 +177,8 @@ class KafkaConnectionFactory(ConnectionFactory):
             raise
         except Exception as e:
             self.logger.error(
-                "Kafka list_topics failed",
-                extra={"error": str(e), "conn_id": self.conn_id},
+                f"[KafkaConnectionFactory.list_topics] Kafka list_topics failed | "
+                f"conn_id={self.conn_id} | error={str(e)}",
                 exc_info=True,
             )
             raise KafkaConnectionError(
@@ -211,6 +211,6 @@ class KafkaConnectionFactory(ConnectionFactory):
             return bool(metadata.brokers)
         except Exception:
             self.logger.exception(
-                "Kafka connection test failed | conn_id=%s", self.conn_id
+                "[KafkaConnectionFactory.test_connection] Kafka connection test failed | conn_id=%s", self.conn_id
             )
             return False
