@@ -19,6 +19,7 @@ class PostgreSQLConnectionFactory(SQLConnectionFactory):
     """
 
     def __init__(self, conn_id: str) -> None:
+        self._cached_connection = None
         if not conn_id:
             raise ValueError("conn_id cannot be empty.")
         self.conn_id = conn_id
@@ -31,18 +32,79 @@ class PostgreSQLConnectionFactory(SQLConnectionFactory):
         self.logger.debug('[PostgreSQLConnectionFactory.get_hook] Creating PostgresHook for conn_id=%s', self.conn_id)
         return PostgresHook(postgres_conn_id=self.conn_id)
 
+    def _is_connection_alive(self, connection) -> bool:
+        """Cheap liveness check (SELECT 1) before reusing a cached connection."""
+        try:
+            cursor = connection.cursor()
+            try:
+                cursor.execute("SELECT 1")
+                cursor.fetchall()
+            finally:
+                cursor.close()
+            return True
+        except Exception:
+            return False
+
+    def close_connection(self) -> None:
+        """
+        Explicitly close and discard the cached connection, if any.
+
+        Call this once the caller (e.g. a writer processing a sync's
+        whole batch loop through this factory) is done issuing queries,
+        so the underlying connection doesn't linger as an idle
+        ('Sleeping') session. __del__ also calls this as a best-effort
+        safety net.
+        """
+        if self._cached_connection is not None:
+            try:
+                self._cached_connection.close()
+            except Exception:
+                pass
+            finally:
+                self._cached_connection = None
+
+    def __del__(self):
+        try:
+            self.close_connection()
+        except Exception:
+            pass
+
     @contextmanager
     def get_connection(self):
-        """Context manager for PostgreSQL connections with proper cleanup."""
+        """
+        Context manager for PostgreSQL connections.
+
+        Reuses a single cached physical connection across calls instead of
+        opening a fresh handshake/login every time: a cheap SELECT 1
+        validates the cached connection before it's handed out, and a
+        dead/broken one is discarded and replaced. On a normal exit the
+        connection is kept cached (NOT closed); on any exception it is
+        discarded so the next call always gets a known-good connection.
+        Call close_connection() once the whole batch/sync using this
+        factory is done (so nothing lingers as an idle 'Sleeping' session);
+        __del__ also does this as a best-effort safety net.
+        """
         connection = None
+        keep_cached = False
         try:
-            self.logger.info(
-                "[PostgreSQLConnectionFactory.get_connection] Opening PostgreSQL connection | conn_id='%s'",
-                self.conn_id,
-            )
-            hook = self.get_hook()
-            connection = hook.get_conn()
+            if self._cached_connection is not None and self._is_connection_alive(self._cached_connection):
+                connection = self._cached_connection
+                self.logger.debug(
+                    "[PostgreSQLConnectionFactory.get_connection] Reusing cached PostgreSQL connection | conn_id='%s'",
+                    self.conn_id,
+                )
+            else:
+                if self._cached_connection is not None:
+                    self.close_connection()
+                self.logger.info(
+                    "[PostgreSQLConnectionFactory.get_connection] Opening PostgreSQL connection | conn_id='%s'",
+                    self.conn_id,
+                )
+                hook = self.get_hook()
+                connection = hook.get_conn()
+                self._cached_connection = connection
             yield connection
+            keep_cached = True
         except PostgreSQLConnectionError:
             raise
         except Exception as exc:
@@ -56,14 +118,8 @@ class PostgreSQLConnectionFactory(SQLConnectionFactory):
                 f"Failed to connect to PostgreSQL: {exc}"
             ) from exc
         finally:
-            if connection is not None:
-                try:
-                    connection.close()
-                except Exception:
-                    self.logger.error(
-                        "[PostgreSQLConnectionFactory.get_connection] Failed to close connection.",
-                        exc_info=True,
-                    )
+            if not keep_cached:
+                self.close_connection()
 
     @contextmanager
     def get_cursor(self, as_dict: bool = True):

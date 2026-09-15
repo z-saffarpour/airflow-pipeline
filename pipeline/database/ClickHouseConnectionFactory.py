@@ -170,6 +170,17 @@ class ClickHouseConnectionFactory(SQLConnectionFactory):
             self.logger.error('[ClickHouseConnectionFactory.execute_scalar] Scalar query execution failed: %s', e)
             raise
 
+    def close_connection(self) -> None:
+        """
+        Satisfies the SQLConnectionFactory contract.
+
+        No-op: unlike the SQL Server/MySQL/PostgreSQL factories, this
+        factory does not cache a connection across calls -- get_connection()
+        opens a fresh client and disconnects it (see the `finally` block
+        there) every time, so there is nothing held open to release here.
+        """
+        pass
+
     def close_client(self) -> None:
         """Close client connection."""
         # client = self.get_connection()

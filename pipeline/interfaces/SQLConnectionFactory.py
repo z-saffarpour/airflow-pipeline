@@ -68,3 +68,17 @@ class SQLConnectionFactory(ConnectionFactory):
             The first column of the first row, or None.
         """
         pass
+
+    @abstractmethod
+    def close_connection(self) -> None:
+        """
+        Release any connection this factory is currently holding open
+        (e.g. a cached/pooled connection reused across calls).
+
+        Callers that process a whole batch/sync through a factory should
+        call this once they are done, so nothing lingers as an idle
+        ('Sleeping') session. Implementations that do not hold a
+        connection open between calls (i.e. open/close per call) may
+        implement this as a no-op.
+        """
+        pass

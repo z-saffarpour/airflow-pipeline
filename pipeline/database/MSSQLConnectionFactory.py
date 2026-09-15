@@ -33,6 +33,7 @@ class MSSQLConnectionFactory(SQLConnectionFactory):
             conn_id: Airflow connection ID for the database
             is_connection_string: If True, conn_id is treated as a connection string
         """
+        self._cached_connection = None
         if not conn_id:
             raise ValueError("conn_id cannot be empty.")
         self.conn_id = conn_id
@@ -60,6 +61,43 @@ class MSSQLConnectionFactory(SQLConnectionFactory):
             return urlunparse((parsed.scheme, netloc, parsed.path, "", "", ""))
         except Exception:
             return "<redacted-connection-string>"
+
+    def _is_connection_alive(self, connection) -> bool:
+        """Cheap liveness check (SELECT 1) before reusing a cached connection."""
+        try:
+            cursor = connection.cursor()
+            try:
+                cursor.execute("SELECT 1")
+                cursor.fetchall()
+            finally:
+                cursor.close()
+            return True
+        except Exception:
+            return False
+
+    def close_connection(self) -> None:
+        """
+        Explicitly close and discard the cached connection, if any.
+
+        Call this once the caller (e.g. a writer processing a sync's
+        whole batch loop through this factory) is done issuing queries,
+        so the underlying connection doesn't linger as an idle
+        ('Sleeping') session. __del__ also calls this as a best-effort
+        safety net.
+        """
+        if self._cached_connection is not None:
+            try:
+                self._cached_connection.close()
+            except Exception:
+                pass
+            finally:
+                self._cached_connection = None
+
+    def __del__(self):
+        try:
+            self.close_connection()
+        except Exception:
+            pass
 
     def get_hook(self) -> SafeMsSqlHook:
         """
@@ -127,7 +165,16 @@ class MSSQLConnectionFactory(SQLConnectionFactory):
     def get_connection(self):
         """
         Context manager for database connections.
-        Ensures proper connection cleanup.
+
+        Reuses a single cached physical connection across calls instead of
+        opening a fresh TCP/TLS/login handshake every time: a cheap
+        SELECT 1 validates the cached connection before it's handed out,
+        and a dead/broken one is discarded and replaced. On a normal exit
+        the connection is kept cached (NOT closed); on any exception it is
+        discarded so the next call always gets a known-good connection.
+        Call close_connection() once the whole batch/sync using this
+        factory is done (so nothing lingers as an idle 'Sleeping' session);
+        __del__ also does this as a best-effort safety net.
 
         Yields:
             Database connection object
@@ -138,56 +185,70 @@ class MSSQLConnectionFactory(SQLConnectionFactory):
                 # ... use cursor
         """
         connection = None
-        
+        keep_cached = False
+
         try:
-            self.logger.info(
-                "[MSSQLConnectionFactory.get_connection] Opening SQL Server connection | conn_id='%s'",
-                self._safe_conn_id(),
-            )
-            if self.is_connection_string:
-                # Parse connection string: mssql+pymssql://user:pass@host:port/db?appname=MyApp&timeout=600&login_timeout=30&query_timeout=300
-                # Parse connection string: mssql+pyodbc://user:pass@host:port/db?driver=ODBC+Driver+18+for+SQL+Server&appname=MyApp&timeout=600&login_timeout=30&query_timeout=300
-                
-                parsed = urlparse(self.conn_id)
-                query_params = parse_qs(parsed.query)
-                
-                # Parse host and port
-                host_parts = parsed.hostname.split(',') if parsed.hostname else ['localhost']
-                server = host_parts[0]
-                port = int(host_parts[1]) if len(host_parts) > 1 else (parsed.port or 1433)
-                
-                database=parsed.path.lstrip('/') if parsed.path else ''
-                username=unquote(parsed.username) if parsed.username else ''
-                password=unquote(parsed.password) if parsed.password else ''
-                
-                # Extract parameters from URI with defaults
-                appname=query_params.get('application_name', ['Airflow-DataPipeline'])[0]
-                timeout=int(query_params.get('timeout', ['600'])[0])
-                login_timeout=int(query_params.get('login_timeout', ['30'])[0])
-                query_timeout = int(query_params.get('query_timeout', ['300'])[0])
-                encrypt = query_params.get('encrypt', ['yes'])[0]
-                trust_server_certificate = query_params.get('trust_server_certificate', ['yes'])[0]
-                
-                # Determine driver type from URI scheme
-                driver_type = 'pyodbc' if 'pyodbc' in parsed.scheme else 'pymssql'
-                
-                if driver_type == 'pyodbc':
-                    driver = query_params.get('driver', ['ODBC Driver 18 for SQL Server'])[0]
-                else:
-                    driver = None
-                    
-                connection = self.create_connection(server, port, database, username, password, appname, timeout, login_timeout, query_timeout, driver_type, driver, encrypt, trust_server_certificate)
+            if self._cached_connection is not None and self._is_connection_alive(self._cached_connection):
+                connection = self._cached_connection
+                self.logger.debug(
+                    "[MSSQLConnectionFactory.get_connection] Reusing cached SQL Server connection | conn_id='%s'",
+                    self._safe_conn_id(),
+                )
             else:
-                # Original hook-based approach
-                hook = self.get_hook()
-                connection = hook.get_conn()
-            
-            self.logger.debug(
-                "[MSSQLConnectionFactory.get_connection] SQL Server connection established successfully | conn_id='%s'",
-                self._safe_conn_id(),
-            )    
+                if self._cached_connection is not None:
+                    self.close_connection()
+
+                self.logger.info(
+                    "[MSSQLConnectionFactory.get_connection] Opening SQL Server connection | conn_id='%s'",
+                    self._safe_conn_id(),
+                )
+                if self.is_connection_string:
+                    # Parse connection string: mssql+pymssql://user:pass@host:port/db?appname=MyApp&timeout=600&login_timeout=30&query_timeout=300
+                    # Parse connection string: mssql+pyodbc://user:pass@host:port/db?driver=ODBC+Driver+18+for+SQL+Server&appname=MyApp&timeout=600&login_timeout=30&query_timeout=300
+
+                    parsed = urlparse(self.conn_id)
+                    query_params = parse_qs(parsed.query)
+
+                    # Parse host and port
+                    host_parts = parsed.hostname.split(',') if parsed.hostname else ['localhost']
+                    server = host_parts[0]
+                    port = int(host_parts[1]) if len(host_parts) > 1 else (parsed.port or 1433)
+
+                    database=parsed.path.lstrip('/') if parsed.path else ''
+                    username=unquote(parsed.username) if parsed.username else ''
+                    password=unquote(parsed.password) if parsed.password else ''
+
+                    # Extract parameters from URI with defaults
+                    appname=query_params.get('application_name', ['Airflow-DataPipeline'])[0]
+                    timeout=int(query_params.get('timeout', ['600'])[0])
+                    login_timeout=int(query_params.get('login_timeout', ['30'])[0])
+                    query_timeout = int(query_params.get('query_timeout', ['300'])[0])
+                    encrypt = query_params.get('encrypt', ['yes'])[0]
+                    trust_server_certificate = query_params.get('trust_server_certificate', ['yes'])[0]
+
+                    # Determine driver type from URI scheme
+                    driver_type = 'pyodbc' if 'pyodbc' in parsed.scheme else 'pymssql'
+
+                    if driver_type == 'pyodbc':
+                        driver = query_params.get('driver', ['ODBC Driver 18 for SQL Server'])[0]
+                    else:
+                        driver = None
+
+                    connection = self.create_connection(server, port, database, username, password, appname, timeout, login_timeout, query_timeout, driver_type, driver, encrypt, trust_server_certificate)
+                else:
+                    # Original hook-based approach
+                    hook = self.get_hook()
+                    connection = hook.get_conn()
+
+                self._cached_connection = connection
+                self.logger.debug(
+                    "[MSSQLConnectionFactory.get_connection] SQL Server connection established successfully | conn_id='%s'",
+                    self._safe_conn_id(),
+                )
+
             yield connection
-            
+            keep_cached = True
+
         except SQLServerConnectionError:
             raise
         except SQLServerDeadlockError:
@@ -221,16 +282,9 @@ class MSSQLConnectionFactory(SQLConnectionFactory):
                 f"[MSSQLConnectionFactory.get_connection] Failed to connect to SQL Server: {str(e)}"
             ) from e
         finally:
-            if connection:
-                try:
-                    connection.close()
-                    self.logger.debug("[MSSQLConnectionFactory.get_connection] Connection closed.")
-                except Exception:
-                    self.logger.error(
-                        "[MSSQLConnectionFactory.get_connection] Failed to close connection.",
-                        exc_info=True,
-                    )
-    
+            if not keep_cached:
+                self.close_connection()
+
     @contextmanager
     def get_cursor(self, as_dict: bool = True):
         """
