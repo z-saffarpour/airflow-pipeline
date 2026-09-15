@@ -131,9 +131,7 @@ class MongoDBDataReader(DataReader):
                 mongo_filter = {**mongo_filter, date_column: date_key}
 
         self.logger.info(
-            "[MongoDBDataReader.get_total_count] START | collection=%s | database=%s",
-            coll,
-            database or self.database,
+            f"[MongoDBDataReader.get_total_count] START | collection={coll} | database={database or self.database}"
         )
         try:
             count = self.connection_factory.count_documents(
@@ -141,19 +139,12 @@ class MongoDBDataReader(DataReader):
                 filter_query=mongo_filter,
                 database=database or self.database,
             )
-            self.logger.info(
-                "[MongoDBDataReader.get_total_count] SUCCESS | count=%s",
-                count,
-            )
+            self.logger.info(f"[MongoDBDataReader.get_total_count] SUCCESS | count={count}")
             return count
         except MongoDBQueryError:
             raise
         except Exception as exc:
-            self.logger.error(
-                "[MongoDBDataReader.get_total_count] Unexpected ERROR | error=%s",
-                exc,
-                exc_info=True,
-            )
+            self.logger.error(f"[MongoDBDataReader.get_total_count] Unexpected ERROR | error={exc}", exc_info=True)
             raise DataReadError(f"Failed to get total count: {exc}") from exc
 
     def stream_data(
@@ -252,12 +243,8 @@ class MongoDBDataReader(DataReader):
             mongo_filter[range_column] = {"$gte": min_key, "$lte": max_key}
 
         self.logger.info(
-            "[MongoDBDataReader.stream_collection] START | collection=%s | "
-            "database=%s | batch_size=%s | has_pipeline=%s",
-            collection,
-            db_name,
-            self.batch_size,
-            aggregation_pipeline is not None,
+            f"[MongoDBDataReader.stream_collection] START | collection={collection} | database={db_name} | "
+            f"batch_size={self.batch_size} | has_pipeline={aggregation_pipeline is not None}"
         )
 
         try:
@@ -283,11 +270,7 @@ class MongoDBDataReader(DataReader):
                         batch_number += 1
                         processed += len(batch)
                         self.logger.info(
-                            "[MongoDBDataReader.stream_collection] Batch %s | "
-                            "rows=%s | processed=%s",
-                            batch_number,
-                            len(batch),
-                            f"{processed:,}",
+                            f"[MongoDBDataReader.stream_collection] Batch {batch_number} | rows={len(batch)} | processed={processed:,}"
                         )
                         yield self.normalize_batch(batch)
                         batch = []
@@ -296,26 +279,18 @@ class MongoDBDataReader(DataReader):
                     batch_number += 1
                     processed += len(batch)
                     self.logger.info(
-                        "[MongoDBDataReader.stream_collection] Batch %s | "
-                        "rows=%s | processed=%s",
-                        batch_number,
-                        len(batch),
-                        f"{processed:,}",
+                        f"[MongoDBDataReader.stream_collection] Batch {batch_number} | rows={len(batch)} | processed={processed:,}"
                     )
                     yield self.normalize_batch(batch)
         except Exception as exc:
             self.logger.error(
-                "[MongoDBDataReader.stream_collection] ERROR | processed=%s | error=%s",
-                processed,
-                exc,
-                exc_info=True,
+                f"[MongoDBDataReader.stream_collection] ERROR | processed={processed} | error={exc}",
+                exc_info=True
             )
             raise AirflowException(f"Streaming MongoDB collection failed: {exc}") from exc
 
         self.logger.info(
-            "[MongoDBDataReader.stream_collection] FINISH | processed=%s | batches=%s",
-            processed,
-            batch_number,
+            f"[MongoDBDataReader.stream_collection] FINISH | processed={processed} | batches={batch_number}"
         )
 
     def get_field_bounds(

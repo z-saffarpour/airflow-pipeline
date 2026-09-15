@@ -46,7 +46,7 @@ class MSSQLConnectionFactory(SQLConnectionFactory):
         Hook objects are lightweight config wrappers.
         Caching them risks stale state in multi-threaded Airflow workers.
         """
-        self.logger.debug("[MSSQLConnectionFactory.get_hook] Creating SafeMsSqlHook for conn_id=%s", self.conn_id)
+        self.logger.debug(f"[MSSQLConnectionFactory.get_hook] Creating SafeMsSqlHook for conn_id={self.conn_id}")
         return SafeMsSqlHook(mssql_conn_id=self.conn_id)
 
     def create_connection(self, server, port, database, username, password, appname, timeout, login_timeout, query_timeout, driver_type, driver) -> Any:
@@ -171,18 +171,14 @@ class MSSQLConnectionFactory(SQLConnectionFactory):
                     )
             if is_sql_server_deadlock(e):
                 self.logger.warning(
-                    "[MSSQLConnectionFactory.get_connection] SQL Server deadlock detected | conn_id='%s' | error=%s",
-                    self.conn_id,
-                    e,
+                    f"[MSSQLConnectionFactory.get_connection] SQL Server deadlock detected | conn_id='{self.conn_id}' | error={e}"
                 )
                 raise SQLServerDeadlockError(
                     f"[MSSQLConnectionFactory.get_connection] SQL Server deadlock detected: {str(e)}"
                 ) from e
             self.logger.error(
-                "[MSSQLConnectionFactory.get_connection] Database connection failed | conn_id='%s' | error=%s",
-                self.conn_id,
-                e,
-                exc_info=True,
+                f"[MSSQLConnectionFactory.get_connection] Database connection failed | conn_id='{self.conn_id}' | error={e}",
+                exc_info=True
             )
             raise SQLServerConnectionError(
                 f"[MSSQLConnectionFactory.get_connection] Failed to connect to SQL Server: {str(e)}"

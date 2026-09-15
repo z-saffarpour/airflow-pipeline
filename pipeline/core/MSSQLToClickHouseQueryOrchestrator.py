@@ -150,9 +150,7 @@ class MSSQLToClickHouseQueryOrchestrator(SyncOrchestrator):
         )
         if total_count == 0:
             self.logger.info(
-                "[MSSQLToClickHouseQueryOrchestrator.plan_sync_chunks] No rows to plan | "
-                "table=%s",
-                sync_config.target_table,
+                f"[MSSQLToClickHouseQueryOrchestrator.plan_sync_chunks] No rows to plan | table={sync_config.target_table}"
             )
             return []
 
@@ -181,11 +179,8 @@ class MSSQLToClickHouseQueryOrchestrator(SyncOrchestrator):
             )
 
         self.logger.info(
-            "[MSSQLToClickHouseQueryOrchestrator.plan_sync_chunks] Planned %d chunks | "
-            "table=%s | total_rows=%s",
-            len(chunks),
-            sync_config.target_table,
-            total_count,
+            f"[MSSQLToClickHouseQueryOrchestrator.plan_sync_chunks] Planned {len(chunks)} chunks | "
+            f"table={sync_config.target_table} | total_rows={total_count}"
         )
         return chunks
 
@@ -227,14 +222,8 @@ class MSSQLToClickHouseQueryOrchestrator(SyncOrchestrator):
         query_params = (min_key, max_key)
 
         self.logger.info(
-            "[MSSQLToClickHouseQueryOrchestrator.sync_data_chunk] Starting | table=%s | "
-            "chunk=%s | %s=[%s, %s] | expected_rows=%s",
-            sync_config.target_table,
-            chunk_no,
-            chunk_column,
-            min_key,
-            max_key,
-            expected_rows,
+            f"[MSSQLToClickHouseQueryOrchestrator.sync_data_chunk] Starting | table={sync_config.target_table} | "
+            f"chunk={chunk_no} | {chunk_column}=[{min_key}, {max_key}] | expected_rows={expected_rows}"
         )
 
         try:
@@ -304,13 +293,9 @@ class MSSQLToClickHouseQueryOrchestrator(SyncOrchestrator):
         version_id = self._resolve_version_id(self.version_id, execution_date)
 
         self.logger.info(
-            "[MSSQLToClickHouseQueryOrchestrator.sync_data] Starting MSSQL → ClickHouse "
-            "sync | source=%s | target=%s.%s | batch_size=%s | version_id=%s",
-            self.source_conn_id,
-            sync_config.target_schema,
-            sync_config.target_table,
-            self.batch_size,
-            version_id,
+            f"[MSSQLToClickHouseQueryOrchestrator.sync_data] Starting MSSQL → ClickHouse sync | "
+            f"source={self.source_conn_id} | target={sync_config.target_schema}.{sync_config.target_table} | "
+            f"batch_size={self.batch_size} | version_id={version_id}"
         )
 
         try:
@@ -361,21 +346,13 @@ class MSSQLToClickHouseQueryOrchestrator(SyncOrchestrator):
                 metrics.increment_batch(batch_size)
 
                 self.logger.info(
-                    "[MSSQLToClickHouseQueryOrchestrator.sync_data] Batch %s | rows=%s | "
-                    "transferred=%s",
-                    batch_number,
-                    batch_size,
-                    metrics.transferred_records,
+                    f"[MSSQLToClickHouseQueryOrchestrator.sync_data] Batch {batch_number} | rows={batch_size} | transferred={metrics.transferred_records}"
                 )
 
             metrics.mark_completed()
             self.logger.info(
-                "[MSSQLToClickHouseQueryOrchestrator.sync_data] Completed | table=%s | "
-                "transferred=%s | inserted=%s | duration=%ss",
-                sync_config.source_name,
-                metrics.transferred_records,
-                metrics.inserted,
-                metrics.duration_seconds,
+                f"[MSSQLToClickHouseQueryOrchestrator.sync_data] Completed | table={sync_config.source_name} | "
+                f"transferred={metrics.transferred_records} | inserted={metrics.inserted} | duration={metrics.duration_seconds}s"
             )
 
             return TransferResult.create_success(
@@ -391,10 +368,8 @@ class MSSQLToClickHouseQueryOrchestrator(SyncOrchestrator):
         except Exception as exc:
             error_message = f"Transfer failed for {sync_config.source_name}: {exc}"
             self.logger.error(
-                "[MSSQLToClickHouseQueryOrchestrator.sync_data] Failed | table=%s | error=%s",
-                sync_config.source_name,
-                exc,
-                exc_info=True,
+                f"[MSSQLToClickHouseQueryOrchestrator.sync_data] Failed | table={sync_config.source_name} | error={exc}",
+                exc_info=True
             )
             metrics.mark_failed(error_message)
             return TransferResult.create_failure(

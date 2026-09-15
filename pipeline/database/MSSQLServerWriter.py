@@ -107,13 +107,7 @@ class MSSQLServerWriter(DataWriter):
         self._cached_unique_keys[cache_key] = unique_keys
 
         if unique_keys:
-            self.logger.info(
-                "[MSSQLServerWriter._discover_unique_keys] Discovered %d unique key constraint(s) for %s.%s: %s",
-                len(unique_keys),
-                schema,
-                table,
-                unique_keys,
-            )
+            self.logger.info(f"[MSSQLServerWriter._discover_unique_keys] Discovered {len(unique_keys)} unique key constraint(s) for {schema}.{table}: {unique_keys}")
 
         return unique_keys
 
@@ -168,12 +162,7 @@ class MSSQLServerWriter(DataWriter):
                     for column in unique_key
                     if column.upper() not in available
                 ]
-                self.logger.warning(
-                    "[MSSQLServerWriter._delete_unique_key_conflicts] Skipping unique key %s for %s; missing staging columns: %s",
-                    unique_key,
-                    table_full,
-                    missing,
-                )
+                self.logger.warning(f"[MSSQLServerWriter._delete_unique_key_conflicts] Skipping unique key {unique_key} for {table_full}; missing staging columns: {missing}")
                 continue
 
             for column in filtered_columns:
@@ -195,12 +184,7 @@ class MSSQLServerWriter(DataWriter):
             deleted = cursor.rowcount if cursor.rowcount and cursor.rowcount > 0 else 0
             if deleted:
                 total_deleted += deleted
-                self.logger.info(
-                    "[MSSQLServerWriter._delete_unique_key_conflicts] Deleted %d conflicting row(s) from %s for unique key (%s)",
-                    deleted,
-                    table_full,
-                    ", ".join(filtered_columns),
-                )
+                self.logger.info(f'[MSSQLServerWriter._delete_unique_key_conflicts] Deleted {deleted} conflicting row(s) from {table_full} for unique key ({", ".join(filtered_columns)})')
 
         return total_deleted
 
@@ -360,11 +344,7 @@ class MSSQLServerWriter(DataWriter):
         except Exception as exc:
             if not self.autocommit:
                 conn.rollback()
-            self.logger.warning(
-                "[MSSQLServerWriter._cleanup_staging_table] Failed to drop staging table %s: %s",
-                staging_table,
-                exc,
-            )
+            self.logger.warning(f"[MSSQLServerWriter._cleanup_staging_table] Failed to drop staging table {staging_table}: {exc}")
 
     def _finalize_connection(
         self,
@@ -381,10 +361,7 @@ class MSSQLServerWriter(DataWriter):
             elif not self.autocommit:
                 conn.rollback()
         except Exception as exc:
-            self.logger.warning(
-                "[MSSQLServerWriter._finalize_connection] Commit/rollback failed: %s",
-                exc,
-            )
+            self.logger.warning(f"[MSSQLServerWriter._finalize_connection] Commit/rollback failed: {exc}")
         try:
             while cursor.nextset():
                 pass
@@ -479,10 +456,8 @@ class MSSQLServerWriter(DataWriter):
                 )
                 success = True
                 self.logger.info(
-                    "[MSSQLServerWriter.insert_batch] Successfully inserted %d records into %s | staging: %s",
-                    total_inserted,
-                    table_full,
-                    staging_table,
+                    f"[MSSQLServerWriter.insert_batch] Successfully inserted {total_inserted} records into {table_full} | "
+                    f"staging: {staging_table}"
                 )
                 return total_inserted
             except Exception as e:
@@ -554,10 +529,7 @@ class MSSQLServerWriter(DataWriter):
                 )
                 success = True
                 self.logger.info(
-                    "[MSSQLServerWriter.update_batch] Successfully updated %d records in %s | staging: %s",
-                    total_updated,
-                    table_full,
-                    staging_table,
+                    f"[MSSQLServerWriter.update_batch] Successfully updated {total_updated} records in {table_full} | staging: {staging_table}"
                 )
                 return total_updated
             except Exception as e:
@@ -638,10 +610,7 @@ class MSSQLServerWriter(DataWriter):
                 )
                 success = True
                 self.logger.info(
-                    "[MSSQLServerWriter.delete_batch] Successfully deleted %d records from %s | staging: %s",
-                    total_deleted,
-                    table_full,
-                    staging_table,
+                    f"[MSSQLServerWriter.delete_batch] Successfully deleted {total_deleted} records from {table_full} | staging: {staging_table}"
                 )
                 return total_deleted
             except Exception as e:
@@ -690,20 +659,12 @@ class MSSQLServerWriter(DataWriter):
                 )
                 if not self.autocommit:
                     conn.commit()
-                self.logger.info(
-                    "[MSSQLServerWriter.prepare_keys_staging_table] Prepared keys staging table %s for %s",
-                    keys_staging_table,
-                    table_full,
-                )
+                self.logger.info(f"[MSSQLServerWriter.prepare_keys_staging_table] Prepared keys staging table {keys_staging_table} for {table_full}")
                 return keys_staging_table
             except Exception as exc:
                 if not self.autocommit:
                     conn.rollback()
-                self.logger.error(
-                    "[MSSQLServerWriter.prepare_keys_staging_table] Failed to prepare keys staging table for %s: %s",
-                    table_full,
-                    exc,
-                )
+                self.logger.error(f"[MSSQLServerWriter.prepare_keys_staging_table] Failed to prepare keys staging table for {table_full}: {exc}")
                 raise
             finally:
                 cursor.close()
@@ -744,18 +705,10 @@ class MSSQLServerWriter(DataWriter):
                     cursor.executemany(insert_query, values)
                     total_appended += len(batch)
                 success = True
-                self.logger.debug(
-                    "[MSSQLServerWriter.append_keys_to_staging] Appended %d key row(s) to %s",
-                    total_appended,
-                    keys_staging_table,
-                )
+                self.logger.debug(f"[MSSQLServerWriter.append_keys_to_staging] Appended {total_appended} key row(s) to {keys_staging_table}")
                 return total_appended
             except Exception as exc:
-                self.logger.error(
-                    "[MSSQLServerWriter.append_keys_to_staging] Failed to append keys to %s: %s",
-                    keys_staging_table,
-                    exc,
-                )
+                self.logger.error(f"[MSSQLServerWriter.append_keys_to_staging] Failed to append keys to {keys_staging_table}: {exc}")
                 raise
             finally:
                 self._finalize_connection(conn, cursor, commit=success)
@@ -779,11 +732,7 @@ class MSSQLServerWriter(DataWriter):
         IdentifierValidator.validate_and_raise(scope_column, "column name")
 
         if min_key is None or max_key is None:
-            self.logger.warning(
-                "[MSSQLServerWriter.delete_missing_in_scope] Skipping scoped delete for %s.%s; min_key or max_key is NULL",
-                schema,
-                table,
-            )
+            self.logger.warning(f"[MSSQLServerWriter.delete_missing_in_scope] Skipping scoped delete for {schema}.{table}; min_key or max_key is NULL")
             return 0
 
         table_full = f"[{schema}].[{table}]"
@@ -815,23 +764,14 @@ class MSSQLServerWriter(DataWriter):
                     conn.commit()
 
                 self.logger.info(
-                    "[MSSQLServerWriter.delete_missing_in_scope] Scoped delete completed for %s | scope_column=%s | "
-                    "min_key=%s | max_key=%s | deleted=%d",
-                    table_full,
-                    scope_column,
-                    min_key,
-                    max_key,
-                    deleted,
+                    f"[MSSQLServerWriter.delete_missing_in_scope] Scoped delete completed for {table_full} | "
+                    f"scope_column={scope_column} | min_key={min_key} | max_key={max_key} | deleted={deleted}"
                 )
                 return deleted
             except Exception as exc:
                 if not self.autocommit:
                     conn.rollback()
-                self.logger.error(
-                    "[MSSQLServerWriter.delete_missing_in_scope] Scoped delete failed for %s: %s",
-                    table_full,
-                    exc,
-                )
+                self.logger.error(f"[MSSQLServerWriter.delete_missing_in_scope] Scoped delete failed for {table_full}: {exc}")
                 raise
             finally:
                 cursor.close()
@@ -845,15 +785,11 @@ class MSSQLServerWriter(DataWriter):
                 self._drop_staging_table(cursor, keys_staging_table)
                 if not self.autocommit:
                     conn.commit()
-                self.logger.debug("[MSSQLServerWriter.drop_keys_staging_table] Dropped keys staging table %s", keys_staging_table)
+                self.logger.debug(f"[MSSQLServerWriter.drop_keys_staging_table] Dropped keys staging table {keys_staging_table}")
             except Exception as exc:
                 if not self.autocommit:
                     conn.rollback()
-                self.logger.error(
-                    "[MSSQLServerWriter.drop_keys_staging_table] Failed to drop keys staging table %s: %s",
-                    keys_staging_table,
-                    exc,
-                )
+                self.logger.error(f"[MSSQLServerWriter.drop_keys_staging_table] Failed to drop keys staging table {keys_staging_table}: {exc}")
                 raise
             finally:
                 cursor.close()

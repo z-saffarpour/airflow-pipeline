@@ -276,12 +276,7 @@ class MongoDBServerWriter(DataWriter):
             staging.create_index(index_spec, unique=True, name="sync_keys_pk")
 
         qualified = f"{staging_db}.{coll_name}"
-        self.logger.info(
-            "[MongoDBServerWriter.prepare_keys_staging_table] Prepared %s for %s.%s",
-            qualified,
-            schema,
-            table,
-        )
+        self.logger.info(f"[MongoDBServerWriter.prepare_keys_staging_table] Prepared {qualified} for {schema}.{table}")
         return qualified
 
     @staticmethod
@@ -435,14 +430,7 @@ class MongoDBServerWriter(DataWriter):
         via cursor and deletes incrementally instead of materializing every
         id to delete before issuing any delete.
         """
-        self.logger.warning(
-            "[MongoDBServerWriter._delete_missing_in_scope_via_python_diff] staging database '%s' "
-            "differs from target database '%s'; $lookup cannot join across "
-            "databases here, falling back to a Python-side key diff (loads all "
-            "staged keys into memory).",
-            staging_db,
-            schema,
-        )
+        self.logger.warning(f"[MongoDBServerWriter._delete_missing_in_scope_via_python_diff] staging database '{staging_db}' differs from target database '{schema}'; $lookup cannot join across databases here, falling back to a Python-side key diff (loads all staged keys into memory).")
         staging = client[staging_db][staging_coll]
 
         staged_keys = set()
@@ -481,12 +469,7 @@ class MongoDBServerWriter(DataWriter):
         self._validate_name(scope_column, "column name")
 
         if min_key is None or max_key is None:
-            self.logger.warning(
-                "[MongoDBServerWriter.delete_missing_in_scope] Skipping scoped delete "
-                "for %s.%s; min_key or max_key is NULL",
-                schema,
-                table,
-            )
+            self.logger.warning(f"[MongoDBServerWriter.delete_missing_in_scope] Skipping scoped delete for {schema}.{table}; min_key or max_key is NULL")
             return 0
 
         staging_db, staging_coll = self._split_qualified_collection(keys_staging_table)
@@ -516,14 +499,8 @@ class MongoDBServerWriter(DataWriter):
                 )
 
             self.logger.info(
-                "[MongoDBServerWriter.delete_missing_in_scope] Scoped delete for %s.%s | "
-                "scope=%s | min=%s | max=%s | deleted=%d",
-                schema,
-                table,
-                mongo_scope,
-                scope_min,
-                scope_max,
-                deleted,
+                f"[MongoDBServerWriter.delete_missing_in_scope] Scoped delete for {schema}.{table} | "
+                f"scope={mongo_scope} | min={scope_min} | max={scope_max} | deleted={deleted}"
             )
             return deleted
 
@@ -531,10 +508,7 @@ class MongoDBServerWriter(DataWriter):
         staging_db, staging_coll = self._split_qualified_collection(keys_staging_table)
         with self.connection_factory.get_database(database=staging_db) as db:
             db.drop_collection(staging_coll)
-            self.logger.info(
-                "[MongoDBServerWriter.drop_keys_staging_table] Dropped %s",
-                keys_staging_table,
-            )
+            self.logger.info(f"[MongoDBServerWriter.drop_keys_staging_table] Dropped {keys_staging_table}")
 
     def upsert_batch(
         self,
@@ -632,13 +606,8 @@ class MongoDBServerWriter(DataWriter):
             )
 
         self.logger.info(
-            "[MongoDBServerWriter.upsert_batch] %s.%s sync completed | "
-            "inserted=%s | updated=%s | hash_change_detection=%s",
-            schema,
-            table,
-            inserted,
-            updated,
-            use_hash_change_detection,
+            f"[MongoDBServerWriter.upsert_batch] {schema}.{table} sync completed | inserted={inserted} | "
+            f"updated={updated} | hash_change_detection={use_hash_change_detection}"
         )
         return {
             "success": True,

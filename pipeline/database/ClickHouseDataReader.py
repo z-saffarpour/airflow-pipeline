@@ -59,11 +59,7 @@ class ClickHouseDataReader(DataReader):
         Retrieve total record count via custom COUNT query or table-based filter.
         """
         mode = "custom_query" if custom_query else "table"
-        self.logger.info(
-            "[ClickHouseDataReader.get_total_count] START | mode=%s | table=%s",
-            mode,
-            table_name,
-        )
+        self.logger.info(f"[ClickHouseDataReader.get_total_count] START | mode={mode} | table={table_name}")
         try:
             query_params = self._normalize_params(params)
             if custom_query:
@@ -92,17 +88,10 @@ class ClickHouseDataReader(DataReader):
 
             result = self.connection_factory.execute_scalar(query, query_params)
             count = int(result) if result is not None else 0
-            self.logger.info(
-                "[ClickHouseDataReader.get_total_count] SUCCESS | count=%s",
-                count,
-            )
+            self.logger.info(f"[ClickHouseDataReader.get_total_count] SUCCESS | count={count}")
             return count
         except Exception as exc:
-            self.logger.error(
-                "[ClickHouseDataReader.get_total_count] Unexpected ERROR | error=%s",
-                exc,
-                exc_info=True,
-            )
+            self.logger.error(f"[ClickHouseDataReader.get_total_count] Unexpected ERROR | error={exc}", exc_info=True)
             raise DataReadError(f"Failed to get total count: {exc}") from exc
 
     def stream_data(
@@ -131,10 +120,7 @@ class ClickHouseDataReader(DataReader):
             date_column_type=date_column_type,
         )
         if total_count == 0:
-            self.logger.warning(
-                "[ClickHouseDataReader.stream_data] NO DATA | table=%s",
-                table_name,
-            )
+            self.logger.warning(f"[ClickHouseDataReader.stream_data] NO DATA | table={table_name}")
             return
 
         column_list = (
@@ -189,12 +175,7 @@ class ClickHouseDataReader(DataReader):
 
                 processed += len(batch)
                 self.logger.info(
-                    "[ClickHouseDataReader.stream_data] Batch %s | rows=%s | "
-                    "processed=%s/%s",
-                    batch_number,
-                    len(batch),
-                    processed,
-                    total_count,
+                    f"[ClickHouseDataReader.stream_data] Batch {batch_number} | rows={len(batch)} | processed={processed}/{total_count}"
                 )
                 yield batch
 
@@ -202,11 +183,8 @@ class ClickHouseDataReader(DataReader):
                     break
             except Exception as exc:
                 self.logger.error(
-                    "[ClickHouseDataReader.stream_data] ERROR reading batch %s | "
-                    "error=%s",
-                    batch_number,
-                    exc,
-                    exc_info=True,
+                    f"[ClickHouseDataReader.stream_data] ERROR reading batch {batch_number} | error={exc}",
+                    exc_info=True
                 )
                 raise AirflowException(f"ClickHouse read error: {exc}") from exc
 
@@ -224,10 +202,7 @@ class ClickHouseDataReader(DataReader):
         query_params = self._normalize_params(parameters)
 
         self.logger.info(
-            "[ClickHouseDataReader.stream_query] START | batch_size=%s | "
-            "has_count_query=%s",
-            self.batch_size,
-            count_query is not None,
+            f"[ClickHouseDataReader.stream_query] START | batch_size={self.batch_size} | has_count_query={count_query is not None}"
         )
 
         if count_query is not None:
@@ -235,10 +210,7 @@ class ClickHouseDataReader(DataReader):
                 custom_query=count_query,
                 params=query_params,
             )
-            self.logger.info(
-                "[ClickHouseDataReader.stream_query] Total rows to stream: %s",
-                f"{total_count:,}",
-            )
+            self.logger.info(f"[ClickHouseDataReader.stream_query] Total rows to stream: {total_count:,}")
         else:
             total_count = None
 
@@ -279,22 +251,14 @@ class ClickHouseDataReader(DataReader):
                     yield batch
         except Exception as exc:
             self.logger.error(
-                "[ClickHouseDataReader.stream_query] ERROR | processed=%s | "
-                "error=%s",
-                processed,
-                exc,
-                exc_info=True,
+                f"[ClickHouseDataReader.stream_query] ERROR | processed={processed} | error={exc}",
+                exc_info=True
             )
             raise AirflowException(
                 f"Streaming ClickHouse query failed: {exc}"
             ) from exc
 
-        self.logger.info(
-            "[ClickHouseDataReader.stream_query] FINISH | processed=%s | "
-            "batches=%s",
-            processed,
-            batch_number,
-        )
+        self.logger.info(f"[ClickHouseDataReader.stream_query] FINISH | processed={processed} | batches={batch_number}")
 
     def _log_stream_batch(
         self,
@@ -306,19 +270,9 @@ class ClickHouseDataReader(DataReader):
         if total_count:
             percentage = processed / total_count * 100
             self.logger.info(
-                "[ClickHouseDataReader._log_stream_batch] Batch %s | rows=%s | "
-                "processed=%s/%s (%.1f%%)",
-                batch_number,
-                batch_len,
-                f"{processed:,}",
-                f"{total_count:,}",
-                percentage,
+                f"[ClickHouseDataReader._log_stream_batch] Batch {batch_number} | rows={batch_len} | processed={processed:,}/{total_count:,} ({percentage:.1f}%)"
             )
         else:
             self.logger.info(
-                "[ClickHouseDataReader._log_stream_batch] Batch %s | rows=%s | "
-                "processed=%s",
-                batch_number,
-                batch_len,
-                f"{processed:,}",
+                f"[ClickHouseDataReader._log_stream_batch] Batch {batch_number} | rows={batch_len} | processed={processed:,}"
             )

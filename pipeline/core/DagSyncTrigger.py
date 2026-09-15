@@ -159,18 +159,9 @@ class DagSyncTrigger:
                 return comms_msg.state
         except Exception as exc:
             if self._is_dag_run_not_found(exc):
-                self.logger.debug(
-                    "[DagSyncTrigger._get_existing_run_state_sdk] No existing DagRun for %s/%s; safe to trigger",
-                    dag_id,
-                    run_id,
-                )
+                self.logger.debug(f"[DagSyncTrigger._get_existing_run_state_sdk] No existing DagRun for {dag_id}/{run_id}; safe to trigger")
                 return None
-            self.logger.warning(
-                "[DagSyncTrigger._get_existing_run_state_sdk] Could not check existing DagRun for %s/%s: %s",
-                dag_id,
-                run_id,
-                exc,
-            )
+            self.logger.warning(f"[DagSyncTrigger._get_existing_run_state_sdk] Could not check existing DagRun for {dag_id}/{run_id}: {exc}")
         return None
 
     def _get_existing_run_state_orm(self, dag_id: str, run_id: str) -> Optional[str]:
@@ -186,12 +177,7 @@ class DagSyncTrigger:
                 )
                 return dag_run.state if dag_run else None
         except Exception as exc:
-            self.logger.warning(
-                "[DagSyncTrigger._get_existing_run_state_orm] Could not check existing DagRun for %s/%s: %s",
-                dag_id,
-                run_id,
-                exc,
-            )
+            self.logger.warning(f"[DagSyncTrigger._get_existing_run_state_orm] Could not check existing DagRun for {dag_id}/{run_id}: {exc}")
             return None
 
     def _apply_wait_failures(
@@ -224,13 +210,7 @@ class DagSyncTrigger:
         existing_state = self._get_existing_run_state(dag_id, run_id)
 
         if existing_state in _ACTIVE_DAG_RUN_STATES:
-            self.logger.info(
-                "[DagSyncTrigger._trigger_store_dag] Skipping duplicate trigger for store=%s dag=%s run_id=%s state=%s",
-                normalized_store,
-                dag_id,
-                run_id,
-                existing_state,
-            )
+            self.logger.info(f"[DagSyncTrigger._trigger_store_dag] Skipping duplicate trigger for store={normalized_store} dag={dag_id} run_id={run_id} state={existing_state}")
             return {
                 "dag_id": dag_id,
                 "run_id": run_id,
@@ -247,27 +227,14 @@ class DagSyncTrigger:
                 logical_date=logical_date,
                 reset_dag_run=reset_dag_run,
             )
-            self.logger.info(
-                "[DagSyncTrigger._trigger_store_dag] Triggered sync orchestrator dag=%s store=%s run_id=%s logical_date=%s reset=%s",
-                dag_id,
-                normalized_store,
-                run_id,
-                logical_date.isoformat(),
-                reset_dag_run,
-            )
+            self.logger.info(f"[DagSyncTrigger._trigger_store_dag] Triggered sync orchestrator dag={dag_id} store={normalized_store} run_id={run_id} logical_date={logical_date.isoformat()} reset={reset_dag_run}")
             return {
                 "dag_id": dag_id,
                 "run_id": run_id,
                 "action": "triggered",
             }
         except Exception as exc:
-            self.logger.error(
-                "[DagSyncTrigger._trigger_store_dag] Failed to trigger dag=%s for store=%s: %s",
-                dag_id,
-                normalized_store,
-                exc,
-                exc_info=True,
-            )
+            self.logger.error(f"[DagSyncTrigger._trigger_store_dag] Failed to trigger dag={dag_id} for store={normalized_store}: {exc}", exc_info=True)
             return {
                 "dag_id": dag_id,
                 "run_id": run_id,
@@ -427,11 +394,7 @@ class DagSyncTrigger:
             if not next_pending:
                 break
 
-            self.logger.info(
-                "[DagSyncTrigger._wait_for_dag_runs] Waiting for %d downstream DagRun(s) to complete: %s",
-                len(next_pending),
-                sorted(next_pending),
-            )
+            self.logger.info(f"[DagSyncTrigger._wait_for_dag_runs] Waiting for {len(next_pending)} downstream DagRun(s) to complete: {sorted(next_pending)}")
             pending = next_pending
             time.sleep(self.poke_interval)
 
@@ -455,14 +418,7 @@ class DagSyncTrigger:
             if not failed_runs:
                 break
 
-            self.logger.info(
-                "[DagSyncTrigger._wait_for_dag_runs_with_retry] Auto-retry %d/%d "
-                "for %d failed DagRun(s): %s",
-                retry_attempt,
-                self.failed_dag_run_retries,
-                len(failed_runs),
-                failed_runs,
-            )
+            self.logger.info(f"[DagSyncTrigger._wait_for_dag_runs_with_retry] Auto-retry {retry_attempt}/{self.failed_dag_run_retries} for {len(failed_runs)} failed DagRun(s): {failed_runs}")
             time.sleep(self.failed_dag_run_retry_delay)
 
             runs_to_retry: List[Tuple[str, str]] = []
@@ -558,20 +514,10 @@ class DagSyncTrigger:
             if comms_msg.error == ErrorType.DAGRUN_ALREADY_EXISTS:
                 existing_state = self._get_existing_run_state(dag_id, run_id)
                 if existing_state in _ACTIVE_DAG_RUN_STATES:
-                    self.logger.info(
-                        "[DagSyncTrigger._trigger_dag_sdk] DagRun already active for dag=%s run_id=%s state=%s",
-                        dag_id,
-                        run_id,
-                        existing_state,
-                    )
+                    self.logger.info(f"[DagSyncTrigger._trigger_dag_sdk] DagRun already active for dag={dag_id} run_id={run_id} state={existing_state}")
                     return
                 if not reset_dag_run:
-                    self.logger.info(
-                        "[DagSyncTrigger._trigger_dag_sdk] DagRun already exists for dag=%s run_id=%s state=%s; resetting",
-                        dag_id,
-                        run_id,
-                        existing_state,
-                    )
+                    self.logger.info(f"[DagSyncTrigger._trigger_dag_sdk] DagRun already exists for dag={dag_id} run_id={run_id} state={existing_state}; resetting")
                     self._trigger_dag_sdk(
                         dag_id,
                         run_id,
@@ -580,11 +526,7 @@ class DagSyncTrigger:
                         reset_dag_run=True,
                     )
                     return
-                self.logger.warning(
-                    "[DagSyncTrigger._trigger_dag_sdk] DagRun already exists for dag=%s run_id=%s after reset attempt",
-                    dag_id,
-                    run_id,
-                )
+                self.logger.warning(f"[DagSyncTrigger._trigger_dag_sdk] DagRun already exists for dag={dag_id} run_id={run_id} after reset attempt")
                 return
             raise RuntimeError(f"Failed to trigger {dag_id}: {comms_msg.error}")
 
@@ -611,19 +553,10 @@ class DagSyncTrigger:
         except DagRunAlreadyExists:
             existing_state = self._get_existing_run_state(dag_id, run_id)
             if existing_state in _ACTIVE_DAG_RUN_STATES:
-                self.logger.info(
-                    "[DagSyncTrigger._trigger_dag_orm] DagRun already active for dag=%s run_id=%s state=%s",
-                    dag_id,
-                    run_id,
-                    existing_state,
-                )
+                self.logger.info(f"[DagSyncTrigger._trigger_dag_orm] DagRun already active for dag={dag_id} run_id={run_id} state={existing_state}")
                 return
             if reset_dag_run:
-                self.logger.warning(
-                    "[DagSyncTrigger._trigger_dag_orm] DagRun already exists for dag=%s run_id=%s after reset attempt",
-                    dag_id,
-                    run_id,
-                )
+                self.logger.warning(f"[DagSyncTrigger._trigger_dag_orm] DagRun already exists for dag={dag_id} run_id={run_id} after reset attempt")
                 return
             self._clear_dag_run_orm(dag_id, run_id)
             trigger_dag(
@@ -738,15 +671,7 @@ class DagSyncTrigger:
             failed = result.get("failed_count", 0)
             duration = result.get("duration_seconds", 0.0)
 
-            logger.info(
-                "[DagSyncTrigger.log_trigger_metrics] Store %s -> triggered=%d, skipped=%d, succeeded=%d, failed=%d, duration=%.2fs",
-                store,
-                triggered,
-                skipped,
-                succeeded,
-                failed,
-                duration,
-            )
+            logger.info(f"[DagSyncTrigger.log_trigger_metrics] Store {store} -> triggered={triggered}, skipped={skipped}, succeeded={succeeded}, failed={failed}, duration={duration:.2f}s")
 
             for dag_status in result.get("dag_statuses", []):
                 line = (
@@ -766,14 +691,7 @@ class DagSyncTrigger:
             totals["duration"] += duration
 
         logger.info("[DagSyncTrigger.log_trigger_metrics] ----- Aggregated Sync Metrics -----")
-        logger.info(
-            "[DagSyncTrigger.log_trigger_metrics] TOTAL -> triggered=%d, skipped=%d, succeeded=%d, failed=%d, duration=%.2fs",
-            totals["triggered"],
-            totals["skipped"],
-            totals["succeeded"],
-            totals["failed"],
-            totals["duration"],
-        )
+        logger.info(f'[DagSyncTrigger.log_trigger_metrics] TOTAL -> triggered={totals["triggered"]}, skipped={totals["skipped"]}, succeeded={totals["succeeded"]}, failed={totals["failed"]}, duration={totals["duration"]:.2f}s')
         logger.info("[DagSyncTrigger.log_trigger_metrics] -----------------------------------")
 
         return {
@@ -797,12 +715,7 @@ class DagSyncTrigger:
                 if dag_run:
                     session.delete(dag_run)
         except Exception as exc:
-            self.logger.warning(
-                "[DagSyncTrigger._clear_dag_run_orm] Could not delete DagRun for %s/%s: %s",
-                dag_id,
-                run_id,
-                exc,
-            )
+            self.logger.warning(f"[DagSyncTrigger._clear_dag_run_orm] Could not delete DagRun for {dag_id}/{run_id}: {exc}")
 
     def trigger_store(self, store_number: Any) -> Dict[str, Any]:
         """

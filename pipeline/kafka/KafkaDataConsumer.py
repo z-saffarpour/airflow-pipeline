@@ -77,10 +77,8 @@ class KafkaDataConsumer(MessageConsumer):
         try:
             config = self._build_consumer_config()
             self.logger.debug(
-                "[KafkaDataConsumer.create_consumer] Creating Kafka Consumer | conn_id=%s | group=%s | bootstrap=%s",
-                self.conn_id,
-                self.consumer_group,
-                config.get("bootstrap.servers"),
+                f'[KafkaDataConsumer.create_consumer] Creating Kafka Consumer | conn_id={self.conn_id} | '
+                f'group={self.consumer_group} | bootstrap={config.get("bootstrap.servers")}'
             )
             return Consumer(config)
         except Exception as exc:
@@ -157,10 +155,7 @@ class KafkaDataConsumer(MessageConsumer):
             return
         try:
             consumer.commit(offsets=list(offsets.values()), asynchronous=False)
-            self.logger.debug(
-                "[KafkaDataConsumer.commit_offsets] Committed Kafka offsets | partitions=%s",
-                len(offsets),
-            )
+            self.logger.debug(f"[KafkaDataConsumer.commit_offsets] Committed Kafka offsets | partitions={len(offsets)}")
         except Exception as exc:
             raise KafkaConsumerError(f"Failed to commit Kafka offsets: {exc}") from exc
 
@@ -276,16 +271,12 @@ class KafkaDataConsumer(MessageConsumer):
             tps = [TopicPartition(topic, int(p)) for p in assigned_partitions]
             consumer.assign(tps)
             self.logger.info(
-                "[KafkaDataConsumer._subscribe_or_assign] Assigned partitions | topic=%s | partitions=%s",
-                topic,
-                list(assigned_partitions),
+                f"[KafkaDataConsumer._subscribe_or_assign] Assigned partitions | topic={topic} | partitions={list(assigned_partitions)}"
             )
         else:
             consumer.subscribe([topic])
             self.logger.info(
-                "[KafkaDataConsumer._subscribe_or_assign] Subscribed | topic=%s | group=%s",
-                topic,
-                self.consumer_group,
+                f"[KafkaDataConsumer._subscribe_or_assign] Subscribed | topic={topic} | group={self.consumer_group}"
             )
 
     def _stream_with_consumer(
@@ -313,12 +304,8 @@ class KafkaDataConsumer(MessageConsumer):
             self._subscribe_or_assign(consumer, topic, assigned_partitions)
 
             self.logger.info(
-                "[KafkaDataConsumer._stream_with_consumer] START | topic=%s | group=%s | "
-                "batch_size=%s | max_messages=%s",
-                topic,
-                self.consumer_group,
-                self.batch_size,
-                self.max_messages_per_run,
+                f"[KafkaDataConsumer._stream_with_consumer] START | topic={topic} | group={self.consumer_group} | "
+                f"batch_size={self.batch_size} | max_messages={self.max_messages_per_run}"
             )
 
             while True:
@@ -335,20 +322,14 @@ class KafkaDataConsumer(MessageConsumer):
                     if batch:
                         batch_number += 1
                         self.logger.info(
-                            "[KafkaDataConsumer._stream_with_consumer] Batch %s | rows=%s | "
-                            "processed=%s (flush on idle)",
-                            batch_number,
-                            len(batch),
-                            f"{processed:,}",
+                            f"[KafkaDataConsumer._stream_with_consumer] Batch {batch_number} | rows={len(batch)} | processed={processed:,} (flush on idle)"
                         )
                         yield batch, dict(offsets)
                         batch = []
                         offsets = {}
                     if idle_polls >= self.max_idle_polls:
                         self.logger.info(
-                            "[KafkaDataConsumer._stream_with_consumer] Idle limit reached | "
-                            "idle_polls=%s",
-                            idle_polls,
+                            f"[KafkaDataConsumer._stream_with_consumer] Idle limit reached | idle_polls={idle_polls}"
                         )
                         break
                     continue
@@ -376,10 +357,7 @@ class KafkaDataConsumer(MessageConsumer):
                 if len(batch) >= self.batch_size:
                     batch_number += 1
                     self.logger.info(
-                        "[KafkaDataConsumer._stream_with_consumer] Batch %s | rows=%s | processed=%s",
-                        batch_number,
-                        len(batch),
-                        f"{processed:,}",
+                        f"[KafkaDataConsumer._stream_with_consumer] Batch {batch_number} | rows={len(batch)} | processed={processed:,}"
                     )
                     yield batch, dict(offsets)
                     batch = []
@@ -395,29 +373,20 @@ class KafkaDataConsumer(MessageConsumer):
             if batch:
                 batch_number += 1
                 self.logger.info(
-                    "[KafkaDataConsumer._stream_with_consumer] Batch %s | rows=%s | processed=%s "
-                    "(final flush)",
-                    batch_number,
-                    len(batch),
-                    f"{processed:,}",
+                    f"[KafkaDataConsumer._stream_with_consumer] Batch {batch_number} | rows={len(batch)} | processed={processed:,} (final flush)"
                 )
                 yield batch, dict(offsets)
 
             self.logger.info(
-                "[KafkaDataConsumer._stream_with_consumer] FINISH | processed=%s | batches=%s | "
-                "reached_limit=%s",
-                processed,
-                batch_number,
-                reached_limit,
+                f"[KafkaDataConsumer._stream_with_consumer] FINISH | processed={processed} | "
+                f"batches={batch_number} | reached_limit={reached_limit}"
             )
         except KafkaConsumerError:
             raise
         except Exception as exc:
             self.logger.error(
-                "[KafkaDataConsumer._stream_with_consumer] ERROR | processed=%s | error=%s",
-                processed,
-                exc,
-                exc_info=True,
+                f"[KafkaDataConsumer._stream_with_consumer] ERROR | processed={processed} | error={exc}",
+                exc_info=True
             )
             raise KafkaConsumerError(f"Streaming Kafka topic failed: {exc}") from exc
         finally:

@@ -71,7 +71,7 @@ def validate_kafka_conn(conn_id: str) -> dict:
         result = validate_kafka_conn("kafka_default")
         # {"status": "ok", "conn_id": "kafka_default", "timestamp": "2026-03-16T15:50:14Z"}
     """
-    logger.info("Validating Kafka connection: %s", conn_id)
+    logger.info(f"Validating Kafka connection: {conn_id}")
     
     try:
         factory = KafkaConnectionFactory(conn_id=conn_id)
@@ -88,11 +88,11 @@ def validate_kafka_conn(conn_id: str) -> dict:
             details={"brokers_count": brokers_count}
         )
         
-        logger.info("Kafka validated: %s (%d brokers)", conn_id, brokers_count)
+        logger.info(f"Kafka validated: {conn_id} ({brokers_count} brokers)")
         return result.to_dict()
     
     except Exception as exc:
-        logger.exception("Kafka validation failed: %s", conn_id)
+        logger.exception(f"Kafka validation failed: {conn_id}")
         raise AirflowException(f"Kafka validation failed for {conn_id}: {exc}")
 
 
@@ -117,7 +117,7 @@ def validate_mssql_conn(conn_id: str) -> dict:
         result = validate_mssql_conn("mssql_default")
         #  {"status": "ok", "conn_id": "mssql_default", "timestamp": "..."}
     """
-    logger.info("Validating SQL Server connection: %s", conn_id)
+    logger.info(f"Validating SQL Server connection: {conn_id}")
     
     try:
         factory = MSSQLConnectionFactory(conn_id = conn_id)
@@ -132,11 +132,11 @@ def validate_mssql_conn(conn_id: str) -> dict:
             timestamp=datetime.now().isoformat(),
         )
         
-        logger.info("SQL Server validated: %s", conn_id)
+        logger.info(f"SQL Server validated: {conn_id}")
         return validation_result.to_dict()
     
     except Exception as exc:
-        logger.exception("SQL Server validation failed: %s", conn_id)
+        logger.exception(f"SQL Server validation failed: {conn_id}")
         raise AirflowException(f"SQL Server validation failed for {conn_id}: {exc}")
 
         
@@ -153,7 +153,7 @@ def validate_mysql_conn(conn_id: str) -> dict:
     Raises:
         AirflowException: If the connection fails or query execution fails.
     """
-    logger.info("Validating MySQL connection: %s", conn_id)
+    logger.info(f"Validating MySQL connection: {conn_id}")
 
     try:
         factory = MySQLConnectionFactory(conn_id=conn_id)
@@ -168,11 +168,11 @@ def validate_mysql_conn(conn_id: str) -> dict:
             timestamp=datetime.now().isoformat(),
         )
 
-        logger.info("MySQL validated: %s", conn_id)
+        logger.info(f"MySQL validated: {conn_id}")
         return validation_result.to_dict()
 
     except Exception as exc:
-        logger.exception("MySQL validation failed: %s", conn_id)
+        logger.exception(f"MySQL validation failed: {conn_id}")
         raise AirflowException(f"MySQL validation failed for {conn_id}: {exc}")
 
 
@@ -189,7 +189,7 @@ def validate_postgres_conn(conn_id: str) -> dict:
     Raises:
         AirflowException: If the connection fails or query execution fails.
     """
-    logger.info("Validating PostgreSQL connection: %s", conn_id)
+    logger.info(f"Validating PostgreSQL connection: {conn_id}")
 
     try:
         factory = PostgreSQLConnectionFactory(conn_id=conn_id)
@@ -204,11 +204,11 @@ def validate_postgres_conn(conn_id: str) -> dict:
             timestamp=datetime.now().isoformat(),
         )
 
-        logger.info("PostgreSQL validated: %s", conn_id)
+        logger.info(f"PostgreSQL validated: {conn_id}")
         return validation_result.to_dict()
 
     except Exception as exc:
-        logger.exception("PostgreSQL validation failed: %s", conn_id)
+        logger.exception(f"PostgreSQL validation failed: {conn_id}")
         raise AirflowException(f"PostgreSQL validation failed for {conn_id}: {exc}")
 
 
@@ -225,7 +225,7 @@ def validate_mongo_conn(conn_id: str) -> dict:
     Raises:
         AirflowException: If the connection fails or ping fails.
     """
-    logger.info("Validating MongoDB connection: %s", conn_id)
+    logger.info(f"Validating MongoDB connection: {conn_id}")
 
     try:
         factory = MongoDBConnectionFactory(conn_id=conn_id)
@@ -240,11 +240,11 @@ def validate_mongo_conn(conn_id: str) -> dict:
             timestamp=datetime.now().isoformat(),
         )
 
-        logger.info("MongoDB validated: %s", conn_id)
+        logger.info(f"MongoDB validated: {conn_id}")
         return validation_result.to_dict()
 
     except Exception as exc:
-        logger.exception("MongoDB validation failed: %s", conn_id)
+        logger.exception(f"MongoDB validation failed: {conn_id}")
         raise AirflowException(f"MongoDB validation failed for {conn_id}: {exc}")
 
 
@@ -269,7 +269,7 @@ def validate_clickhouse_conn(conn_id: str) -> dict:
         result = validate_clickhouse_conn("mssql_default")
         #  {"status": "ok", "conn_id": "mssql_default", "timestamp": "..."}
     """
-    logger.info("Validating ClickHouse connection: %s", conn_id)
+    logger.info(f"Validating ClickHouse connection: {conn_id}")
     
     try:
         factory = ClickHouseConnectionFactory(conn_id = conn_id)
@@ -284,9 +284,9 @@ def validate_clickhouse_conn(conn_id: str) -> dict:
             timestamp=datetime.now().isoformat(),
         )
         
-        logger.info("ClickHouse validated: %s", conn_id)
+        logger.info(f"ClickHouse validated: {conn_id}")
         return validation_result.to_dict()
     
     except Exception as exc:
-        logger.exception("ClickHouse validation failed: %s", conn_id)
+        logger.exception(f"ClickHouse validation failed: {conn_id}")
         raise AirflowException(f"ClickHouse validation failed for {conn_id}: {exc}")

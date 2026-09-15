@@ -142,9 +142,7 @@ class MSSQLToKafkaQueryOrchestrator(SyncOrchestrator):
         )
         if total_count == 0:
             self.logger.info(
-                "[MSSQLToKafkaQueryOrchestrator.plan_sync_chunks] No rows to plan | "
-                "source=%s",
-                sync_config.source_name,
+                f"[MSSQLToKafkaQueryOrchestrator.plan_sync_chunks] No rows to plan | source={sync_config.source_name}"
             )
             return []
 
@@ -173,11 +171,8 @@ class MSSQLToKafkaQueryOrchestrator(SyncOrchestrator):
             )
 
         self.logger.info(
-            "[MSSQLToKafkaQueryOrchestrator.plan_sync_chunks] Planned %d chunks | "
-            "source=%s | total_rows=%s",
-            len(chunks),
-            sync_config.source_name,
-            total_count,
+            f"[MSSQLToKafkaQueryOrchestrator.plan_sync_chunks] Planned {len(chunks)} chunks | "
+            f"source={sync_config.source_name} | total_rows={total_count}"
         )
         return chunks
 
@@ -220,15 +215,8 @@ class MSSQLToKafkaQueryOrchestrator(SyncOrchestrator):
         query_params = (min_key, max_key)
 
         self.logger.info(
-            "[MSSQLToKafkaQueryOrchestrator.sync_data_chunk] Starting | source=%s | "
-            "topic=%s | chunk=%s | %s=[%s, %s] | expected_rows=%s",
-            sync_config.source_name,
-            kafka_topic,
-            chunk_no,
-            chunk_column,
-            min_key,
-            max_key,
-            expected_rows,
+            f"[MSSQLToKafkaQueryOrchestrator.sync_data_chunk] Starting | source={sync_config.source_name} | "
+            f"topic={kafka_topic} | chunk={chunk_no} | {chunk_column}=[{min_key}, {max_key}] | expected_rows={expected_rows}"
         )
 
         try:
@@ -259,11 +247,8 @@ class MSSQLToKafkaQueryOrchestrator(SyncOrchestrator):
                     )
                 except Exception as exc:
                     self.logger.error(
-                        "[MSSQLToKafkaQueryOrchestrator.sync_data_chunk] Kafka send "
-                        "failed | chunk=%s | batch=%s | error=%s",
-                        chunk_no,
-                        batch_number,
-                        exc,
+                        f"[MSSQLToKafkaQueryOrchestrator.sync_data_chunk] Kafka send failed | chunk={chunk_no} | "
+                        f"batch={batch_number} | error={exc}"
                     )
                     if self.fail_on_error:
                         raise
@@ -312,12 +297,8 @@ class MSSQLToKafkaQueryOrchestrator(SyncOrchestrator):
         version_id = self._resolve_version_id(self.version_id, execution_date)
 
         self.logger.info(
-            "[MSSQLToKafkaQueryOrchestrator.sync_data] Starting MSSQL → Kafka "
-            "sync | source=%s | topic=%s | batch_size=%s | version_id=%s",
-            sync_config.source_name,
-            kafka_topic,
-            self.batch_size,
-            version_id,
+            f"[MSSQLToKafkaQueryOrchestrator.sync_data] Starting MSSQL → Kafka sync | "
+            f"source={sync_config.source_name} | topic={kafka_topic} | batch_size={self.batch_size} | version_id={version_id}"
         )
 
         try:
@@ -368,10 +349,7 @@ class MSSQLToKafkaQueryOrchestrator(SyncOrchestrator):
                     )
                 except Exception as exc:
                     self.logger.error(
-                        "[MSSQLToKafkaQueryOrchestrator.sync_data] Kafka send "
-                        "failed | batch=%s | error=%s",
-                        batch_number,
-                        exc,
+                        f"[MSSQLToKafkaQueryOrchestrator.sync_data] Kafka send failed | batch={batch_number} | error={exc}"
                     )
                     if self.fail_on_error:
                         raise
@@ -380,21 +358,13 @@ class MSSQLToKafkaQueryOrchestrator(SyncOrchestrator):
                 metrics.increment_batch(batch_size)
 
                 self.logger.info(
-                    "[MSSQLToKafkaQueryOrchestrator.sync_data] Batch %s | rows=%s | "
-                    "transferred=%s",
-                    batch_number,
-                    batch_size,
-                    metrics.transferred_records,
+                    f"[MSSQLToKafkaQueryOrchestrator.sync_data] Batch {batch_number} | rows={batch_size} | transferred={metrics.transferred_records}"
                 )
 
             metrics.mark_completed()
             self.logger.info(
-                "[MSSQLToKafkaQueryOrchestrator.sync_data] Completed | source=%s | "
-                "topic=%s | transferred=%s | duration=%ss",
-                sync_config.source_name,
-                kafka_topic,
-                metrics.transferred_records,
-                metrics.duration_seconds,
+                f"[MSSQLToKafkaQueryOrchestrator.sync_data] Completed | source={sync_config.source_name} | "
+                f"topic={kafka_topic} | transferred={metrics.transferred_records} | duration={metrics.duration_seconds}s"
             )
 
             return TransferResult.create_success(
@@ -410,10 +380,8 @@ class MSSQLToKafkaQueryOrchestrator(SyncOrchestrator):
         except Exception as exc:
             error_message = f"Transfer failed for {sync_config.source_name}: {exc}"
             self.logger.error(
-                "[MSSQLToKafkaQueryOrchestrator.sync_data] Failed | source=%s | error=%s",
-                sync_config.source_name,
-                exc,
-                exc_info=True,
+                f"[MSSQLToKafkaQueryOrchestrator.sync_data] Failed | source={sync_config.source_name} | error={exc}",
+                exc_info=True
             )
             metrics.mark_failed(error_message)
             return TransferResult.create_failure(

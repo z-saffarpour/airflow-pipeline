@@ -204,10 +204,8 @@ class MSSQLToMSSQLQueryOrchestrator(SyncOrchestrator):
         try:
             if min_key is None or max_key is None:
                 self.logger.info(
-                    "[MSSQLToMSSQLQueryOrchestrator._finalize_delete_missing] Skipping scoped delete | table=%s | scope_column=%s | "
-                    "reason=source scope bounds unavailable (empty source)",
-                    sync_config.target_table,
-                    scope_column,
+                    f"[MSSQLToMSSQLQueryOrchestrator._finalize_delete_missing] Skipping scoped delete | "
+                    f"table={sync_config.target_table} | scope_column={scope_column} | reason=source scope bounds unavailable (empty source)"
                 )
                 return 0
 
@@ -221,13 +219,9 @@ class MSSQLToMSSQLQueryOrchestrator(SyncOrchestrator):
                 max_key=max_key,
             )
             self.logger.info(
-                "[MSSQLToMSSQLQueryOrchestrator._finalize_delete_missing] Scoped delete_missing completed | table=%s | scope_column=%s | "
-                "min_key=%s | max_key=%s | deleted=%s",
-                sync_config.target_table,
-                scope_column,
-                min_key,
-                max_key,
-                deleted,
+                f"[MSSQLToMSSQLQueryOrchestrator._finalize_delete_missing] Scoped delete_missing completed | "
+                f"table={sync_config.target_table} | scope_column={scope_column} | min_key={min_key} | "
+                f"max_key={max_key} | deleted={deleted}"
             )
             return deleted
         finally:
@@ -268,8 +262,7 @@ class MSSQLToMSSQLQueryOrchestrator(SyncOrchestrator):
         )
         if total_count == 0:
             self.logger.info(
-                "[MSSQLToMSSQLQueryOrchestrator.plan_sync_chunks] No rows to plan for dynamic sync | table=%s",
-                sync_config.target_table,
+                f"[MSSQLToMSSQLQueryOrchestrator.plan_sync_chunks] No rows to plan for dynamic sync | table={sync_config.target_table}"
             )
             return []
 
@@ -298,11 +291,8 @@ class MSSQLToMSSQLQueryOrchestrator(SyncOrchestrator):
             )
 
         self.logger.info(
-            "[MSSQLToMSSQLQueryOrchestrator.plan_sync_chunks] Planned %d dynamic sync chunks | table=%s | total_rows=%s | chunk_size=%s",
-            len(chunks),
-            sync_config.target_table,
-            total_count,
-            sync_config.task_chunk_size,
+            f"[MSSQLToMSSQLQueryOrchestrator.plan_sync_chunks] Planned {len(chunks)} dynamic sync chunks | "
+            f"table={sync_config.target_table} | total_rows={total_count} | chunk_size={sync_config.task_chunk_size}"
         )
         return chunks
 
@@ -316,9 +306,8 @@ class MSSQLToMSSQLQueryOrchestrator(SyncOrchestrator):
         chunk_no = chunk["chunk_no"]
         if chunk.get("skip"):
             self.logger.info(
-                "[MSSQLToMSSQLQueryOrchestrator.sync_data_chunk] Skipping chunk sync | table=%s | chunk=%s | reason=skip flag set",
-                sync_config.target_table,
-                chunk_no,
+                f"[MSSQLToMSSQLQueryOrchestrator.sync_data_chunk] Skipping chunk sync | "
+                f"table={sync_config.target_table} | chunk={chunk_no} | reason=skip flag set"
             )
             return TransferResult.create_success(
                 records_transferred=0,
@@ -348,14 +337,9 @@ class MSSQLToMSSQLQueryOrchestrator(SyncOrchestrator):
         query_params = (min_key, max_key)
 
         self.logger.info(
-            "[MSSQLToMSSQLQueryOrchestrator.sync_data_chunk] Starting chunk sync | table=%s | chunk=%s | %s>=%s | %s<=%s | expected_rows=%s",
-            sync_config.target_table,
-            chunk_no,
-            chunk_column,
-            min_key,
-            chunk_column,
-            max_key,
-            expected_rows,
+            f"[MSSQLToMSSQLQueryOrchestrator.sync_data_chunk] Starting chunk sync | "
+            f"table={sync_config.target_table} | chunk={chunk_no} | {chunk_column}>={min_key} | "
+            f"{chunk_column}<={max_key} | expected_rows={expected_rows}"
         )
 
         try:
@@ -414,13 +398,8 @@ class MSSQLToMSSQLQueryOrchestrator(SyncOrchestrator):
                 metrics.increment_batch(batch_size)
 
                 self.logger.info(
-                    "[MSSQLToMSSQLQueryOrchestrator.sync_data_chunk] Chunk sync progress | table=%s | chunk=%s | batch=%s | rows=%s | staged=%s/%s",
-                    sync_config.target_table,
-                    chunk_no,
-                    batch_number,
-                    batch_size,
-                    metrics.transferred_records,
-                    expected_rows or metrics.transferred_records,
+                    f"[MSSQLToMSSQLQueryOrchestrator.sync_data_chunk] Chunk sync progress | "
+                    f"table={sync_config.target_table} | chunk={chunk_no} | batch={batch_number} | rows={batch_size} | staged={metrics.transferred_records}/{expected_rows or metrics.transferred_records}"
                 )
 
             if sync_config.delete_missing and keys_staging_table:
@@ -486,12 +465,10 @@ class MSSQLToMSSQLQueryOrchestrator(SyncOrchestrator):
         total_count = None
         
         self.logger.info(
-            "[MSSQLToMSSQLQueryOrchestrator.sync_data] Starting MSSQL to MSSQL query transfer | source_conn_id=%s | target_schema=%s | target_table=%s | staging_schema=%s | batch_size=%s",
-            self.source_conn_id,
-            sync_config.target_schema,
-            sync_config.target_table,
-            self._resolve_staging_schema(sync_config),
-            self.batch_size,
+            f"[MSSQLToMSSQLQueryOrchestrator.sync_data] Starting MSSQL to MSSQL query transfer | "
+            f"source_conn_id={self.source_conn_id} | target_schema={sync_config.target_schema} | "
+            f"target_table={sync_config.target_table} | "
+            f"staging_schema={self._resolve_staging_schema(sync_config)} | batch_size={self.batch_size}"
         )
         # Initialize components
         reader = None
@@ -517,12 +494,8 @@ class MSSQLToMSSQLQueryOrchestrator(SyncOrchestrator):
                     scope_column,
                 )
                 self.logger.info(
-                    "[MSSQLToMSSQLQueryOrchestrator.sync_data] delete_missing enabled | table=%s | scope_column=%s | "
-                    "min_key=%s | max_key=%s",
-                    sync_config.target_table,
-                    scope_column,
-                    min_key,
-                    max_key,
+                    f"[MSSQLToMSSQLQueryOrchestrator.sync_data] delete_missing enabled | "
+                    f"table={sync_config.target_table} | scope_column={scope_column} | min_key={min_key} | max_key={max_key}"
                 )
             
             # Get total count for metrics
@@ -534,17 +507,14 @@ class MSSQLToMSSQLQueryOrchestrator(SyncOrchestrator):
                 metrics.total_records = total_count
 
                 self.logger.info(
-                    "[MSSQLToMSSQLQueryOrchestrator.sync_data] Total records to transfer | table=%s | total_count=%s | execution_date=%s",
-                    sync_config.target_table,
-                    total_count,
-                    execution_date,
+                    f"[MSSQLToMSSQLQueryOrchestrator.sync_data] Total records to transfer | "
+                    f"table={sync_config.target_table} | total_count={total_count} | execution_date={execution_date}"
                 )
 
                 if total_count == 0:
                     self.logger.info(
-                        "[MSSQLToMSSQLQueryOrchestrator.sync_data] No records to transfer | table=%s | execution_date=%s",
-                        sync_config.target_table,
-                        execution_date,
+                        f"[MSSQLToMSSQLQueryOrchestrator.sync_data] No records to transfer | "
+                        f"table={sync_config.target_table} | execution_date={execution_date}"
                     )
 
                     if delete_missing:
@@ -603,11 +573,7 @@ class MSSQLToMSSQLQueryOrchestrator(SyncOrchestrator):
                 batch_size = len(batch)
 
                 self.logger.debug(
-                    "[MSSQLToMSSQLQueryOrchestrator.sync_data] Processing batch %s | rows=%s | target=%s.%s",
-                    batch_number,
-                    batch_size,
-                    sync_config.target_schema,
-                    sync_config.target_table,
+                    f"[MSSQLToMSSQLQueryOrchestrator.sync_data] Processing batch {batch_number} | rows={batch_size} | target={sync_config.target_schema}.{sync_config.target_table}"
                 )
 
                 batch_result = writer.upsert_batch(
@@ -636,23 +602,16 @@ class MSSQLToMSSQLQueryOrchestrator(SyncOrchestrator):
                 metrics.deleted += batch_result.get("deleted", 0)
 
                 self.logger.debug(
-                    "[MSSQLToMSSQLQueryOrchestrator.sync_data] Batch %s processed | rows=%s",
-                    batch_number,
-                    batch_size,
+                    f"[MSSQLToMSSQLQueryOrchestrator.sync_data] Batch {batch_number} processed | rows={batch_size}"
                 )
 
                 metrics.increment_batch(batch_size)
 
                 progress = metrics.get_progress_percentage()
                 self.logger.debug(
-                    "[MSSQLToMSSQLQueryOrchestrator.sync_data] Batch transferred | table=%s | batch=%s | batch_size=%s | "
-                    "transferred=%s | total=%s | progress=%s%%",
-                    sync_config.source_name,
-                    batch_number,
-                    batch_size,
-                    metrics.transferred_records,
-                    total_count if sync_config.source_query_count is not None else None,
-                    round(progress, 1) if progress is not None else None,
+                    f"[MSSQLToMSSQLQueryOrchestrator.sync_data] Batch transferred | table={sync_config.source_name} | "
+                    f"batch={batch_number} | batch_size={batch_size} | transferred={metrics.transferred_records} | "
+                    f"total={total_count if sync_config.source_query_count is not None else None} | progress={round(progress, 1) if progress is not None else None}%"
                 )
 
             if delete_missing and keys_staging_table:
@@ -670,17 +629,10 @@ class MSSQLToMSSQLQueryOrchestrator(SyncOrchestrator):
             summary = metrics.get_summary_message()
             
             self.logger.info(
-                "[MSSQLToMSSQLQueryOrchestrator.sync_data] MSSQL to MSSQL query transfer completed successfully | "
-                "table=%s | transferred=%s | batches=%s | duration=%ss | "
-                "inserted=%s | updated=%s | deleted=%s | %s",
-                sync_config.source_name,
-                metrics.transferred_records,
-                metrics.batch_count,
-                metrics.duration_seconds,
-                metrics.inserted,
-                metrics.updated,
-                metrics.deleted,
-                summary,
+                f"[MSSQLToMSSQLQueryOrchestrator.sync_data] MSSQL to MSSQL query transfer completed successfully | "
+                f"table={sync_config.source_name} | transferred={metrics.transferred_records} | "
+                f"batches={metrics.batch_count} | duration={metrics.duration_seconds}s | "
+                f"inserted={metrics.inserted} | updated={metrics.updated} | deleted={metrics.deleted} | {summary}"
             )
 
             return TransferResult.create_success(
@@ -697,12 +649,8 @@ class MSSQLToMSSQLQueryOrchestrator(SyncOrchestrator):
             error_message = f"Transfer failed for {sync_config.source_name}: {str(e)}"
 
             self.logger.error(
-                "[MSSQLToMSSQLQueryOrchestrator.sync_data] Data transfer failed | table=%s | execution_date=%s | error=%s | transferred=%s | batches=%s",
-                sync_config.source_name,
-                execution_date,
-                str(e),
-                metrics.transferred_records,
-                metrics.batch_count,
+                f"[MSSQLToMSSQLQueryOrchestrator.sync_data] Data transfer failed | table={sync_config.source_name} | "
+                f"execution_date={execution_date} | error={str(e)} | transferred={metrics.transferred_records} | batches={metrics.batch_count}"
             )
 
             metrics.mark_failed(error_message)

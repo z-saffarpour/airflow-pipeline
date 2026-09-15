@@ -110,9 +110,7 @@ class KafkaConnectionFactory(ConnectionFactory):
         try:
             config = self.get_client_config(**overrides)
             self.logger.debug(
-                "[KafkaConnectionFactory.create_admin_client] Creating Kafka AdminClient | conn_id=%s | bootstrap=%s",
-                self.conn_id,
-                config.get("bootstrap.servers"),
+                f'[KafkaConnectionFactory.create_admin_client] Creating Kafka AdminClient | conn_id={self.conn_id} | bootstrap={config.get("bootstrap.servers")}'
             )
             return AdminClient(config)
         except Exception as e:
@@ -211,6 +209,6 @@ class KafkaConnectionFactory(ConnectionFactory):
             return bool(metadata.brokers)
         except Exception:
             self.logger.exception(
-                "[KafkaConnectionFactory.test_connection] Kafka connection test failed | conn_id=%s", self.conn_id
+                f"[KafkaConnectionFactory.test_connection] Kafka connection test failed | conn_id={self.conn_id}"
             )
             return False

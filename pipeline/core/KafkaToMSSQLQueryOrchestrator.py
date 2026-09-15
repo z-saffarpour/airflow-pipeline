@@ -100,9 +100,8 @@ class KafkaToMSSQLQueryOrchestrator(SyncOrchestrator):
         try:
             if min_key is None or max_key is None:
                 self.logger.info(
-                    "[KafkaToMSSQLQueryOrchestrator._finalize_delete_missing] Skipping "
-                    "scoped delete | table=%s | reason=empty consumed scope bounds",
-                    sync_config.target_table,
+                    f"[KafkaToMSSQLQueryOrchestrator._finalize_delete_missing] Skipping scoped delete | "
+                    f"table={sync_config.target_table} | reason=empty consumed scope bounds"
                 )
                 return 0
 
@@ -116,10 +115,8 @@ class KafkaToMSSQLQueryOrchestrator(SyncOrchestrator):
                 max_key=max_key,
             )
             self.logger.info(
-                "[KafkaToMSSQLQueryOrchestrator._finalize_delete_missing] Scoped delete "
-                "completed | table=%s | deleted=%s",
-                sync_config.target_table,
-                deleted,
+                f"[KafkaToMSSQLQueryOrchestrator._finalize_delete_missing] Scoped delete completed | "
+                f"table={sync_config.target_table} | deleted={deleted}"
             )
             return deleted
         finally:
@@ -150,11 +147,8 @@ class KafkaToMSSQLQueryOrchestrator(SyncOrchestrator):
         consumer = self._create_consumer(sync_config)
         chunks = consumer.plan_partition_chunks(sync_config.kafka_topic)
         self.logger.info(
-            "[KafkaToMSSQLQueryOrchestrator.plan_sync_chunks] Planned %d partition "
-            "chunks | topic=%s | approx_lag=%s",
-            len(chunks),
-            sync_config.kafka_topic,
-            sum(chunk.get("row_count", 0) for chunk in chunks),
+            f'[KafkaToMSSQLQueryOrchestrator.plan_sync_chunks] Planned {len(chunks)} partition chunks | '
+            f'topic={sync_config.kafka_topic} | approx_lag={sum(chunk.get("row_count", 0) for chunk in chunks)}'
         )
         return chunks
 
@@ -233,10 +227,7 @@ class KafkaToMSSQLQueryOrchestrator(SyncOrchestrator):
             metrics.increment_batch(batch_size)
 
             self.logger.info(
-                "[KafkaToMSSQLQueryOrchestrator._sync_consume] Batch %s | rows=%s | transferred=%s",
-                batch_number,
-                batch_size,
-                metrics.transferred_records,
+                f"[KafkaToMSSQLQueryOrchestrator._sync_consume] Batch {batch_number} | rows={batch_size} | transferred={metrics.transferred_records}"
             )
 
         if delete_missing and keys_staging_table:
@@ -287,12 +278,8 @@ class KafkaToMSSQLQueryOrchestrator(SyncOrchestrator):
         metrics.total_records = chunk.get("row_count", 0)
 
         self.logger.info(
-            "[KafkaToMSSQLQueryOrchestrator.sync_data_chunk] Starting | table=%s | "
-            "chunk=%s | partition=%s | approx_lag=%s",
-            sync_config.target_table,
-            chunk_no,
-            partition_id,
-            chunk.get("row_count"),
+            f'[KafkaToMSSQLQueryOrchestrator.sync_data_chunk] Starting | table={sync_config.target_table} | '
+            f'chunk={chunk_no} | partition={partition_id} | approx_lag={chunk.get("row_count")}'
         )
 
         try:
@@ -332,14 +319,10 @@ class KafkaToMSSQLQueryOrchestrator(SyncOrchestrator):
         )
 
         self.logger.info(
-            "[KafkaToMSSQLQueryOrchestrator.sync_data] Starting Kafka → MSSQL sync | "
-            "source=%s | topic=%s | group=%s | target=%s.%s | batch_size=%s",
-            self.source_conn_id,
-            sync_config.kafka_topic,
-            sync_config.consumer_group,
-            sync_config.target_schema,
-            sync_config.target_table,
-            self.batch_size,
+            f"[KafkaToMSSQLQueryOrchestrator.sync_data] Starting Kafka → MSSQL sync | "
+            f"source={self.source_conn_id} | topic={sync_config.kafka_topic} | "
+            f"group={sync_config.consumer_group} | "
+            f"target={sync_config.target_schema}.{sync_config.target_table} | batch_size={self.batch_size}"
         )
 
         try:
@@ -349,23 +332,16 @@ class KafkaToMSSQLQueryOrchestrator(SyncOrchestrator):
                 metrics=metrics,
             )
             self.logger.info(
-                "[KafkaToMSSQLQueryOrchestrator.sync_data] Completed | table=%s | "
-                "transferred=%s | inserted=%s | updated=%s | deleted=%s | duration=%ss",
-                sync_config.source_name,
-                result.records_transferred,
-                result.inserted,
-                result.updated,
-                result.deleted,
-                result.duration_seconds,
+                f"[KafkaToMSSQLQueryOrchestrator.sync_data] Completed | table={sync_config.source_name} | "
+                f"transferred={result.records_transferred} | inserted={result.inserted} | updated={result.updated} | "
+                f"deleted={result.deleted} | duration={result.duration_seconds}s"
             )
             return result
         except Exception as exc:
             error_message = f"Transfer failed for {sync_config.source_name}: {exc}"
             self.logger.error(
-                "[KafkaToMSSQLQueryOrchestrator.sync_data] Failed | table=%s | error=%s",
-                sync_config.source_name,
-                exc,
-                exc_info=True,
+                f"[KafkaToMSSQLQueryOrchestrator.sync_data] Failed | table={sync_config.source_name} | error={exc}",
+                exc_info=True
             )
             metrics.mark_failed(error_message)
             return TransferResult.create_failure(

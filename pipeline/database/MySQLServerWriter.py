@@ -133,14 +133,7 @@ class MySQLServerWriter(DataWriter):
         self._cached_unique_keys[cache_key] = unique_keys
 
         if unique_keys:
-            self.logger.info(
-                "[MySQLServerWriter._discover_unique_keys] Discovered %d unique key(s) "
-                "for %s.%s: %s",
-                len(unique_keys),
-                schema,
-                table,
-                unique_keys,
-            )
+            self.logger.info(f"[MySQLServerWriter._discover_unique_keys] Discovered {len(unique_keys)} unique key(s) for {schema}.{table}: {unique_keys}")
         return unique_keys
 
     def _resolve_unique_keys(
@@ -199,13 +192,7 @@ class MySQLServerWriter(DataWriter):
             deleted = cursor.rowcount if cursor.rowcount and cursor.rowcount > 0 else 0
             if deleted:
                 total_deleted += deleted
-                self.logger.info(
-                    "[MySQLServerWriter._delete_unique_key_conflicts] Deleted %d "
-                    "conflicting row(s) from %s for unique key (%s)",
-                    deleted,
-                    table_full,
-                    ", ".join(filtered_columns),
-                )
+                self.logger.info(f'[MySQLServerWriter._delete_unique_key_conflicts] Deleted {deleted} conflicting row(s) from {table_full} for unique key ({", ".join(filtered_columns)})')
         return total_deleted
 
     def _drop_staging_table(self, cursor, staging_table: str) -> None:
@@ -241,11 +228,7 @@ class MySQLServerWriter(DataWriter):
         except Exception as exc:
             if not self.autocommit:
                 conn.rollback()
-            self.logger.warning(
-                "[MySQLServerWriter._cleanup_staging_table] Failed to drop %s: %s",
-                staging_table,
-                exc,
-            )
+            self.logger.warning(f"[MySQLServerWriter._cleanup_staging_table] Failed to drop {staging_table}: {exc}")
 
     def _finalize_connection(self, conn, cursor, *, commit: bool = True) -> None:
         try:
@@ -255,10 +238,7 @@ class MySQLServerWriter(DataWriter):
             elif not self.autocommit:
                 conn.rollback()
         except Exception as exc:
-            self.logger.warning(
-                "[MySQLServerWriter._finalize_connection] Commit/rollback failed: %s",
-                exc,
-            )
+            self.logger.warning(f"[MySQLServerWriter._finalize_connection] Commit/rollback failed: {exc}")
         try:
             cursor.close()
         except Exception:
@@ -466,11 +446,7 @@ class MySQLServerWriter(DataWriter):
                 )
                 if not self.autocommit:
                     conn.commit()
-                self.logger.info(
-                    "[MySQLServerWriter.prepare_keys_staging_table] Prepared %s for %s",
-                    keys_staging_table,
-                    table_full,
-                )
+                self.logger.info(f"[MySQLServerWriter.prepare_keys_staging_table] Prepared {keys_staging_table} for {table_full}")
                 return keys_staging_table
             except Exception:
                 if not self.autocommit:
@@ -532,12 +508,7 @@ class MySQLServerWriter(DataWriter):
         IdentifierValidator.validate_and_raise(scope_column, "column name")
 
         if min_key is None or max_key is None:
-            self.logger.warning(
-                "[MySQLServerWriter.delete_missing_in_scope] Skipping scoped delete "
-                "for %s.%s; min_key or max_key is NULL",
-                schema,
-                table,
-            )
+            self.logger.warning(f"[MySQLServerWriter.delete_missing_in_scope] Skipping scoped delete for {schema}.{table}; min_key or max_key is NULL")
             return 0
 
         table_full = self._quote_table(schema, table)
@@ -563,13 +534,8 @@ class MySQLServerWriter(DataWriter):
                 if not self.autocommit:
                     conn.commit()
                 self.logger.info(
-                    "[MySQLServerWriter.delete_missing_in_scope] Scoped delete for %s | "
-                    "scope=%s | min=%s | max=%s | deleted=%d",
-                    table_full,
-                    scope_column,
-                    min_key,
-                    max_key,
-                    deleted,
+                    f"[MySQLServerWriter.delete_missing_in_scope] Scoped delete for {table_full} | "
+                    f"scope={scope_column} | min={min_key} | max={max_key} | deleted={deleted}"
                 )
                 return deleted
             except Exception:
@@ -646,21 +612,9 @@ class MySQLServerWriter(DataWriter):
                     raise
                 attempt = retry_ctx.current_attempt + 1
                 if attempt >= retry_ctx.max_attempts:
-                    self.logger.error(
-                        "[MySQLServerWriter.upsert_batch] Deadlock persisted after "
-                        "%s attempts for %s: %s",
-                        retry_ctx.max_attempts,
-                        table_full,
-                        exc,
-                    )
+                    self.logger.error(f"[MySQLServerWriter.upsert_batch] Deadlock persisted after {retry_ctx.max_attempts} attempts for {table_full}: {exc}")
                     raise
-                self.logger.warning(
-                    "[MySQLServerWriter.upsert_batch] Deadlock victim on attempt "
-                    "%s/%s for %s, retrying...",
-                    attempt,
-                    retry_ctx.max_attempts,
-                    table_full,
-                )
+                self.logger.warning(f"[MySQLServerWriter.upsert_batch] Deadlock victim on attempt {attempt}/{retry_ctx.max_attempts} for {table_full}, retrying...")
                 retry_ctx.record_failure(exc)
 
     def _upsert_batch_once(
@@ -756,13 +710,8 @@ class MySQLServerWriter(DataWriter):
                 success = True
 
                 self.logger.info(
-                    "[MySQLServerWriter._upsert_batch_once] %s sync completed | staging=%s | "
-                    "inserted=%s | updated=%s | hash_change_detection=%s",
-                    table_full,
-                    staging_table,
-                    inserted_count,
-                    updated_count,
-                    use_hash_change_detection,
+                    f"[MySQLServerWriter._upsert_batch_once] {table_full} sync completed | staging={staging_table} | "
+                    f"inserted={inserted_count} | updated={updated_count} | hash_change_detection={use_hash_change_detection}"
                 )
                 return {
                     "success": True,
@@ -772,11 +721,7 @@ class MySQLServerWriter(DataWriter):
                     "total": inserted_count + updated_count,
                 }
             except Exception as exc:
-                self.logger.error(
-                    "[MySQLServerWriter._upsert_batch_once] Upsert failed for %s: %s",
-                    table_full,
-                    exc,
-                )
+                self.logger.error(f"[MySQLServerWriter._upsert_batch_once] Upsert failed for {table_full}: {exc}")
                 raise
             finally:
                 self._cleanup_staging_table(conn, cursor, staging_table)

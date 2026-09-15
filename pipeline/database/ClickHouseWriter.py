@@ -45,14 +45,14 @@ class ClickHouseWriter(DataWriter):
             Number of rows inserted
         """
         if not batch:
-            self.logger.warning("[ClickHouseWriter.upsert_batch] Empty batch provided for %s.%s", database, table_name)
+            self.logger.warning(f"[ClickHouseWriter.upsert_batch] Empty batch provided for {database}.{table_name}")
             return 0
 
         # Validate identifiers (database and table) to avoid injection
         IdentifierValidator.validate_and_raise(f"{database}.{table_name}", "table name")
 
         table_full = f"{database}.{table_name}"
-        self.logger.info("[ClickHouseWriter.upsert_batch] Starting upsert_batch for %s, batch size: %d, version_id=%s", table_full, len(batch), str(version_id))
+        self.logger.info(f"[ClickHouseWriter.upsert_batch] Starting upsert_batch for {table_full}, batch size: {len(batch)}, version_id={str(version_id)}")
 
         # Add version_id to batch if provided and not already present
         if version_id is not None:
@@ -73,25 +73,25 @@ class ClickHouseWriter(DataWriter):
         for col in columns:
             IdentifierValidator.validate_and_raise(col, "column name")
 
-        self.logger.info("[ClickHouseWriter.upsert_batch] Columns for insert: %s", columns)
+        self.logger.info(f"[ClickHouseWriter.upsert_batch] Columns for insert: {columns}")
 
         with self.factory.get_connection() as client:
             # Prepare data for insertion as list of lists (bulk insert)
             data = [[row.get(col) for col in columns] for row in batch]
-            self.logger.info("[ClickHouseWriter.upsert_batch] Prepared %d rows for insertion into %s", len(data), table_full)
+            self.logger.info(f"[ClickHouseWriter.upsert_batch] Prepared {len(data)} rows for insertion into {table_full}")
 
             # Build INSERT query; table and columns were validated above
             query = f"INSERT INTO {table_full} ({', '.join(columns)}) VALUES"
-            self.logger.debug("[ClickHouseWriter.upsert_batch] Executing query: %s", query)
+            self.logger.debug(f"[ClickHouseWriter.upsert_batch] Executing query: {query}")
 
             try:
                 client.execute(query, data)
-                self.logger.info("[ClickHouseWriter.upsert_batch] Successfully inserted %d rows into %s", len(batch), table_full)
+                self.logger.info(f"[ClickHouseWriter.upsert_batch] Successfully inserted {len(batch)} rows into {table_full}")
                 return len(batch)
             except Exception as e:
-                self.logger.error("[ClickHouseWriter.upsert_batch] Failed to insert into ClickHouse table %s: %s", table_full, str(e))
-                self.logger.debug("[ClickHouseWriter.upsert_batch] Query: %s", query)
-                self.logger.debug("[ClickHouseWriter.upsert_batch] Columns: %s", columns)
+                self.logger.error(f"[ClickHouseWriter.upsert_batch] Failed to insert into ClickHouse table {table_full}: {str(e)}")
+                self.logger.debug(f"[ClickHouseWriter.upsert_batch] Query: {query}")
+                self.logger.debug(f"[ClickHouseWriter.upsert_batch] Columns: {columns}")
                 raise
 
     def execute_query(self, query: str, params: dict = None) -> List[Dict[str, Any]]:
@@ -107,7 +107,7 @@ class ClickHouseWriter(DataWriter):
         """
         self.logger.info("[ClickHouseWriter.execute_query] Executing query")
         if params:
-            self.logger.debug("[ClickHouseWriter.execute_query] Query parameters: %s", params)
+            self.logger.debug(f"[ClickHouseWriter.execute_query] Query parameters: {params}")
         with self.factory.get_connection() as client:
             try:
                 result = client.execute(query, params or {}, with_column_types=True)
@@ -118,15 +118,15 @@ class ClickHouseWriter(DataWriter):
                 rows, columns_with_types = result
                 column_names = [col[0] for col in columns_with_types]
 
-                self.logger.info("[ClickHouseWriter.execute_query] Query executed successfully, returned %d rows", len(rows))
-                self.logger.debug("[ClickHouseWriter.execute_query] Result columns: %s", column_names)
+                self.logger.info(f"[ClickHouseWriter.execute_query] Query executed successfully, returned {len(rows)} rows")
+                self.logger.debug(f"[ClickHouseWriter.execute_query] Result columns: {column_names}")
 
                 return [dict(zip(column_names, row)) for row in rows]
             except Exception as e:
-                self.logger.error("[ClickHouseWriter.execute_query] Failed to execute query: %s", str(e))
-                self.logger.debug("[ClickHouseWriter.execute_query] Query: %s", query)
+                self.logger.error(f"[ClickHouseWriter.execute_query] Failed to execute query: {str(e)}")
+                self.logger.debug(f"[ClickHouseWriter.execute_query] Query: {query}")
                 if params:
-                    self.logger.debug("[ClickHouseWriter.execute_query] Parameters: %s", params)
+                    self.logger.debug(f"[ClickHouseWriter.execute_query] Parameters: {params}")
                 raise
 
 
@@ -140,17 +140,17 @@ class ClickHouseWriter(DataWriter):
         """
         self.logger.info("[ClickHouseWriter.execute_command] Executing command")
         if params:
-            self.logger.debug("[ClickHouseWriter.execute_command] Command parameters: %s", params)
+            self.logger.debug(f"[ClickHouseWriter.execute_command] Command parameters: {params}")
 
         with self.factory.get_connection() as client:
             try:
                 client.execute(command, params or {})
                 self.logger.info("[ClickHouseWriter.execute_command] Command executed successfully")
             except Exception as e:
-                self.logger.error("[ClickHouseWriter.execute_command] Failed to execute command: %s", str(e))
-                self.logger.debug("[ClickHouseWriter.execute_command] Command: %s", command)
+                self.logger.error(f"[ClickHouseWriter.execute_command] Failed to execute command: {str(e)}")
+                self.logger.debug(f"[ClickHouseWriter.execute_command] Command: {command}")
                 if params:
-                    self.logger.debug("[ClickHouseWriter.execute_command] Parameters: %s", params)
+                    self.logger.debug(f"[ClickHouseWriter.execute_command] Parameters: {params}")
                 raise
 
 

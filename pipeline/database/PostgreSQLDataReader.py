@@ -44,11 +44,7 @@ class PostgreSQLDataReader(DataReader):
         Retrieve total record count via custom COUNT query or table-based builder.
         """
         mode = "custom_query" if custom_query else "query_builder"
-        self.logger.info(
-            "[PostgreSQLDataReader.get_total_count] START | mode=%s | table=%s",
-            mode,
-            table_name,
-        )
+        self.logger.info(f"[PostgreSQLDataReader.get_total_count] START | mode={mode} | table={table_name}")
         try:
             if custom_query:
                 query = custom_query
@@ -65,19 +61,12 @@ class PostgreSQLDataReader(DataReader):
 
             result = self.connection_factory.execute_scalar(query, query_params)
             count = int(result) if result is not None else 0
-            self.logger.info(
-                "[PostgreSQLDataReader.get_total_count] SUCCESS | count=%s",
-                count,
-            )
+            self.logger.info(f"[PostgreSQLDataReader.get_total_count] SUCCESS | count={count}")
             return count
         except PostgreSQLQueryError:
             raise
         except Exception as exc:
-            self.logger.error(
-                "[PostgreSQLDataReader.get_total_count] Unexpected ERROR | error=%s",
-                exc,
-                exc_info=True,
-            )
+            self.logger.error(f"[PostgreSQLDataReader.get_total_count] Unexpected ERROR | error={exc}", exc_info=True)
             raise DataReadError(f"Failed to get total count: {exc}") from exc
 
     def stream_data(
@@ -106,10 +95,7 @@ class PostgreSQLDataReader(DataReader):
             date_column_type=date_column_type,
         )
         if total_count == 0:
-            self.logger.warning(
-                "[PostgreSQLDataReader.stream_data] NO DATA | table=%s",
-                table_name,
-            )
+            self.logger.warning(f"[PostgreSQLDataReader.stream_data] NO DATA | table={table_name}")
             return
 
         column_list = "*" if not columns else ", ".join(f'"{c}"' for c in columns)
@@ -159,11 +145,7 @@ class PostgreSQLDataReader(DataReader):
 
                 processed += len(batch)
                 self.logger.info(
-                    "[PostgreSQLDataReader.stream_data] Batch %s | rows=%s | processed=%s/%s",
-                    batch_number,
-                    len(batch),
-                    processed,
-                    total_count,
+                    f"[PostgreSQLDataReader.stream_data] Batch {batch_number} | rows={len(batch)} | processed={processed}/{total_count}"
                 )
                 yield batch
 
@@ -171,10 +153,8 @@ class PostgreSQLDataReader(DataReader):
                     break
             except Exception as exc:
                 self.logger.error(
-                    "[PostgreSQLDataReader.stream_data] ERROR reading batch %s | error=%s",
-                    batch_number,
-                    exc,
-                    exc_info=True,
+                    f"[PostgreSQLDataReader.stream_data] ERROR reading batch {batch_number} | error={exc}",
+                    exc_info=True
                 )
                 raise AirflowException(f"PostgreSQL read error: {exc}") from exc
 
@@ -191,17 +171,12 @@ class PostgreSQLDataReader(DataReader):
         batch_number = 0
 
         self.logger.info(
-            "[PostgreSQLDataReader.stream_query] START | batch_size=%s | has_count_query=%s",
-            self.batch_size,
-            count_query is not None,
+            f"[PostgreSQLDataReader.stream_query] START | batch_size={self.batch_size} | has_count_query={count_query is not None}"
         )
 
         if count_query is not None:
             total_count = self.get_total_count(custom_query=count_query, params=parameters)
-            self.logger.info(
-                "[PostgreSQLDataReader.stream_query] Total rows to stream: %s",
-                f"{total_count:,}",
-            )
+            self.logger.info(f"[PostgreSQLDataReader.stream_query] Total rows to stream: {total_count:,}")
         else:
             total_count = None
 
@@ -231,34 +206,19 @@ class PostgreSQLDataReader(DataReader):
                     if total_count:
                         percentage = processed / total_count * 100
                         self.logger.info(
-                            "[PostgreSQLDataReader.stream_query] Batch %s | rows=%s | "
-                            "processed=%s/%s (%.1f%%)",
-                            batch_number,
-                            len(batch),
-                            f"{processed:,}",
-                            f"{total_count:,}",
-                            percentage,
+                            f"[PostgreSQLDataReader.stream_query] Batch {batch_number} | rows={len(batch)} | processed={processed:,}/{total_count:,} ({percentage:.1f}%)"
                         )
                     else:
                         self.logger.info(
-                            "[PostgreSQLDataReader.stream_query] Batch %s | rows=%s | processed=%s",
-                            batch_number,
-                            len(batch),
-                            f"{processed:,}",
+                            f"[PostgreSQLDataReader.stream_query] Batch {batch_number} | rows={len(batch)} | processed={processed:,}"
                         )
 
                     yield batch
         except Exception as exc:
             self.logger.error(
-                "[PostgreSQLDataReader.stream_query] ERROR | processed=%s | error=%s",
-                processed,
-                exc,
-                exc_info=True,
+                f"[PostgreSQLDataReader.stream_query] ERROR | processed={processed} | error={exc}",
+                exc_info=True
             )
             raise AirflowException(f"Streaming PostgreSQL query failed: {exc}") from exc
 
-        self.logger.info(
-            "[PostgreSQLDataReader.stream_query] FINISH | processed=%s | batches=%s",
-            processed,
-            batch_number,
-        )
+        self.logger.info(f"[PostgreSQLDataReader.stream_query] FINISH | processed={processed} | batches={batch_number}")

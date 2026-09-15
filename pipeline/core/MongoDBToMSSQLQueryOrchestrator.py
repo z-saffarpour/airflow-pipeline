@@ -119,9 +119,8 @@ class MongoDBToMSSQLQueryOrchestrator(SyncOrchestrator):
         try:
             if min_key is None or max_key is None:
                 self.logger.info(
-                    "[MongoDBToMSSQLQueryOrchestrator._finalize_delete_missing] Skipping "
-                    "scoped delete | table=%s | reason=empty source scope bounds",
-                    sync_config.target_table,
+                    f"[MongoDBToMSSQLQueryOrchestrator._finalize_delete_missing] Skipping scoped delete | "
+                    f"table={sync_config.target_table} | reason=empty source scope bounds"
                 )
                 return 0
 
@@ -142,10 +141,8 @@ class MongoDBToMSSQLQueryOrchestrator(SyncOrchestrator):
                 max_key=max_key,
             )
             self.logger.info(
-                "[MongoDBToMSSQLQueryOrchestrator._finalize_delete_missing] Scoped delete "
-                "completed | table=%s | deleted=%s",
-                sync_config.target_table,
-                deleted,
+                f"[MongoDBToMSSQLQueryOrchestrator._finalize_delete_missing] Scoped delete completed | "
+                f"table={sync_config.target_table} | deleted={deleted}"
             )
             return deleted
         finally:
@@ -167,9 +164,7 @@ class MongoDBToMSSQLQueryOrchestrator(SyncOrchestrator):
         )
         if total_count == 0:
             self.logger.info(
-                "[MongoDBToMSSQLQueryOrchestrator.plan_sync_chunks] No rows to plan | "
-                "table=%s",
-                sync_config.target_table,
+                f"[MongoDBToMSSQLQueryOrchestrator.plan_sync_chunks] No rows to plan | table={sync_config.target_table}"
             )
             return []
 
@@ -197,11 +192,8 @@ class MongoDBToMSSQLQueryOrchestrator(SyncOrchestrator):
                 chunk["max_key"] = str(chunk["max_key"])
 
         self.logger.info(
-            "[MongoDBToMSSQLQueryOrchestrator.plan_sync_chunks] Planned %d chunks | "
-            "table=%s | total_rows=%s",
-            len(chunks),
-            sync_config.target_table,
-            total_count,
+            f"[MongoDBToMSSQLQueryOrchestrator.plan_sync_chunks] Planned {len(chunks)} chunks | "
+            f"table={sync_config.target_table} | total_rows={total_count}"
         )
         return chunks
 
@@ -240,14 +232,8 @@ class MongoDBToMSSQLQueryOrchestrator(SyncOrchestrator):
         metrics.total_records = expected_rows
 
         self.logger.info(
-            "[MongoDBToMSSQLQueryOrchestrator.sync_data_chunk] Starting | table=%s | "
-            "chunk=%s | %s=[%s, %s] | expected_rows=%s",
-            sync_config.target_table,
-            chunk_no,
-            mongo_field,
-            min_key,
-            max_key,
-            expected_rows,
+            f"[MongoDBToMSSQLQueryOrchestrator.sync_data_chunk] Starting | table={sync_config.target_table} | "
+            f"chunk={chunk_no} | {mongo_field}=[{min_key}, {max_key}] | expected_rows={expected_rows}"
         )
 
         try:
@@ -371,13 +357,9 @@ class MongoDBToMSSQLQueryOrchestrator(SyncOrchestrator):
         total_count = None
 
         self.logger.info(
-            "[MongoDBToMSSQLQueryOrchestrator.sync_data] Starting MongoDB → MSSQL sync | "
-            "source=%s | collection=%s | target=%s.%s | batch_size=%s",
-            self.source_conn_id,
-            sync_config.collection,
-            sync_config.target_schema,
-            sync_config.target_table,
-            self.batch_size,
+            f"[MongoDBToMSSQLQueryOrchestrator.sync_data] Starting MongoDB → MSSQL sync | "
+            f"source={self.source_conn_id} | collection={sync_config.collection} | "
+            f"target={sync_config.target_schema}.{sync_config.target_table} | batch_size={self.batch_size}"
         )
 
         try:
@@ -487,11 +469,7 @@ class MongoDBToMSSQLQueryOrchestrator(SyncOrchestrator):
                 metrics.increment_batch(batch_size)
 
                 self.logger.info(
-                    "[MongoDBToMSSQLQueryOrchestrator.sync_data] Batch %s | rows=%s | "
-                    "transferred=%s",
-                    batch_number,
-                    batch_size,
-                    metrics.transferred_records,
+                    f"[MongoDBToMSSQLQueryOrchestrator.sync_data] Batch {batch_number} | rows={batch_size} | transferred={metrics.transferred_records}"
                 )
 
             if delete_missing and keys_staging_table:
@@ -506,14 +484,9 @@ class MongoDBToMSSQLQueryOrchestrator(SyncOrchestrator):
 
             metrics.mark_completed()
             self.logger.info(
-                "[MongoDBToMSSQLQueryOrchestrator.sync_data] Completed | table=%s | "
-                "transferred=%s | inserted=%s | updated=%s | deleted=%s | duration=%ss",
-                sync_config.source_name,
-                metrics.transferred_records,
-                metrics.inserted,
-                metrics.updated,
-                metrics.deleted,
-                metrics.duration_seconds,
+                f"[MongoDBToMSSQLQueryOrchestrator.sync_data] Completed | table={sync_config.source_name} | "
+                f"transferred={metrics.transferred_records} | inserted={metrics.inserted} | "
+                f"updated={metrics.updated} | deleted={metrics.deleted} | duration={metrics.duration_seconds}s"
             )
 
             return TransferResult.create_success(
@@ -529,10 +502,8 @@ class MongoDBToMSSQLQueryOrchestrator(SyncOrchestrator):
         except Exception as exc:
             error_message = f"Transfer failed for {sync_config.source_name}: {exc}"
             self.logger.error(
-                "[MongoDBToMSSQLQueryOrchestrator.sync_data] Failed | table=%s | error=%s",
-                sync_config.source_name,
-                exc,
-                exc_info=True,
+                f"[MongoDBToMSSQLQueryOrchestrator.sync_data] Failed | table={sync_config.source_name} | error={exc}",
+                exc_info=True
             )
             metrics.mark_failed(error_message)
             return TransferResult.create_failure(

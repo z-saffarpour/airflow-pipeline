@@ -206,9 +206,8 @@ class MSSQLToPostgreSQLQueryOrchestrator(SyncOrchestrator):
         try:
             if min_key is None or max_key is None:
                 self.logger.info(
-                    "[MSSQLToPostgreSQLQueryOrchestrator._finalize_delete_missing] Skipping "
-                    "scoped delete | table=%s | reason=empty source scope bounds",
-                    sync_config.target_table,
+                    f"[MSSQLToPostgreSQLQueryOrchestrator._finalize_delete_missing] Skipping scoped delete | "
+                    f"table={sync_config.target_table} | reason=empty source scope bounds"
                 )
                 return 0
 
@@ -222,10 +221,8 @@ class MSSQLToPostgreSQLQueryOrchestrator(SyncOrchestrator):
                 max_key=max_key,
             )
             self.logger.info(
-                "[MSSQLToPostgreSQLQueryOrchestrator._finalize_delete_missing] Scoped delete "
-                "completed | table=%s | deleted=%s",
-                sync_config.target_table,
-                deleted,
+                f"[MSSQLToPostgreSQLQueryOrchestrator._finalize_delete_missing] Scoped delete completed | "
+                f"table={sync_config.target_table} | deleted={deleted}"
             )
             return deleted
         finally:
@@ -248,8 +245,7 @@ class MSSQLToPostgreSQLQueryOrchestrator(SyncOrchestrator):
         )
         if total_count == 0:
             self.logger.info(
-                "[MSSQLToPostgreSQLQueryOrchestrator.plan_sync_chunks] No rows to plan | table=%s",
-                sync_config.target_table,
+                f"[MSSQLToPostgreSQLQueryOrchestrator.plan_sync_chunks] No rows to plan | table={sync_config.target_table}"
             )
             return []
 
@@ -278,11 +274,8 @@ class MSSQLToPostgreSQLQueryOrchestrator(SyncOrchestrator):
             )
 
         self.logger.info(
-            "[MSSQLToPostgreSQLQueryOrchestrator.plan_sync_chunks] Planned %d chunks | "
-            "table=%s | total_rows=%s",
-            len(chunks),
-            sync_config.target_table,
-            total_count,
+            f"[MSSQLToPostgreSQLQueryOrchestrator.plan_sync_chunks] Planned {len(chunks)} chunks | "
+            f"table={sync_config.target_table} | total_rows={total_count}"
         )
         return chunks
 
@@ -323,14 +316,8 @@ class MSSQLToPostgreSQLQueryOrchestrator(SyncOrchestrator):
         query_params = (min_key, max_key)
 
         self.logger.info(
-            "[MSSQLToPostgreSQLQueryOrchestrator.sync_data_chunk] Starting | table=%s | "
-            "chunk=%s | %s=[%s, %s] | expected_rows=%s",
-            sync_config.target_table,
-            chunk_no,
-            chunk_column,
-            min_key,
-            max_key,
-            expected_rows,
+            f"[MSSQLToPostgreSQLQueryOrchestrator.sync_data_chunk] Starting | table={sync_config.target_table} | "
+            f"chunk={chunk_no} | {chunk_column}=[{min_key}, {max_key}] | expected_rows={expected_rows}"
         )
 
         try:
@@ -450,12 +437,8 @@ class MSSQLToPostgreSQLQueryOrchestrator(SyncOrchestrator):
         total_count = None
 
         self.logger.info(
-            "[MSSQLToPostgreSQLQueryOrchestrator.sync_data] Starting MSSQL → PostgreSQL sync | "
-            "source=%s | target=%s.%s | batch_size=%s",
-            self.source_conn_id,
-            sync_config.target_schema,
-            sync_config.target_table,
-            self.batch_size,
+            f"[MSSQLToPostgreSQLQueryOrchestrator.sync_data] Starting MSSQL → PostgreSQL sync | "
+            f"source={self.source_conn_id} | target={sync_config.target_schema}.{sync_config.target_table} | batch_size={self.batch_size}"
         )
 
         try:
@@ -565,11 +548,7 @@ class MSSQLToPostgreSQLQueryOrchestrator(SyncOrchestrator):
                 metrics.increment_batch(batch_size)
 
                 self.logger.info(
-                    "[MSSQLToPostgreSQLQueryOrchestrator.sync_data] Batch %s | rows=%s | "
-                    "transferred=%s",
-                    batch_number,
-                    batch_size,
-                    metrics.transferred_records,
+                    f"[MSSQLToPostgreSQLQueryOrchestrator.sync_data] Batch {batch_number} | rows={batch_size} | transferred={metrics.transferred_records}"
                 )
 
             if delete_missing and keys_staging_table:
@@ -584,14 +563,9 @@ class MSSQLToPostgreSQLQueryOrchestrator(SyncOrchestrator):
 
             metrics.mark_completed()
             self.logger.info(
-                "[MSSQLToPostgreSQLQueryOrchestrator.sync_data] Completed | table=%s | "
-                "transferred=%s | inserted=%s | updated=%s | deleted=%s | duration=%ss",
-                sync_config.source_name,
-                metrics.transferred_records,
-                metrics.inserted,
-                metrics.updated,
-                metrics.deleted,
-                metrics.duration_seconds,
+                f"[MSSQLToPostgreSQLQueryOrchestrator.sync_data] Completed | table={sync_config.source_name} | "
+                f"transferred={metrics.transferred_records} | inserted={metrics.inserted} | "
+                f"updated={metrics.updated} | deleted={metrics.deleted} | duration={metrics.duration_seconds}s"
             )
 
             return TransferResult.create_success(
@@ -607,10 +581,8 @@ class MSSQLToPostgreSQLQueryOrchestrator(SyncOrchestrator):
         except Exception as exc:
             error_message = f"Transfer failed for {sync_config.source_name}: {exc}"
             self.logger.error(
-                "[MSSQLToPostgreSQLQueryOrchestrator.sync_data] Failed | table=%s | error=%s",
-                sync_config.source_name,
-                exc,
-                exc_info=True,
+                f"[MSSQLToPostgreSQLQueryOrchestrator.sync_data] Failed | table={sync_config.source_name} | error={exc}",
+                exc_info=True
             )
             metrics.mark_failed(error_message)
             return TransferResult.create_failure(
