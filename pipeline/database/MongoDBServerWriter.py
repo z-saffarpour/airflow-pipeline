@@ -338,6 +338,132 @@ class MongoDBServerWriter(DataWriter):
                             ) from exc
         return total
 
+    @staticmethod
+    def _build_lookup_missing_pipeline(
+        staging_coll: str,
+        mongo_keys: List[str],
+        scope_filter: Dict[str, Any],
+    ) -> List[Dict[str, Any]]:
+        """
+        Build an aggregation pipeline that finds target documents (within
+        ``scope_filter``) whose key is absent from the staging collection,
+        entirely server-side - the Mongo equivalent of the
+        ``DELETE ... WHERE NOT EXISTS (SELECT 1 FROM staging ...)`` pattern
+        used by the SQL writers. Requires ``staging_coll`` to live in the
+        same database as the aggregation runs against ($lookup does not
+        support crossing databases on a standard deployment).
+
+        A pipeline-style $lookup (via ``let``/``pipeline``) is used instead
+        of the simpler localField/foreignField form so this works uniformly
+        for both single-column and composite keys.
+        """
+        let_vars = {f"k{i}": f"${col}" for i, col in enumerate(mongo_keys)}
+        match_exprs = [
+            {"$eq": [f"$${name}", f"${col}"]}
+            for name, col in zip(let_vars.keys(), mongo_keys)
+        ]
+        return [
+            {"$match": scope_filter},
+            {
+                "$lookup": {
+                    "from": staging_coll,
+                    "let": let_vars,
+                    "pipeline": [
+                        {"$match": {"$expr": {"$and": match_exprs}}},
+                        {"$limit": 1},
+                    ],
+                    "as": "_sync_match",
+                }
+            },
+            {"$match": {"_sync_match": {"$size": 0}}},
+            {"$project": {"_id": 1}},
+        ]
+
+    @staticmethod
+    def _delete_by_id_in_batches(coll, ids: List[Any], batch_size: int = 1000) -> int:
+        """Delete documents by ``_id`` in batches, without holding all ids at once."""
+        deleted = 0
+        for i in range(0, len(ids), batch_size):
+            batch = ids[i : i + batch_size]
+            result = coll.delete_many({"_id": {"$in": batch}})
+            deleted += result.deleted_count
+        return deleted
+
+    def _delete_missing_in_scope_via_lookup(
+        self,
+        target,
+        staging_coll: str,
+        mongo_keys: List[str],
+        scope_filter: Dict[str, Any],
+    ) -> int:
+        """
+        Server-side variant: stream the ids of missing documents from a
+        $lookup aggregation and delete them in batches, without ever
+        materializing the full staged-key set or the full scoped target set
+        in this process's memory.
+        """
+        agg_pipeline = self._build_lookup_missing_pipeline(
+            staging_coll, mongo_keys, scope_filter
+        )
+        deleted = 0
+        batch_ids: List[Any] = []
+        batch_size = 1000
+        for doc in target.aggregate(agg_pipeline, allowDiskUse=True):
+            batch_ids.append(doc["_id"])
+            if len(batch_ids) >= batch_size:
+                deleted += self._delete_by_id_in_batches(target, batch_ids, batch_size)
+                batch_ids = []
+        if batch_ids:
+            deleted += self._delete_by_id_in_batches(target, batch_ids, batch_size)
+        return deleted
+
+    def _delete_missing_in_scope_via_python_diff(
+        self,
+        client,
+        schema: str,
+        staging_db: str,
+        staging_coll: str,
+        target,
+        mongo_keys: List[str],
+        scope_filter: Dict[str, Any],
+    ) -> int:
+        """
+        Fallback for a staging collection in a different database than the
+        target ($lookup cannot cross databases on a standard deployment).
+        Still loads the full staged-key set into memory (unavoidable without
+        a server-side join across databases), but streams the target scope
+        via cursor and deletes incrementally instead of materializing every
+        id to delete before issuing any delete.
+        """
+        self.logger.warning(
+            "[MongoDBServerWriter.delete_missing_in_scope] staging database '%s' "
+            "differs from target database '%s'; $lookup cannot join across "
+            "databases here, falling back to a Python-side key diff (loads all "
+            "staged keys into memory).",
+            staging_db,
+            schema,
+        )
+        staging = client[staging_db][staging_coll]
+
+        staged_keys = set()
+        for doc in staging.find({}, {k: 1 for k in mongo_keys}):
+            staged_keys.add(tuple(doc.get(k) for k in mongo_keys))
+
+        deleted = 0
+        batch_ids: List[Any] = []
+        batch_size = 1000
+        projection = {k: 1 for k in mongo_keys}
+        for doc in target.find(scope_filter, projection):
+            key_tuple = tuple(doc.get(k) for k in mongo_keys)
+            if key_tuple not in staged_keys:
+                batch_ids.append(doc["_id"])
+                if len(batch_ids) >= batch_size:
+                    deleted += self._delete_by_id_in_batches(target, batch_ids, batch_size)
+                    batch_ids = []
+        if batch_ids:
+            deleted += self._delete_by_id_in_batches(target, batch_ids, batch_size)
+        return deleted
+
     def delete_missing_in_scope(
         self,
         schema: str,
@@ -374,28 +500,20 @@ class MongoDBServerWriter(DataWriter):
         scope_max = self._normalize_value(max_key)
 
         with self.connection_factory.get_client() as client:
-            staging = client[staging_db][staging_coll]
             target = client[schema][table]
-
-            # Load all staged keys into a set of tuples for membership checks.
-            staged_keys = set()
-            for doc in staging.find({}, {k: 1 for k in mongo_keys}):
-                staged_keys.add(tuple(doc.get(k) for k in mongo_keys))
-
             scope_filter = {mongo_scope: {"$gte": scope_min, "$lte": scope_max}}
-            to_delete_ids = []
-            projection = {k: 1 for k in mongo_keys}
-            for doc in target.find(scope_filter, projection):
-                key_tuple = tuple(doc.get(k) for k in mongo_keys)
-                if key_tuple not in staged_keys:
-                    to_delete_ids.append(doc["_id"])
 
-            deleted = 0
-            batch_size = 1000
-            for i in range(0, len(to_delete_ids), batch_size):
-                batch = to_delete_ids[i : i + batch_size]
-                result = target.delete_many({"_id": {"$in": batch}})
-                deleted += result.deleted_count
+            if staging_db == schema:
+                # Common case (no staging_schema override): push the whole
+                # anti-join down to MongoDB via $lookup, same as the SQL
+                # writers' DELETE ... WHERE NOT EXISTS.
+                deleted = self._delete_missing_in_scope_via_lookup(
+                    target, staging_coll, mongo_keys, scope_filter
+                )
+            else:
+                deleted = self._delete_missing_in_scope_via_python_diff(
+                    client, schema, staging_db, staging_coll, target, mongo_keys, scope_filter
+                )
 
             self.logger.info(
                 "[MongoDBServerWriter.delete_missing_in_scope] Scoped delete for %s.%s | "
