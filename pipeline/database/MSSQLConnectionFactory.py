@@ -7,7 +7,7 @@ from typing import Any, List, Dict
 from contextlib import contextmanager
 import pymssql # type: ignore
 import pyodbc # type: ignore
-from urllib.parse import urlparse, unquote, parse_qs
+from urllib.parse import urlparse, unquote, parse_qs, urlunparse
 
 from pipeline.database.SafeMsSqlHook import SafeMsSqlHook
 from pipeline.core.exceptions import (
@@ -39,6 +39,28 @@ class MSSQLConnectionFactory(SQLConnectionFactory):
         self.is_connection_string = is_connection_string
         self.logger = logging.getLogger(self.__class__.__name__)
 
+    def _safe_conn_id(self) -> str:
+        """
+        Log-safe representation of conn_id.
+
+        When is_connection_string is True, conn_id is a full connection
+        string of the form scheme://user:password@host:port/db which
+        embeds a (URL-encoded) plaintext password. Never log it as-is;
+        return only the scheme/host/port/path instead. When conn_id is a
+        plain Airflow connection ID (is_connection_string is False), it
+        does not carry credentials and is returned unchanged.
+        """
+        if not self.is_connection_string:
+            return self.conn_id
+        try:
+            parsed = urlparse(self.conn_id)
+            netloc = parsed.hostname or ""
+            if parsed.port:
+                netloc = f"{netloc}:{parsed.port}"
+            return urlunparse((parsed.scheme, netloc, parsed.path, "", "", ""))
+        except Exception:
+            return "<redacted-connection-string>"
+
     def get_hook(self) -> SafeMsSqlHook:
         """
         Create a fresh SafeMsSqlHook instance per call.
@@ -46,7 +68,7 @@ class MSSQLConnectionFactory(SQLConnectionFactory):
         Hook objects are lightweight config wrappers.
         Caching them risks stale state in multi-threaded Airflow workers.
         """
-        self.logger.debug('[MSSQLConnectionFactory.get_hook] Creating SafeMsSqlHook for conn_id=%s', self.conn_id)
+        self.logger.debug('[MSSQLConnectionFactory.get_hook] Creating SafeMsSqlHook for conn_id=%s', self._safe_conn_id())
         return SafeMsSqlHook(mssql_conn_id=self.conn_id)
 
     def create_connection(self, server, port, database, username, password, appname, timeout, login_timeout, query_timeout, driver_type, driver) -> Any:
@@ -119,7 +141,7 @@ class MSSQLConnectionFactory(SQLConnectionFactory):
         try:
             self.logger.info(
                 "[MSSQLConnectionFactory.get_connection] Opening SQL Server connection | conn_id='%s'",
-                self.conn_id,
+                self._safe_conn_id(),
             )
             if self.is_connection_string:
                 # Parse connection string: mssql+pymssql://user:pass@host:port/db?appname=MyApp&timeout=600&login_timeout=30&query_timeout=300
@@ -159,7 +181,7 @@ class MSSQLConnectionFactory(SQLConnectionFactory):
             
             self.logger.debug(
                 "[MSSQLConnectionFactory.get_connection] SQL Server connection established successfully | conn_id='%s'",
-                self.conn_id,
+                self._safe_conn_id(),
             )    
             yield connection
             
@@ -174,13 +196,13 @@ class MSSQLConnectionFactory(SQLConnectionFactory):
                 except Exception as rollback_error:
                     self.logger.warning(
                         '[MSSQLConnectionFactory.get_connection] Rollback failed | conn_id=%s | error=%s',
-                        self.conn_id,
+                        self._safe_conn_id(),
                         str(rollback_error),
                     )
             if is_sql_server_deadlock(e):
                 self.logger.warning(
                     "[MSSQLConnectionFactory.get_connection] SQL Server deadlock detected | conn_id='%s' | error=%s",
-                    self.conn_id,
+                    self._safe_conn_id(),
                     e,
                 )
                 raise SQLServerDeadlockError(
@@ -188,7 +210,7 @@ class MSSQLConnectionFactory(SQLConnectionFactory):
                 ) from e
             self.logger.error(
                 "[MSSQLConnectionFactory.get_connection] Database connection failed | conn_id='%s' | error=%s",
-                self.conn_id,
+                self._safe_conn_id(),
                 e,
                 exc_info=True,
             )
@@ -236,13 +258,13 @@ class MSSQLConnectionFactory(SQLConnectionFactory):
 
                 self.logger.debug(
                     "[MSSQLConnectionFactory.get_cursor] SQL Server cursor created successfully | conn_id='%s'",
-                    self.conn_id,
+                    self._safe_conn_id(),
                 )
                 yield cursor
             except Exception as e:
                 self.logger.error(
                     "[MSSQLConnectionFactory.get_cursor] ERROR creating cursor | conn_id='%s' | error=%s",
-                    self.conn_id,
+                    self._safe_conn_id(),
                     e,
                     exc_info=True,
                 )
@@ -259,7 +281,7 @@ class MSSQLConnectionFactory(SQLConnectionFactory):
                         )
                 self.logger.debug(
                     "[MSSQLConnectionFactory.get_cursor] SQL Server connection closed | conn_id='%s'",
-                    self.conn_id,
+                    self._safe_conn_id(),
                 )
 
     def test_connection(self) -> bool:
