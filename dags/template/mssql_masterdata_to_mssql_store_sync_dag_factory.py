@@ -1,4 +1,4 @@
-﻿"""
+"""
 Replication MD store sync DAG factory.
 
 Repairs missed SQL Server Replication data by querying the Replication_MD publisher
@@ -12,6 +12,8 @@ If the pool is smaller, pool limits apply before Airflow ``max_active_tis_per_da
 Light tasks (validation, discovery, create_chunks, report) use ``default_pool``.
 Only ``sync_replication_md_store_chunk`` uses ``dag_config.pool`` (e.g. replication_md_store_sync_pool).
 """
+from __future__ import annotations
+
 import logging
 from dataclasses import replace
 from datetime import timedelta
@@ -33,11 +35,6 @@ from pipeline.core.exceptions import (
 
 
 from pipeline.config.AuditConfig import EventType, EventStatus
-from pipeline.core.MSSQLToMSSQLQueryOrchestrator import MSSQLToMSSQLQueryOrchestrator
-from pipeline.database.MSSQLConnectionFactory import MSSQLConnectionFactory
-from pipeline.core.ExecutionDateExtractor import ExecutionDateExtractor
-from pipeline.utils.AuditLogger import AuditLogger
-from pipeline.utils.validation import validate_mssql_conn
 
 # ============================================================================
 # LOGGING
@@ -198,6 +195,9 @@ def make_validate_mssql_connection_info_task():
         Ensures Windows Auth connection to HQ server is working.
         Fails fast if HQ is unreachable.
         """
+        from pipeline.utils.AuditLogger import AuditLogger
+        from pipeline.utils.validation import validate_mssql_conn
+
         audit = AuditLogger(
             dag_id=context['dag'].dag_id,
             run_id=context['run_id']
@@ -238,6 +238,9 @@ def make_validate_mssql_connection_replication_md_task():
         Ensures Windows Auth connection to HQ server is working.
         Fails fast if HQ is unreachable.
         """
+        from pipeline.utils.AuditLogger import AuditLogger
+        from pipeline.utils.validation import validate_mssql_conn
+
         audit = AuditLogger(
             dag_id=context['dag'].dag_id,
             run_id=context['run_id']
@@ -270,6 +273,8 @@ def make_validate_store_number_task():
     )
     def validate_store_number(**context):
         
+        from pipeline.utils.AuditLogger import AuditLogger
+
         audit = AuditLogger(
             dag_id=context['dag'].dag_id,
             run_id=context['run_id']
@@ -322,6 +327,9 @@ def make_fetch_store_server_connection_task():
         Returns:
             str: Path to temp JSON file (format: /opt/airflow/shared/{dag_id}_{run_id}_servers.json).
         """
+        from pipeline.database.MSSQLConnectionFactory import MSSQLConnectionFactory
+        from pipeline.utils.AuditLogger import AuditLogger
+
         dag_id = context['dag'].dag_id
         run_id = context['run_id']
         audit = AuditLogger(
@@ -385,6 +393,9 @@ def make_validate_mssql_connection_task():
         Builds the dynamic store connection string and verifies connectivity
         before any query/sync work starts.
         """
+        from pipeline.database.MSSQLConnectionFactory import MSSQLConnectionFactory
+        from pipeline.utils.AuditLogger import AuditLogger
+
         audit = AuditLogger(
             dag_id=context['dag'].dag_id,
             run_id=context['run_id']
@@ -487,6 +498,10 @@ def make_sync_replication_md_store_task(dag_config: DAGConfig, sync_config: Mast
         Returns:
             Result dict with sync metrics for the store.
         """
+        from pipeline.core.ExecutionDateExtractor import ExecutionDateExtractor
+        from pipeline.core.MSSQLToMSSQLQueryOrchestrator import MSSQLToMSSQLQueryOrchestrator
+        from pipeline.utils.AuditLogger import AuditLogger
+
         # Initialize audit logger
         audit = AuditLogger(
             dag_id=context['dag'].dag_id,
@@ -567,6 +582,9 @@ def make_create_sync_chunks_task(sync_config: MasterDataSyncConfig):
     @task(task_id="create_sync_chunks")
     def create_sync_chunks(store_connection: Dict[str, str], **context) -> List[Dict[str, Any]]:
         """Plan key-range chunks for dynamic parallel Replication_MD store sync."""
+        from pipeline.core.MSSQLToMSSQLQueryOrchestrator import MSSQLToMSSQLQueryOrchestrator
+        from pipeline.utils.AuditLogger import AuditLogger
+
         audit = AuditLogger(
             dag_id=context["dag"].dag_id,
             run_id=context["run_id"],
@@ -642,6 +660,10 @@ def make_sync_replication_md_store_chunk_task(
         **context,
     ) -> Dict[str, Any]:
         """Sync one key-range chunk to the store database."""
+        from pipeline.core.ExecutionDateExtractor import ExecutionDateExtractor
+        from pipeline.core.MSSQLToMSSQLQueryOrchestrator import MSSQLToMSSQLQueryOrchestrator
+        from pipeline.utils.AuditLogger import AuditLogger
+
         audit = AuditLogger(
             dag_id=context["dag"].dag_id,
             run_id=context["run_id"],

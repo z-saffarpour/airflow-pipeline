@@ -3,26 +3,10 @@ Pipeline Core Package
 =====================
 Contains core orchestration and utility components.
 """
+from __future__ import annotations
 
-from pipeline.core.MSSQLDataTransferOrchestrator import MSSQLDataTransferOrchestrator
-from pipeline.core.MSSQLToMSSQLQueryOrchestrator import MSSQLToMSSQLQueryOrchestrator
-from pipeline.core.MySQLToMSSQLQueryOrchestrator import MySQLToMSSQLQueryOrchestrator
-from pipeline.core.MSSQLToMySQLQueryOrchestrator import MSSQLToMySQLQueryOrchestrator
-from pipeline.core.MSSQLToPostgreSQLQueryOrchestrator import MSSQLToPostgreSQLQueryOrchestrator
-from pipeline.core.PostgreSQLToMSSQLQueryOrchestrator import PostgreSQLToMSSQLQueryOrchestrator
-from pipeline.core.MSSQLToClickHouseQueryOrchestrator import MSSQLToClickHouseQueryOrchestrator
-from pipeline.core.MSSQLToKafkaQueryOrchestrator import MSSQLToKafkaQueryOrchestrator
-from pipeline.core.MSSQLToMongoDBQueryOrchestrator import MSSQLToMongoDBQueryOrchestrator
-from pipeline.core.MongoDBToMSSQLQueryOrchestrator import MongoDBToMSSQLQueryOrchestrator
-from pipeline.core.KafkaToMSSQLQueryOrchestrator import KafkaToMSSQLQueryOrchestrator
-from pipeline.core.ClickHouseToMSSQLQueryOrchestrator import ClickHouseToMSSQLQueryOrchestrator
-from pipeline.core.TransferMetrics import TransferMetrics
-from pipeline.core.TransferResult import TransferResult
-from pipeline.core.ExecutionDateExtractor import ExecutionDateExtractor
-from pipeline.core.OptimizationResult import OptimizationResult
-from pipeline.core.ClickHouseOptimizationOrchestrator import ClickHouseOptimizationOrchestrator
+from typing import Any
 
-# Exceptions
 from pipeline.core.exceptions import (
     PipelineException,
     DatabaseException,
@@ -51,6 +35,69 @@ from pipeline.core.exceptions import (
     TransferVerificationError,
     ClickHouseConnectionError,
 )
+from pipeline._lazy_import import getattr_lazy
+
+_LAZY_EXPORTS = {
+    "MSSQLDataTransferOrchestrator": (
+        "pipeline.core.MSSQLDataTransferOrchestrator:MSSQLDataTransferOrchestrator"
+    ),
+    "MSSQLToMSSQLQueryOrchestrator": (
+        "pipeline.core.MSSQLToMSSQLQueryOrchestrator:MSSQLToMSSQLQueryOrchestrator"
+    ),
+    "MySQLToMSSQLQueryOrchestrator": (
+        "pipeline.core.MySQLToMSSQLQueryOrchestrator:MySQLToMSSQLQueryOrchestrator"
+    ),
+    "MSSQLToMySQLQueryOrchestrator": (
+        "pipeline.core.MSSQLToMySQLQueryOrchestrator:MSSQLToMySQLQueryOrchestrator"
+    ),
+    "MSSQLToPostgreSQLQueryOrchestrator": (
+        "pipeline.core.MSSQLToPostgreSQLQueryOrchestrator:"
+        "MSSQLToPostgreSQLQueryOrchestrator"
+    ),
+    "PostgreSQLToMSSQLQueryOrchestrator": (
+        "pipeline.core.PostgreSQLToMSSQLQueryOrchestrator:"
+        "PostgreSQLToMSSQLQueryOrchestrator"
+    ),
+    "MSSQLToClickHouseQueryOrchestrator": (
+        "pipeline.core.MSSQLToClickHouseQueryOrchestrator:"
+        "MSSQLToClickHouseQueryOrchestrator"
+    ),
+    "MSSQLToKafkaQueryOrchestrator": (
+        "pipeline.core.MSSQLToKafkaQueryOrchestrator:MSSQLToKafkaQueryOrchestrator"
+    ),
+    "MSSQLToMongoDBQueryOrchestrator": (
+        "pipeline.core.MSSQLToMongoDBQueryOrchestrator:MSSQLToMongoDBQueryOrchestrator"
+    ),
+    "MongoDBToMSSQLQueryOrchestrator": (
+        "pipeline.core.MongoDBToMSSQLQueryOrchestrator:MongoDBToMSSQLQueryOrchestrator"
+    ),
+    "KafkaToMSSQLQueryOrchestrator": (
+        "pipeline.core.KafkaToMSSQLQueryOrchestrator:KafkaToMSSQLQueryOrchestrator"
+    ),
+    "ClickHouseToMSSQLQueryOrchestrator": (
+        "pipeline.core.ClickHouseToMSSQLQueryOrchestrator:"
+        "ClickHouseToMSSQLQueryOrchestrator"
+    ),
+    "TransferMetrics": "pipeline.core.TransferMetrics:TransferMetrics",
+    "TransferResult": "pipeline.core.TransferResult:TransferResult",
+    "ExecutionDateExtractor": (
+        "pipeline.core.ExecutionDateExtractor:ExecutionDateExtractor"
+    ),
+    "OptimizationResult": "pipeline.core.OptimizationResult:OptimizationResult",
+    "ClickHouseOptimizationOrchestrator": (
+        "pipeline.core.ClickHouseOptimizationOrchestrator:"
+        "ClickHouseOptimizationOrchestrator"
+    ),
+}
+
+
+def __getattr__(name: str) -> Any:
+    return getattr_lazy(globals(), name, _LAZY_EXPORTS)
+
+
+def __dir__() -> list[str]:
+    return sorted(list(globals().keys()) + list(__all__))
+
 
 __all__ = [
     "MSSQLDataTransferOrchestrator",
@@ -70,7 +117,6 @@ __all__ = [
     "ExecutionDateExtractor",
     "OptimizationResult",
     "ClickHouseOptimizationOrchestrator",
-    # Exceptions
     "PipelineException",
     "DatabaseException",
     "SQLServerConnectionError",

@@ -14,7 +14,7 @@ Author: Zahra Saffarpour
 Version: 1.0
 """
 from datetime import datetime, timedelta
-from airflow.models import Variable  # type: ignore
+from pipeline.utils.parse_config import parse_int, parse_str
 
 from pipeline.config import DAGConfig, ConnectionConfig, KafkaTopicConfig
 from pipeline.config.MSSQLToKafkaSyncConfig import MSSQLToKafkaSyncConfig
@@ -32,44 +32,27 @@ dag_config = DAGConfig(
     start_date=datetime(2026, 7, 23),
     schedule=None,
     catchup=False,
-    max_active_runs=int(
-        Variable.get("max_active_runs_mssql_example_table_kafka", default_var=1)
-    ),
-    retries=int(Variable.get("retries_mssql_example_table_kafka", default_var=2)),
+    max_active_runs=parse_int("max_active_runs_mssql_example_table_kafka", 1),
+    retries=parse_int("retries_mssql_example_table_kafka", 2),
     retry_delay=timedelta(
-        minutes=int(
-            Variable.get(
-                "retry_delay_minutes_mssql_example_table_kafka", default_var=5
-            )
-        )
+        minutes=parse_int("retry_delay_minutes_mssql_example_table_kafka", 5)
     ),
     execution_timeout=timedelta(
-        hours=int(
-            Variable.get(
-                "execution_timeout_hours_mssql_example_table_kafka", default_var=8
-            )
-        )
+        hours=parse_int("execution_timeout_hours_mssql_example_table_kafka", 8)
     ),
     tags=["mssql", "kafka", "sync", "mssql-to-kafka"],
     pool="mssql_to_kafka_sync_pool",
 )
 
 conn_config = ConnectionConfig(
-    mssql_conn_id=Variable.get("mssql_source_conn_id", default_var="mssql_default"),
-    kafka_conn_id=Variable.get("kafka_target_conn_id", default_var="kafka_default"),
+    mssql_conn_id=parse_str("mssql_source_conn_id", "mssql_default"),
+    kafka_conn_id=parse_str("kafka_target_conn_id", "kafka_default"),
 )
 
 kafka_topic_config = KafkaTopicConfig(
-    name=Variable.get(
-        "kafka_topic_mssql_example_table",
-        default_var="dwh.table.curated.example_table",
-    ),
-    num_partitions=int(
-        Variable.get("kafka_partitions_mssql_example_table", default_var=3)
-    ),
-    replication_factor=int(
-        Variable.get("kafka_replication_mssql_example_table", default_var=3)
-    ),
+    name=parse_str("kafka_topic_mssql_example_table", "dwh.table.curated.example_table"),
+    num_partitions=parse_int("kafka_partitions_mssql_example_table", 3),
+    replication_factor=parse_int("kafka_replication_mssql_example_table", 3),
 )
 
 # Replace SELECT / COUNT / key / topic with your real MSSQL source and Kafka topic.
@@ -89,9 +72,7 @@ sync_config = MSSQLToKafkaSyncConfig(
     # use_dynamic_tasks=True,
     # chunk_column="id",
     # task_chunk_size=100_000,
-    batch_size=int(
-        Variable.get("batch_size_mssql_example_table_kafka", default_var=10000)
-    ),
+    batch_size=parse_int("batch_size_mssql_example_table_kafka", 10000),
 )
 
 # ============================================================================

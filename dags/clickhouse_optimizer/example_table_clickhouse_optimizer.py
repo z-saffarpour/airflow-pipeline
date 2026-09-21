@@ -13,7 +13,7 @@ Author: Zahra Saffarpour
 Version: 1.0
 """
 from datetime import datetime, timedelta
-from airflow.models import Variable  # type: ignore
+from pipeline.utils.parse_config import parse_int, parse_str
 
 from pipeline.config.DAGConfig import DAGConfig
 from pipeline.config.ConnectionConfig import ConnectionConfig
@@ -32,19 +32,13 @@ dag_config = DAGConfig(
     start_date=datetime(2026, 7, 23),
     schedule=None,
     catchup=False,
-    max_active_runs=int(
-        Variable.get("max_active_runs_example_ch_optimizer", default_var=1)
-    ),
-    retries=int(Variable.get("retries_example_ch_optimizer", default_var=2)),
+    max_active_runs=parse_int("max_active_runs_example_ch_optimizer", 1),
+    retries=parse_int("retries_example_ch_optimizer", 2),
     retry_delay=timedelta(
-        minutes=int(
-            Variable.get("retry_delay_minutes_example_ch_optimizer", default_var=5)
-        )
+        minutes=parse_int("retry_delay_minutes_example_ch_optimizer", 5)
     ),
     execution_timeout=timedelta(
-        hours=int(
-            Variable.get("execution_timeout_hours_example_ch_optimizer", default_var=4)
-        )
+        hours=parse_int("execution_timeout_hours_example_ch_optimizer", 4)
     ),
     tags=["clickhouse", "optimization", "example"],
     pool="clickhouse_optimizer_pool",
@@ -54,13 +48,9 @@ dag_config = DAGConfig(
 # For partitioned fact tables set partition_column and partition_format
 # (e.g. YYYYMMDD or PERSIAN_YYYYMM).
 optimize_config = ClickHouseOptimizationConfig(
-    cluster_name=Variable.get(
-        "clickhouse_cluster_name", default_var="cluster_2S_2R"
-    ),
-    database=Variable.get("example_ch_database", default_var="dbo"),
-    table_name=Variable.get(
-        "example_ch_table", default_var="Local_ExampleTable"
-    ),
+    cluster_name=parse_str("clickhouse_cluster_name", "cluster_2S_2R"),
+    database=parse_str("example_ch_database", "dbo"),
+    table_name=parse_str("example_ch_table", "Local_ExampleTable"),
     partition_column=None,
     partition_format="YYYYMM",
     final=True,
@@ -68,9 +58,7 @@ optimize_config = ClickHouseOptimizationConfig(
 )
 
 conn_config = ConnectionConfig(
-    clickhouse_conn_id=Variable.get(
-        "clickhouse_conn_id", default_var="clickhouse_default"
-    ),
+    clickhouse_conn_id=parse_str("clickhouse_conn_id", "clickhouse_default"),
 )
 
 # ============================================================================

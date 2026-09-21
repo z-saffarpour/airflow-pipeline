@@ -13,7 +13,7 @@ Author: Zahra Saffarpour
 Version: 1.0
 """
 from datetime import datetime, timedelta
-from airflow.models import Variable  # type: ignore
+from pipeline.utils.parse_config import parse_int, parse_str
 
 from pipeline.config import DAGConfig
 from pipeline.config.MasterDataSyncConfig import MasterDataSyncConfig
@@ -31,19 +31,13 @@ dag_config = DAGConfig(
     start_date=datetime(2026, 7, 23),
     schedule=None,
     catchup=False,
-    max_active_runs=int(
-        Variable.get("max_active_runs_example_table_store", default_var=1)
-    ),
-    retries=int(Variable.get("retries_example_table_store", default_var=2)),
+    max_active_runs=parse_int("max_active_runs_example_table_store", 1),
+    retries=parse_int("retries_example_table_store", 2),
     retry_delay=timedelta(
-        minutes=int(
-            Variable.get("retry_delay_minutes_example_table_store", default_var=5)
-        )
+        minutes=parse_int("retry_delay_minutes_example_table_store", 5)
     ),
     execution_timeout=timedelta(
-        hours=int(
-            Variable.get("execution_timeout_hours_example_table_store", default_var=8)
-        )
+        hours=parse_int("execution_timeout_hours_example_table_store", 8)
     ),
     tags=["mssql", "store", "master-data", "example"],
     pool="replication_md_store_sync_pool",
@@ -64,9 +58,9 @@ sync_config = MasterDataSyncConfig(
     primary_keys=("id",),
     target_schema="dbo",
     target_table="ExampleTable",
-    staging_schema=Variable.get("mssql_staging_schema", default_var="crt"),
+    staging_schema=parse_str("mssql_staging_schema", "crt"),
     delete_missing=bool(
-        int(Variable.get("delete_missing_example_table_store", default_var=0))
+        parse_int("delete_missing_example_table_store", 0)
     ),
     delete_scope_column="id",
     use_hash_change_detection=True,
@@ -74,9 +68,7 @@ sync_config = MasterDataSyncConfig(
     # use_dynamic_tasks=True,
     # chunk_column="id",
     # task_chunk_size=100_000,
-    batch_size=int(
-        Variable.get("batch_size_example_table_store", default_var=10000)
-    ),
+    batch_size=parse_int("batch_size_example_table_store", 10000),
 )
 
 # ============================================================================

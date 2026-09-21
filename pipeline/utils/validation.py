@@ -16,13 +16,6 @@ from datetime import datetime
 from dataclasses import dataclass, asdict
 from airflow.exceptions import AirflowException  # type: ignore
 
-from pipeline.database.MSSQLConnectionFactory import MSSQLConnectionFactory
-from pipeline.database.MySQLConnectionFactory import MySQLConnectionFactory
-from pipeline.database.PostgreSQLConnectionFactory import PostgreSQLConnectionFactory
-from pipeline.database.MongoDBConnectionFactory import MongoDBConnectionFactory
-from pipeline.database.ClickHouseConnectionFactory import ClickHouseConnectionFactory
-from pipeline.kafka.KafkaConnectionFactory import KafkaConnectionFactory
-
 # ============================================================================
 # LOGGING
 # ============================================================================
@@ -74,6 +67,8 @@ def validate_kafka_conn(conn_id: str) -> dict:
     logger.info(f"Validating Kafka connection: {conn_id}")
     
     try:
+        from pipeline.kafka.KafkaConnectionFactory import KafkaConnectionFactory
+
         factory = KafkaConnectionFactory(conn_id=conn_id)
         cluster = factory.get_cluster_info(timeout=10)
 
@@ -120,6 +115,8 @@ def validate_mssql_conn(conn_id: str) -> dict:
     logger.info(f"Validating SQL Server connection: {conn_id}")
     
     try:
+        from pipeline.database.MSSQLConnectionFactory import MSSQLConnectionFactory
+
         factory = MSSQLConnectionFactory(conn_id = conn_id)
         result = factory.test_connection()
                
@@ -156,6 +153,8 @@ def validate_mysql_conn(conn_id: str) -> dict:
     logger.info(f"Validating MySQL connection: {conn_id}")
 
     try:
+        from pipeline.database.MySQLConnectionFactory import MySQLConnectionFactory
+
         factory = MySQLConnectionFactory(conn_id=conn_id)
         result = factory.test_connection()
 
@@ -192,6 +191,10 @@ def validate_postgres_conn(conn_id: str) -> dict:
     logger.info(f"Validating PostgreSQL connection: {conn_id}")
 
     try:
+        from pipeline.database.PostgreSQLConnectionFactory import (
+            PostgreSQLConnectionFactory,
+        )
+
         factory = PostgreSQLConnectionFactory(conn_id=conn_id)
         result = factory.test_connection()
 
@@ -228,6 +231,8 @@ def validate_mongo_conn(conn_id: str) -> dict:
     logger.info(f"Validating MongoDB connection: {conn_id}")
 
     try:
+        from pipeline.database.MongoDBConnectionFactory import MongoDBConnectionFactory
+
         factory = MongoDBConnectionFactory(conn_id=conn_id)
         result = factory.test_connection()
 
@@ -272,6 +277,10 @@ def validate_clickhouse_conn(conn_id: str) -> dict:
     logger.info(f"Validating ClickHouse connection: {conn_id}")
     
     try:
+        from pipeline.database.ClickHouseConnectionFactory import (
+            ClickHouseConnectionFactory,
+        )
+
         factory = ClickHouseConnectionFactory(conn_id = conn_id)
         result = factory.test_connection()
                

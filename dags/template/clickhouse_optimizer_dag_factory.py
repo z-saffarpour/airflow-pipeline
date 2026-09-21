@@ -19,6 +19,7 @@ Usage:
 Author: Senior Data Engineer
 Version: 2.0
 """
+from __future__ import annotations
 
 from datetime import datetime, timedelta
 
@@ -31,10 +32,7 @@ from airflow.utils.log.logging_mixin import LoggingMixin  # type: ignore
 from pipeline.config.DAGConfig import DAGConfig
 from pipeline.config.ConnectionConfig import ConnectionConfig
 from pipeline.config.ClickHouseOptimizationConfig import ClickHouseOptimizationConfig
-from pipeline.core.ClickHouseOptimizationOrchestrator import ClickHouseOptimizationOrchestrator
-from pipeline.core.ExecutionDateExtractor import ExecutionDateExtractor
 
-from pipeline.utils.validation import validate_clickhouse_conn
 
 # ============================================================================
 # LOGGING
@@ -58,6 +56,8 @@ def make_validate_clickhouse_task(clickhouse_conn_id: str):
         """
         Validate ClickHouse connection.
         """
+        from pipeline.utils.validation import validate_clickhouse_conn
+
         validate_clickhouse_conn(clickhouse_conn_id)
 
     return validate_clickhouse_connection
@@ -74,6 +74,8 @@ def make_check_table_health_before_task(clickhouse_conn_id: str, config: ClickHo
         """
         Check table health before optimization.
         """    
+        from pipeline.core.ClickHouseOptimizationOrchestrator import ClickHouseOptimizationOrchestrator
+
         try:            
             # Create orchestrator and run optimization
             orchestrator = ClickHouseOptimizationOrchestrator(conn_id=clickhouse_conn_id)
@@ -103,6 +105,9 @@ def make_run_optimization_task(clickhouse_conn_id: str, config: ClickHouseOptimi
         """
         Run OPTIMIZE TABLE on ClickHouse.
         """        
+        from pipeline.core.ClickHouseOptimizationOrchestrator import ClickHouseOptimizationOrchestrator
+        from pipeline.core.ExecutionDateExtractor import ExecutionDateExtractor
+
         # Get execution date
         execution_date = ExecutionDateExtractor.get_date_key_from_context(context)
         
@@ -152,6 +157,8 @@ def make_check_table_health_after_task(clickhouse_conn_id: str, config: ClickHou
         """
         Check table health after optimization and verify improvement.
         """        
+        from pipeline.core.ClickHouseOptimizationOrchestrator import ClickHouseOptimizationOrchestrator
+
         # Get before stats from previous task
         before_stats = context['ti'].xcom_pull(task_ids='health_checks.check_table_health_before')
         optimization_result = context['ti'].xcom_pull(task_ids='optimization.run_optimization')

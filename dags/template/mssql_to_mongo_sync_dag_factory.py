@@ -21,6 +21,8 @@ Required Airflow connections:
     - mssql_*  : source (e.g. mssql_default)
     - mongo_*  : target (e.g. mongo_target_default)
 """
+from __future__ import annotations
+
 import logging
 from datetime import timedelta
 from typing import Any, Dict, List
@@ -34,14 +36,10 @@ from pipeline.config.DAGConfig import DAGConfig
 from pipeline.config.ConnectionConfig import ConnectionConfig
 from pipeline.config.MasterDataSyncConfig import MasterDataSyncConfig
 from pipeline.config.AuditConfig import EventType, EventStatus
-from pipeline.core.MSSQLToMongoDBQueryOrchestrator import MSSQLToMongoDBQueryOrchestrator
-from pipeline.core.ExecutionDateExtractor import ExecutionDateExtractor
 from pipeline.core.exceptions import (
     is_transient_sql_server_error_message,
     raise_sync_task_error,
 )
-from pipeline.utils.AuditLogger import AuditLogger
-from pipeline.utils.validation import validate_mssql_conn, validate_mongo_conn
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +58,9 @@ def make_validate_mssql_connection_task(conn_config: ConnectionConfig):
         execution_timeout=timedelta(hours=2),
     )
     def validate_mssql_connection(**context):
+        from pipeline.utils.AuditLogger import AuditLogger
+        from pipeline.utils.validation import validate_mssql_conn, validate_mongo_conn
+
         audit = AuditLogger(
             dag_id=context["dag"].dag_id,
             run_id=context["run_id"],
@@ -95,6 +96,9 @@ def make_validate_mongo_connection_task(conn_config: ConnectionConfig):
         execution_timeout=timedelta(hours=2),
     )
     def validate_mongo_connection(**context):
+        from pipeline.utils.AuditLogger import AuditLogger
+        from pipeline.utils.validation import validate_mssql_conn, validate_mongo_conn
+
         audit = AuditLogger(
             dag_id=context["dag"].dag_id,
             run_id=context["run_id"],
@@ -135,6 +139,10 @@ def make_sync_mssql_to_mongo_task(
         pool=dag_config.pool,
     )
     def sync_mssql_to_mongo(**context) -> Dict[str, Any]:
+        from pipeline.core.ExecutionDateExtractor import ExecutionDateExtractor
+        from pipeline.core.MSSQLToMongoDBQueryOrchestrator import MSSQLToMongoDBQueryOrchestrator
+        from pipeline.utils.AuditLogger import AuditLogger
+
         audit = AuditLogger(
             dag_id=context["dag"].dag_id,
             run_id=context["run_id"],
@@ -216,6 +224,9 @@ def make_create_sync_chunks_task(
 ):
     @task(task_id="create_sync_chunks")
     def create_sync_chunks(**context) -> List[Dict[str, Any]]:
+        from pipeline.core.MSSQLToMongoDBQueryOrchestrator import MSSQLToMongoDBQueryOrchestrator
+        from pipeline.utils.AuditLogger import AuditLogger
+
         audit = AuditLogger(
             dag_id=context["dag"].dag_id,
             run_id=context["run_id"],
@@ -286,6 +297,10 @@ def make_sync_mssql_to_mongo_chunk_task(
         chunk: Dict[str, Any],
         **context,
     ) -> Dict[str, Any]:
+        from pipeline.core.ExecutionDateExtractor import ExecutionDateExtractor
+        from pipeline.core.MSSQLToMongoDBQueryOrchestrator import MSSQLToMongoDBQueryOrchestrator
+        from pipeline.utils.AuditLogger import AuditLogger
+
         audit = AuditLogger(
             dag_id=context["dag"].dag_id,
             run_id=context["run_id"],
