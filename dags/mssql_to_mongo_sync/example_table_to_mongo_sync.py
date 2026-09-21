@@ -13,7 +13,7 @@ Author: Zahra Saffarpour
 Version: 1.0
 """
 from datetime import datetime, timedelta
-from airflow.models import Variable  # type: ignore
+from pipeline.utils.parse_config import parse_int, parse_str
 
 from pipeline.config import DAGConfig, ConnectionConfig
 from pipeline.config.MasterDataSyncConfig import MasterDataSyncConfig
@@ -31,27 +31,21 @@ dag_config = DAGConfig(
     start_date=datetime(2026, 7, 23),
     schedule=None,
     catchup=False,
-    max_active_runs=int(
-        Variable.get("max_active_runs_mssql_example_table_mongo", default_var=1)
-    ),
-    retries=int(Variable.get("retries_mssql_example_table_mongo", default_var=2)),
+    max_active_runs=parse_int("max_active_runs_mssql_example_table_mongo", 1),
+    retries=parse_int("retries_mssql_example_table_mongo", 2),
     retry_delay=timedelta(
-        minutes=int(
-            Variable.get("retry_delay_minutes_mssql_example_table_mongo", default_var=5)
-        )
+        minutes=parse_int("retry_delay_minutes_mssql_example_table_mongo", 5)
     ),
     execution_timeout=timedelta(
-        hours=int(
-            Variable.get("execution_timeout_hours_mssql_example_table_mongo", default_var=8)
-        )
+        hours=parse_int("execution_timeout_hours_mssql_example_table_mongo", 8)
     ),
     tags=["mssql", "mongo", "mongodb", "mssql-to-mongo"],
     pool="mssql_to_mongo_sync_pool",
 )
 
 conn_config = ConnectionConfig(
-    mssql_conn_id=Variable.get("mssql_source_conn_id", default_var="mssql_default"),
-    mongo_conn_id=Variable.get("mongo_target_conn_id", default_var="mongo_target_default"),
+    mssql_conn_id=parse_str("mssql_source_conn_id", "mssql_default"),
+    mongo_conn_id=parse_str("mongo_target_conn_id", "mongo_target_default"),
 )
 
 # Replace SELECT / COUNT / keys / target with your real MSSQL source and Mongo target.
@@ -70,9 +64,9 @@ sync_config = MasterDataSyncConfig(
     primary_keys=("id",),
     target_schema="app",
     target_table="example_table",
-    staging_schema=Variable.get("mongo_staging_database", default_var="staging"),
+    staging_schema=parse_str("mongo_staging_database", "staging"),
     delete_missing=bool(
-        int(Variable.get("delete_missing_mssql_example_table_mongo", default_var=0))
+        parse_int("delete_missing_mssql_example_table_mongo", 0)
     ),
     delete_scope_column="id",
     use_hash_change_detection=True,
@@ -80,7 +74,7 @@ sync_config = MasterDataSyncConfig(
     # use_dynamic_tasks=True,
     # chunk_column="id",
     # task_chunk_size=100_000,
-    batch_size=int(Variable.get("batch_size_mssql_example_table_mongo", default_var=10000)),
+    batch_size=parse_int("batch_size_mssql_example_table_mongo", 10000),
 )
 
 # ============================================================================

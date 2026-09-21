@@ -1,0 +1,7 @@
+# Factory modules are imported by DAG files. Do not parse them as DAGs.
+template/
+
+# Bytecode / cache
+__pycache__/
+*.pyc
+*.pyo

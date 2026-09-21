@@ -26,6 +26,8 @@ Usage:
 Author: Senior Data Engineer
 Version: 3.0
 """
+from __future__ import annotations
+
 import logging
 from datetime import datetime, timedelta
 from typing import Dict, Any
@@ -42,12 +44,6 @@ from pipeline.config.DAGConfig import DAGConfig
 from pipeline.config.SyncConfig import SyncConfig
 from pipeline.config.TableConfiguration import TableConfiguration
 
-from pipeline.core.MSSQLDataTransferOrchestrator import MSSQLDataTransferOrchestrator
-from pipeline.core.ExecutionDateExtractor import ExecutionDateExtractor
-from pipeline.database.SQLQueryBuilder import SQLQueryBuilder
-from pipeline.database.SafeMsSqlHook import SafeMsSqlHook
-from pipeline.kafka.KafkaTopicManager import KafkaTopicManager
-from pipeline.utils.validation import validate_kafka_conn, validate_mssql_conn, validate_clickhouse_conn
 
 # ============================================================================
 # LOGGING
@@ -68,6 +64,8 @@ def make_validate_mssql_task(conn_config: ConnectionConfig):
         execution_timeout=timedelta(hours=2),
     )
     def validate_mssql_connection():
+        from pipeline.utils.validation import validate_kafka_conn, validate_mssql_conn, validate_clickhouse_conn
+
         return validate_mssql_conn(conn_config.mssql_conn_id)
 
     return validate_mssql_connection
@@ -81,6 +79,8 @@ def make_validate_kafka_task(conn_config: ConnectionConfig):
         execution_timeout=timedelta(hours=2),
     )
     def validate_kafka_connection():
+        from pipeline.utils.validation import validate_kafka_conn, validate_mssql_conn, validate_clickhouse_conn
+
         if not conn_config.kafka_conn_id:
             logger.info("[table_mssql_sync_dag_factory.validate_kafka_connection] Kafka connection validation skipped (no kafka_conn_id provided)")
             return {"status": "skipped"}
@@ -98,6 +98,8 @@ def make_validate_clickhouse_task(conn_config: ConnectionConfig):
         execution_timeout=timedelta(hours=2),
     )
     def validate_clickhouse_connection():
+        from pipeline.utils.validation import validate_kafka_conn, validate_mssql_conn, validate_clickhouse_conn
+
         if not conn_config.clickhouse_conn_id:
             logger.info("[table_mssql_sync_dag_factory.validate_clickhouse_connection] ClickHouse connection validation skipped (no clickhouse_conn_id provided)")
             return {"status": "skipped"}
@@ -115,6 +117,8 @@ def make_ensure_topic_task(conn_config: ConnectionConfig, sync_config: SyncConfi
         execution_timeout=timedelta(hours=1),
     )
     def ensure_kafka_topic():
+        from pipeline.kafka.KafkaTopicManager import KafkaTopicManager
+
         if not conn_config.kafka_conn_id or not sync_config.is_send_kafka:
             logger.info("[table_mssql_sync_dag_factory.ensure_kafka_topic] Kafka topic creation skipped (no kafka_conn_id provided)")
             return {"status": "skipped"}
@@ -143,6 +147,9 @@ def make_transfer_task(dag_config: DAGConfig, sync_config: SyncConfig, conn_conf
         pool=dag_config.pool,
     )
     def transfer_data_to_kafka(**context) -> Dict[str, Any]:
+        from pipeline.core.ExecutionDateExtractor import ExecutionDateExtractor
+        from pipeline.core.MSSQLDataTransferOrchestrator import MSSQLDataTransferOrchestrator
+
         execution_date_key = ExecutionDateExtractor.get_date_key_from_context(
             context, sync_config.date_offset
         )
@@ -201,6 +208,10 @@ def make_verify_task(sync_config: SyncConfig, conn_config: ConnectionConfig, tab
         execution_timeout=timedelta(minutes=10),
     )
     def verify_transfer(**context) -> Dict[str, Any]:
+        from pipeline.core.ExecutionDateExtractor import ExecutionDateExtractor
+        from pipeline.database.SQLQueryBuilder import SQLQueryBuilder
+        from pipeline.database.SafeMsSqlHook import SafeMsSqlHook
+
         execution_date_key = ExecutionDateExtractor.get_date_key_from_context(
             context, sync_config.date_offset
         )

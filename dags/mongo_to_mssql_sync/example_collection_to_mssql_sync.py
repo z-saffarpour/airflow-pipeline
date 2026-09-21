@@ -13,7 +13,7 @@ Author: Zahra Saffarpour
 Version: 1.0
 """
 from datetime import datetime, timedelta
-from airflow.models import Variable  # type: ignore
+from pipeline.utils.parse_config import parse_int, parse_optional_str, parse_str
 
 from pipeline.config import DAGConfig, ConnectionConfig
 from pipeline.config.MongoSyncConfig import MongoSyncConfig
@@ -31,27 +31,21 @@ dag_config = DAGConfig(
     start_date=datetime(2026, 7, 23),
     schedule=None,
     catchup=False,
-    max_active_runs=int(
-        Variable.get("max_active_runs_mongo_example_collection", default_var=1)
-    ),
-    retries=int(Variable.get("retries_mongo_example_collection", default_var=2)),
+    max_active_runs=parse_int("max_active_runs_mongo_example_collection", 1),
+    retries=parse_int("retries_mongo_example_collection", 2),
     retry_delay=timedelta(
-        minutes=int(
-            Variable.get("retry_delay_minutes_mongo_example_collection", default_var=5)
-        )
+        minutes=parse_int("retry_delay_minutes_mongo_example_collection", 5)
     ),
     execution_timeout=timedelta(
-        hours=int(
-            Variable.get("execution_timeout_hours_mongo_example_collection", default_var=8)
-        )
+        hours=parse_int("execution_timeout_hours_mongo_example_collection", 8)
     ),
     tags=["mongo", "mongodb", "mssql", "mongo-sync"],
     pool="mongo_to_mssql_sync_pool",
 )
 
 conn_config = ConnectionConfig(
-    mongo_conn_id=Variable.get("mongo_source_conn_id", default_var="mongo_source_default"),
-    mssql_conn_id=Variable.get("mssql_target_conn_id", default_var="mssql_default"),
+    mongo_conn_id=parse_str("mongo_source_conn_id", "mongo_source_default"),
+    mssql_conn_id=parse_str("mssql_target_conn_id", "mssql_default"),
 )
 
 # Replace collection / projection / keys / target with your real Mongo source and MSSQL target.
@@ -59,7 +53,7 @@ conn_config = ConnectionConfig(
 sync_config = MongoSyncConfig(
     source_name="mongo_example_collection",
     collection="example_collection",
-    database=Variable.get("mongo_source_database", default_var="") or None,
+    database=parse_optional_str("mongo_source_database", ""),
     filter_query={},  # e.g. {"status": "active"} or {"updated_at": {"$gte": ...}}
     projection={
         "_id": 1,
@@ -72,9 +66,9 @@ sync_config = MongoSyncConfig(
     primary_keys=("id",),
     target_schema="dbo",
     target_table="ExampleCollection",
-    staging_schema=Variable.get("mssql_staging_schema", default_var="crt"),
+    staging_schema=parse_str("mssql_staging_schema", "crt"),
     delete_missing=bool(
-        int(Variable.get("delete_missing_mongo_example_collection", default_var=0))
+        parse_int("delete_missing_mongo_example_collection", 0)
     ),
     delete_scope_column="id",
     use_hash_change_detection=True,
@@ -82,9 +76,7 @@ sync_config = MongoSyncConfig(
     # use_dynamic_tasks=True,
     # chunk_column="id",  # maps to Mongo _id when rename_id_to="id"
     # task_chunk_size=100_000,
-    batch_size=int(
-        Variable.get("batch_size_mongo_example_collection", default_var=10000)
-    ),
+    batch_size=parse_int("batch_size_mongo_example_collection", 10000),
 )
 
 # ============================================================================

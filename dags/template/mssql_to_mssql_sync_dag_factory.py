@@ -19,6 +19,8 @@ Required Airflow connections:
     - mssql_* (source) : e.g. mssql_default  → ConnectionConfig.mssql_conn_id
     - mssql_* (target) : e.g. mssql_target_default → ConnectionConfig.mssql_target_conn_id
 """
+from __future__ import annotations
+
 import logging
 from datetime import timedelta
 from typing import Any, Dict, List
@@ -32,14 +34,10 @@ from pipeline.config.DAGConfig import DAGConfig
 from pipeline.config.ConnectionConfig import ConnectionConfig
 from pipeline.config.MasterDataSyncConfig import MasterDataSyncConfig
 from pipeline.config.AuditConfig import EventType, EventStatus
-from pipeline.core.MSSQLToMSSQLQueryOrchestrator import MSSQLToMSSQLQueryOrchestrator
-from pipeline.core.ExecutionDateExtractor import ExecutionDateExtractor
 from pipeline.core.exceptions import (
     is_transient_sql_server_error_message,
     raise_sync_task_error,
 )
-from pipeline.utils.AuditLogger import AuditLogger
-from pipeline.utils.validation import validate_mssql_conn
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +48,8 @@ def _build_orchestrator(
     sync_config: MasterDataSyncConfig,
     conn_config: ConnectionConfig,
 ) -> MSSQLToMSSQLQueryOrchestrator:
+    from pipeline.core.MSSQLToMSSQLQueryOrchestrator import MSSQLToMSSQLQueryOrchestrator
+
     return MSSQLToMSSQLQueryOrchestrator(
         source_conn_id=conn_config.mssql_conn_id,
         target_connection_string=conn_config.mssql_target_conn_id,
@@ -71,6 +71,9 @@ def make_validate_mssql_source_connection_task(conn_config: ConnectionConfig):
         execution_timeout=timedelta(hours=2),
     )
     def validate_mssql_source_connection(**context):
+        from pipeline.utils.AuditLogger import AuditLogger
+        from pipeline.utils.validation import validate_mssql_conn
+
         audit = AuditLogger(
             dag_id=context["dag"].dag_id,
             run_id=context["run_id"],
@@ -106,6 +109,9 @@ def make_validate_mssql_target_connection_task(conn_config: ConnectionConfig):
         execution_timeout=timedelta(hours=2),
     )
     def validate_mssql_target_connection(**context):
+        from pipeline.utils.AuditLogger import AuditLogger
+        from pipeline.utils.validation import validate_mssql_conn
+
         audit = AuditLogger(
             dag_id=context["dag"].dag_id,
             run_id=context["run_id"],
@@ -146,6 +152,9 @@ def make_sync_mssql_to_mssql_task(
         pool=dag_config.pool,
     )
     def sync_mssql_to_mssql(**context) -> Dict[str, Any]:
+        from pipeline.core.ExecutionDateExtractor import ExecutionDateExtractor
+        from pipeline.utils.AuditLogger import AuditLogger
+
         audit = AuditLogger(
             dag_id=context["dag"].dag_id,
             run_id=context["run_id"],
@@ -222,6 +231,8 @@ def make_create_sync_chunks_task(
 ):
     @task(task_id="create_sync_chunks")
     def create_sync_chunks(**context) -> List[Dict[str, Any]]:
+        from pipeline.utils.AuditLogger import AuditLogger
+
         audit = AuditLogger(
             dag_id=context["dag"].dag_id,
             run_id=context["run_id"],
@@ -287,6 +298,9 @@ def make_sync_mssql_to_mssql_chunk_task(
         chunk: Dict[str, Any],
         **context,
     ) -> Dict[str, Any]:
+        from pipeline.core.ExecutionDateExtractor import ExecutionDateExtractor
+        from pipeline.utils.AuditLogger import AuditLogger
+
         audit = AuditLogger(
             dag_id=context["dag"].dag_id,
             run_id=context["run_id"],
