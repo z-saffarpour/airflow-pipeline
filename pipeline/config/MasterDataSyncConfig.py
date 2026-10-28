@@ -23,6 +23,7 @@ class MasterDataSyncConfig:
     max_parallel_chunks: int = 8
     max_global_parallel_chunks: int = 32
     delete_missing : bool = False
+    insert_only: bool = False
     batch_size: int = 10_000
 
     def __post_init__(self) -> None:
@@ -34,3 +35,5 @@ class MasterDataSyncConfig:
             raise ValueError(
                 "'max_global_parallel_chunks' must be >= 'max_parallel_chunks'"
             )
+        if self.insert_only and self.delete_missing:
+            raise ValueError("'insert_only' and 'delete_missing' cannot both be True")

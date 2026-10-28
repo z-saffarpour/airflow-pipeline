@@ -30,12 +30,18 @@ class MSSQLServerWriter(DataWriter):
         self,
         conn_id: str,
         is_connection_string: bool = False,
-        autocommit: bool = False
+        autocommit: bool = False,
+        database: Optional[str] = None,
     ):
         self.conn_id = conn_id
         self.is_connection_string = is_connection_string
         self.autocommit = autocommit
-        self.connection_factory = MSSQLConnectionFactory(conn_id, is_connection_string)
+        self.database = database
+        self.connection_factory = MSSQLConnectionFactory(
+            conn_id,
+            is_connection_string,
+            database=database,
+        )
         self.logger = logging.getLogger(self.__class__.__name__)
         self._cached_unique_keys: Dict[str, Tuple[Tuple[str, ...], ...]] = {}
 
@@ -846,6 +852,7 @@ class MSSQLServerWriter(DataWriter):
         use_hash_change_detection: bool = True,
         staging_schema: Optional[str] = None,
         staging_suffix: str = "upsert",
+        insert_only: bool = False,
     ) -> Dict[str, int]:
         """
         Full UPSERT with MERGE and optional delete_missing support.
@@ -855,6 +862,7 @@ class MSSQLServerWriter(DataWriter):
             use_hash_change_detection: Compare row versions with SHA2_256 hash instead of per-column checks
             staging_schema: Schema for temporary staging tables; defaults to schema (target) when omitted
             staging_suffix: Unique suffix for the staging table name; use per-chunk values for parallel syncs
+            insert_only: When True, insert rows whose key is absent and leave existing rows unchanged
         """
         if not data:
             self.logger.warning("[MSSQLServerWriter.upsert_batch] No data to upsert")
@@ -896,6 +904,7 @@ class MSSQLServerWriter(DataWriter):
                     use_hash_change_detection=use_hash_change_detection,
                     table_full=table_full,
                     staging_table=staging_table,
+                    insert_only=insert_only,
                 )
             except Exception as exc:
                 if not is_sql_server_deadlock(exc):
@@ -930,6 +939,7 @@ class MSSQLServerWriter(DataWriter):
         use_hash_change_detection: bool,
         table_full: str,
         staging_table: str,
+        insert_only: bool = False,
     ) -> Dict[str, int]:
         columns = list(data[0].keys())
         IdentifierValidator.validate_columns(columns)
@@ -957,7 +967,7 @@ class MSSQLServerWriter(DataWriter):
         insert_values = ", ".join([f"source.[{col}]" for col in columns])
 
         matched_clause = ""
-        if update_columns:
+        if update_columns and not insert_only:
             matched_clause = f"""
                 WHEN MATCHED
                 AND (

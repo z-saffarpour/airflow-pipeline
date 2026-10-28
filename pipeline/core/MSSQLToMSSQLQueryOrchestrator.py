@@ -19,6 +19,8 @@ class MSSQLToMSSQLQueryOrchestrator(SyncOrchestrator):
         fail_on_error: bool,
         batch_size: int = 5000,
         target_is_connection_string: bool = True,
+        source_is_connection_string: bool = False,
+        target_database: Optional[str] = None,
     ) -> None:
         """
         Initialize orchestrator with connection parameters.
@@ -32,19 +34,38 @@ class MSSQLToMSSQLQueryOrchestrator(SyncOrchestrator):
             target_is_connection_string: If True (default), treat target as a
                 SQLAlchemy/ODBC URI. If False, treat target as an Airflow
                 connection ID (fixed MSSQL→MSSQL sync).
+            source_is_connection_string: If True, ``source_conn_id`` is a
+                SQLAlchemy/ODBC URI instead of an Airflow connection ID.
+            target_database: Optional catalog override when the target is an
+                Airflow connection ID.
         """
         self.source_conn_id = source_conn_id
         self.target_connection_string = target_connection_string
         self.target_is_connection_string = target_is_connection_string
+        self.source_is_connection_string = source_is_connection_string
+        self.target_database = target_database
         self.fail_on_error = fail_on_error
         self.batch_size = batch_size
 
         self.logger = logging.getLogger(self.__class__.__name__)
 
+    def _create_reader(self) -> MSSQLDataReader:
+        return MSSQLDataReader(
+            conn_id=self.source_conn_id,
+            batch_size=self.batch_size,
+            is_connection_string=self.source_is_connection_string,
+        )
+
+    def _source_log_name(self) -> str:
+        if self.source_is_connection_string:
+            return "<source-connection-string>"
+        return self.source_conn_id
+
     def _create_writer(self) -> MSSQLServerWriter:
         return MSSQLServerWriter(
             conn_id=self.target_connection_string,
             is_connection_string=self.target_is_connection_string,
+            database=None if self.target_is_connection_string else self.target_database,
         )
 
     @staticmethod
@@ -251,10 +272,7 @@ class MSSQLToMSSQLQueryOrchestrator(SyncOrchestrator):
     ) -> List[Dict[str, Any]]:
         """Build RECID/key ranges for parallel dynamic sync tasks."""
         chunk_column = self._resolve_chunk_column(sync_config)
-        reader = MSSQLDataReader(
-            conn_id=self.source_conn_id,
-            batch_size=sync_config.batch_size,
-        )
+        reader = self._create_reader()
 
         total_count = reader.get_total_count(
             custom_query=sync_config.source_query_count,
@@ -344,10 +362,7 @@ class MSSQLToMSSQLQueryOrchestrator(SyncOrchestrator):
 
         writer = None
         try:
-            reader = MSSQLDataReader(
-                conn_id=self.source_conn_id,
-                batch_size=self.batch_size,
-            )
+            reader = self._create_reader()
             writer = self._create_writer()
             staging_schema = self._resolve_staging_schema(sync_config)
             primary_keys = list(sync_config.primary_keys)
@@ -383,6 +398,7 @@ class MSSQLToMSSQLQueryOrchestrator(SyncOrchestrator):
                     use_hash_change_detection=sync_config.use_hash_change_detection,
                     staging_schema=staging_schema,
                     staging_suffix=f"upsert_{chunk_no}",
+                    insert_only=sync_config.insert_only,
                 ) or {}
 
                 if sync_config.delete_missing and keys_staging_table and batch:
@@ -476,7 +492,7 @@ class MSSQLToMSSQLQueryOrchestrator(SyncOrchestrator):
         
         self.logger.info(
             f"[MSSQLToMSSQLQueryOrchestrator.sync_data] Starting MSSQL to MSSQL query transfer | "
-            f"source_conn_id={self.source_conn_id} | target_schema={sync_config.target_schema} | "
+            f"source_conn_id={self._source_log_name()} | target_schema={sync_config.target_schema} | "
             f"target_table={sync_config.target_table} | "
             f"staging_schema={self._resolve_staging_schema(sync_config)} | batch_size={self.batch_size}"
         )
@@ -485,10 +501,7 @@ class MSSQLToMSSQLQueryOrchestrator(SyncOrchestrator):
         writer = None
                             
         try:         
-            reader = MSSQLDataReader(
-                conn_id=self.source_conn_id,
-                batch_size=self.batch_size,
-            )
+            reader = self._create_reader()
 
             staging_schema = self._resolve_staging_schema(sync_config)
             delete_missing = sync_config.delete_missing
@@ -601,6 +614,7 @@ class MSSQLToMSSQLQueryOrchestrator(SyncOrchestrator):
                     resolve_unique_key_conflicts=sync_config.resolve_unique_key_conflicts,
                     use_hash_change_detection=sync_config.use_hash_change_detection,
                     staging_schema=staging_schema,
+                    insert_only=sync_config.insert_only,
                 ) or {}
 
                 if delete_missing and keys_staging_table and batch:

@@ -3,7 +3,7 @@ MSSQL Connection Factory for managing SQL Server database connections.
 Provides abstraction for connection creation and lifecycle management.
 """
 import logging
-from typing import Any, List, Dict
+from typing import Any, List, Dict, Optional
 from contextlib import contextmanager
 import pymssql # type: ignore
 import pyodbc # type: ignore
@@ -25,19 +25,29 @@ class MSSQLConnectionFactory(SQLConnectionFactory):
     Implements Dependency Inversion Principle by providing abstraction layer.
     """
 
-    def __init__(self, conn_id: str, is_connection_string: bool = False) -> None:
+    def __init__(
+        self,
+        conn_id: str,
+        is_connection_string: bool = False,
+        database: Optional[str] = None,
+    ) -> None:
         """
         Initialize connection factory.
 
         Args:
             conn_id: Airflow connection ID for the database
             is_connection_string: If True, conn_id is treated as a connection string
+            database: Optional catalog override for an Airflow connection.
+                Ignored when ``is_connection_string`` is True.
         """
         self._cached_connection = None
         if not conn_id:
             raise ValueError("conn_id cannot be empty.")
         self.conn_id = conn_id
         self.is_connection_string = is_connection_string
+        self.database = database.strip() if isinstance(database, str) else None
+        if self.database == "":
+            self.database = None
         self.logger = logging.getLogger(self.__class__.__name__)
 
     def _safe_conn_id(self) -> str:
@@ -107,7 +117,13 @@ class MSSQLConnectionFactory(SQLConnectionFactory):
         Caching them risks stale state in multi-threaded Airflow workers.
         """
         self.logger.debug('[MSSQLConnectionFactory.get_hook] Creating SafeMsSqlHook for conn_id=%s', self._safe_conn_id())
-        return SafeMsSqlHook(mssql_conn_id=self.conn_id)
+        hook = SafeMsSqlHook(mssql_conn_id=self.conn_id)
+        if self.database and not self.is_connection_string:
+            from pipeline.utils.IdentifierValidator import IdentifierValidator
+
+            IdentifierValidator.validate_and_raise(self.database, "database name")
+            hook.schema = self.database
+        return hook
 
     def create_connection(self, server, port, database, username, password, appname, timeout, login_timeout, query_timeout, driver_type, driver, encrypt: str = "yes", trust_server_certificate: str = "yes") -> Any:
         """
