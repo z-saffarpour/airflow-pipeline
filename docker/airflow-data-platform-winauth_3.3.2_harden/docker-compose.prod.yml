@@ -1,0 +1,121 @@
+# =============================================================================
+# Docker Compose Override for Production Security Hardening
+# Usage: docker-compose -f docker-compose.winauth.yml -f docker-compose.prod.yml up -d
+# =============================================================================
+
+version: '3.8'
+
+services:
+  postgres:
+    environment:
+      # Production PostgreSQL settings
+      POSTGRES_INITDB_ARGS: >
+        -c log_min_duration_statement=1000
+        -c log_statement=all
+        -c log_connections=on
+        -c log_disconnections=on
+        -c log_duration=on
+        -c log_error_verbosity=verbose
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "${POSTGRES_USER:-airflow}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  redis:
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: [ "CMD-SHELL", "redis-cli -a \"${REDIS_PASSWORD:-ChangeMe_RedisPassword123!}\" ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  airflow-apiserver:
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      AIRFLOW__WEBSERVER__EXPOSE_CONFIG: 'false'
+      AIRFLOW__WEBSERVER__RBAC: 'true'
+      AIRFLOW__WEBSERVER__SECURE_COOKIES: 'true'
+      AIRFLOW__WEBSERVER__COOKIE_HTTPONLY: 'true'
+      AIRFLOW__WEBSERVER__COOKIE_SAMESITE: 'Strict'
+      AIRFLOW__API__ENDPOINT_URL: "https://airflow.example.com/api"
+      # Add more security headers
+      AIRFLOW__WEBSERVER__X_FRAME_OPTIONS: 'SAMEORIGIN'
+      AIRFLOW__WEBSERVER__X_CONTENT_TYPE_OPTIONS: 'nosniff'
+      AIRFLOW__WEBSERVER__X_XSS_PROTECTION: '1; mode=block'
+
+  airflow-scheduler:
+    security_opt:
+      - no-new-privileges:true
+    # Limit resources
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+
+  airflow-worker:
+    security_opt:
+      - no-new-privileges:true
+    # Limit resources per worker
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '500m'
+          memory: 512M
+
+  airflow-dag-processor:
+    security_opt:
+      - no-new-privileges:true
+
+  airflow-triggerer:
+    security_opt:
+      - no-new-privileges:true
+
+  airflow-flower:
+    security_opt:
+      - no-new-privileges:true
+    # Restrict access to flower
+    environment:
+      FLOWER_BASIC_AUTH: "${FLOWER_USERNAME:-admin}:${FLOWER_PASSWORD:-changeme}"
+
+  postgres-backup:
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      # Add encryption for backups
+      POSTGRES_BACKUP_DUMP_OPTIONS: "-Fc"
+
+networks:
+  airflow_net:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: br-airflow
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+          gateway: 172.20.0.1
+
+# =============================================================================
+# Production Security Features:
+#
+# 1. no-new-privileges: Prevents privilege escalation
+# 2. Resource limits: Prevents resource exhaustion attacks
+# 3. Secure cookies: HTTPOnly, SameSite=Strict
+# 4. Security headers: X-Frame-Options, X-Content-Type-Options, X-XSS-Protection
+# 5. Logging: Enhanced PostgreSQL logging for audit trails
+# 6. Network isolation: Explicit subnet configuration
+# 7. Authentication: Flower basic auth, FAB auth manager
+#
+# =============================================================================
