@@ -170,3 +170,4 @@ dags/kafka_health_monitor/sales_inventory/
 images/
 *.tar
 
+.cursor/rules/git-no-cursor-attribution.mdc
