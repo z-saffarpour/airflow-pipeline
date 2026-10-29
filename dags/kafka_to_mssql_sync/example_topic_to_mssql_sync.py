@@ -14,7 +14,7 @@ Author: Zahra Saffarpour
 Version: 1.0
 """
 from datetime import datetime, timedelta
-from airflow.models import Variable  # type: ignore
+from pipeline.utils.parse_config import parse_int, parse_str
 
 from pipeline.config import DAGConfig, ConnectionConfig
 from pipeline.config.KafkaSyncConfig import KafkaSyncConfig
@@ -32,64 +32,48 @@ dag_config = DAGConfig(
     start_date=datetime(2026, 7, 23),
     schedule=None,
     catchup=False,
-    max_active_runs=int(
-        Variable.get("max_active_runs_kafka_example_topic", default_var=1)
-    ),
-    retries=int(Variable.get("retries_kafka_example_topic", default_var=2)),
+    max_active_runs=parse_int("max_active_runs_kafka_example_topic", 1),
+    retries=parse_int("retries_kafka_example_topic", 2),
     retry_delay=timedelta(
-        minutes=int(
-            Variable.get("retry_delay_minutes_kafka_example_topic", default_var=5)
-        )
+        minutes=parse_int("retry_delay_minutes_kafka_example_topic", 5)
     ),
     execution_timeout=timedelta(
-        hours=int(
-            Variable.get("execution_timeout_hours_kafka_example_topic", default_var=8)
-        )
+        hours=parse_int("execution_timeout_hours_kafka_example_topic", 8)
     ),
     tags=["kafka", "mssql", "kafka-sync"],
     pool="kafka_to_mssql_sync_pool",
 )
 
 conn_config = ConnectionConfig(
-    kafka_conn_id=Variable.get("kafka_source_conn_id", default_var="kafka_default"),
-    mssql_conn_id=Variable.get("mssql_target_conn_id", default_var="mssql_default"),
+    kafka_conn_id=parse_str("kafka_source_conn_id", "kafka_default"),
+    mssql_conn_id=parse_str("mssql_target_conn_id", "mssql_default"),
 )
 
 # Replace topic / keys / target with your real Kafka source and MSSQL target.
 # JSON field names (after exclude_columns) must match MSSQL destination columns.
 sync_config = KafkaSyncConfig(
     source_name="kafka_example_topic",
-    kafka_topic=Variable.get(
-        "kafka_example_topic_name",
-        default_var="dwh.table.curated.example",
-    ),
-    consumer_group=Variable.get(
-        "kafka_example_consumer_group",
-        default_var="mssql-sync-example-topic",
-    ),
+    kafka_topic=parse_str("kafka_example_topic_name", "dwh.table.curated.example"),
+    consumer_group=parse_str("kafka_example_consumer_group", "mssql-sync-example-topic"),
     primary_keys=("id",),
     target_schema="dbo",
     target_table="ExampleFromKafka",
-    staging_schema=Variable.get("mssql_staging_schema", default_var="crt"),
+    staging_schema=parse_str("mssql_staging_schema", "crt"),
     # Strip producer metadata injected by IdempotentKafkaProducer
     exclude_columns=("version_id",),
     # Optional: keep only these columns from the JSON payload
     # value_columns=("id", "code", "name", "updated_at"),
     auto_offset_reset="earliest",
-    max_idle_polls=int(
-        Variable.get("max_idle_polls_kafka_example_topic", default_var=10)
-    ),
+    max_idle_polls=parse_int("max_idle_polls_kafka_example_topic", 10),
     delete_missing=bool(
-        int(Variable.get("delete_missing_kafka_example_topic", default_var=0))
+        parse_int("delete_missing_kafka_example_topic", 0)
     ),
     delete_scope_column="id",
     use_hash_change_detection=True,
     # For high-partition topics enable parallel consume:
     # use_dynamic_tasks=True,
     # max_parallel_chunks=8,
-    batch_size=int(
-        Variable.get("batch_size_kafka_example_topic", default_var=10000)
-    ),
+    batch_size=parse_int("batch_size_kafka_example_topic", 10000),
 )
 
 # ============================================================================

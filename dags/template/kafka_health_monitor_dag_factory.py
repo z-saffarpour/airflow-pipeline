@@ -22,6 +22,7 @@ Usage:
 Author: Senior Data Engineer
 Version: 2.0
 """
+from __future__ import annotations
 
 from datetime import datetime, timedelta
 from typing import Any, Dict, List
@@ -35,8 +36,6 @@ from airflow.utils.task_group import TaskGroup  # type: ignore
 from pipeline.config.DAGConfig import DAGConfig
 from pipeline.config.ConnectionConfig import ConnectionConfig
 from pipeline.config.KafkaHealthMonitorConfig import KafkaHealthMonitorConfig
-from pipeline.kafka.KafkaConnectionFactory import KafkaConnectionFactory
-from pipeline.kafka.KafkaTopicManager import KafkaTopicManager
 
 # ============================================================================
 # LOGGING
@@ -90,6 +89,8 @@ def make_validate_kafka_health_task(kafka_conn_id: str):
         execution_timeout=timedelta(minutes=5),
     )
     def validate_kafka_health() -> Dict[str, Any]:
+        from pipeline.kafka.KafkaConnectionFactory import KafkaConnectionFactory
+
         factory = KafkaConnectionFactory(kafka_conn_id)
         cluster = factory.get_cluster_info(timeout=30)
 
@@ -123,6 +124,8 @@ def make_check_consumer_lag_task(kafka_conn_id: str, health_config: KafkaHealthM
         execution_timeout=timedelta(minutes=5),
     )
     def check_consumer_lag() -> Dict[str, Any]:
+        from pipeline.kafka.KafkaTopicManager import KafkaTopicManager
+
         topic = health_config.kafka_topic
         consumer_group = health_config.consumer_group
 
@@ -193,6 +196,8 @@ def make_check_topic_stats_task(kafka_conn_id: str, health_config: KafkaHealthMo
         execution_timeout=timedelta(minutes=5),
     )
     def check_topic_stats() -> Dict[str, Any]:
+        from pipeline.kafka.KafkaTopicManager import KafkaTopicManager
+
         topic = health_config.kafka_topic
         if not topic:
             logger.warning("[kafka_health_monitor_dag_factory.check_topic_stats] Topic not specified, skipping stats check")
@@ -239,6 +244,8 @@ def make_sample_recent_messages_task(kafka_conn_id: str, health_config: KafkaHea
         execution_timeout=timedelta(minutes=5),
     )
     def sample_recent_messages() -> Dict[str, Any]:
+        from pipeline.kafka.KafkaTopicManager import KafkaTopicManager
+
         topic = health_config.kafka_topic
         if not topic:
             logger.warning("[kafka_health_monitor_dag_factory.sample_recent_messages] Topic not specified, skipping message sampling")
